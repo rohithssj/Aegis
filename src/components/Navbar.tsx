@@ -17,10 +17,9 @@ import {
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { name: "Dashboard", path: "/", icon: LayoutDashboard },
-  { name: "Incidents", path: "/incidents", icon: AlertCircle },
+  { name: "Command", path: "/", icon: LayoutDashboard },
+  { name: "Intelligence", path: "/incidents", icon: AlertCircle },
   { name: "Analytics", path: "/analytics", icon: BarChart3 },
-  { name: "Settings", path: "/settings", icon: Settings },
 ];
 
 export const Navbar = () => {
@@ -29,7 +28,6 @@ export const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -40,35 +38,41 @@ export const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Scroll animations - refined for speed
-  const height = useTransform(scrollY, [0, 50], ["72px", "56px"]);
+  // Snappier transitions for a tactical feel
+  const height = useTransform(scrollY, [0, 40], ["64px", "52px"]);
   const backgroundColor = useTransform(
     scrollY,
-    [0, 50],
-    ["rgba(2, 6, 23, 0)", "rgba(2, 6, 23, 0.9)"]
+    [0, 40],
+    ["rgba(11, 17, 32, 0)", "rgba(11, 17, 32, 0.8)"]
   );
-  const backdropBlur = useTransform(scrollY, [0, 50], ["blur(0px)", "blur(12px)"]);
   const borderBottom = useTransform(
     scrollY,
-    [0, 50],
-    ["1px solid rgba(255, 255, 255, 0)", "1px solid rgba(255, 255, 255, 0.05)"]
+    [0, 40],
+    ["1px solid rgba(255, 255, 255, 0)", "1px solid rgba(255, 255, 255, 0.08)"]
   );
 
   return (
     <motion.nav
-      style={{ height, backgroundColor, backdropFilter: backdropBlur, borderBottom } as any}
-      className="fixed top-0 left-0 right-0 z-50 flex items-center px-4 md:px-8 transition-colors duration-200"
+      style={{ 
+        height, 
+        backgroundColor, 
+        backdropFilter: "blur(12px)", 
+        borderBottom,
+        WebkitBackdropFilter: "blur(12px)"
+      } as any}
+      className="fixed top-0 left-0 right-0 z-50 flex items-center px-6 md:px-10 transition-colors"
     >
-      <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="p-1.5 rounded-lg bg-accent-primary/10 group-hover:bg-accent-primary/20 transition-colors duration-200">
-            <Shield className="h-5 w-5 text-accent-primary" />
+      <div className="max-w-[1400px] mx-auto w-full flex items-center justify-between">
+        {/* LOGO */}
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="p-1.5 rounded-xl bg-accent-indigo/10 group-hover:bg-accent-indigo/20 transition-all border border-accent-indigo/20">
+            <Shield className="h-4.5 w-4.5 text-accent-indigo" />
           </div>
-          <span className="font-bold text-lg tracking-tighter hidden sm:block">AEGIS</span>
+          <span className="font-bold text-sm tracking-widest text-white uppercase">AEGIS<span className="text-accent-indigo opacity-80">AI</span></span>
         </Link>
 
-        {/* Central Nav */}
-        <div className="flex items-center gap-1 bg-white/[0.02] border border-white/[0.05] p-1 rounded-full">
+        {/* INTEGRATED NAV (Linear style) */}
+        <div className="hidden md:flex items-center gap-1 bg-white/[0.03] border border-white/[0.08] p-1 rounded-full">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.path;
             return (
@@ -76,19 +80,19 @@ export const Navbar = () => {
                 key={item.path}
                 href={item.path}
                 className={cn(
-                  "relative flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150",
+                  "relative flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all",
                   isActive 
                     ? "text-white" 
-                    : "text-slate-500 hover:text-white hover:bg-white/[0.03]"
+                    : "text-slate-500 hover:text-slate-300"
                 )}
               >
-                <item.icon className="h-3.5 w-3.5" />
-                <span className="hidden md:inline">{item.name}</span>
+                <item.icon className={cn("h-3.5 w-3.5", isActive ? "text-accent-indigo" : "text-slate-600")} />
+                {item.name}
                 {isActive && (
                   <motion.div
                     layoutId="nav-pill"
-                    className="absolute inset-0 bg-white/5 rounded-full -z-10"
-                    transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                    className="absolute inset-0 bg-white/[0.05] border border-white/10 rounded-full -z-10"
+                    transition={{ type: "spring", bounce: 0, duration: 0.3 }}
                   />
                 )}
               </Link>
@@ -96,48 +100,50 @@ export const Navbar = () => {
           })}
         </div>
 
-        {/* User Profile Dropdown */}
-        <div className="relative" ref={dropdownRef}>
-          <button 
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-2 p-1 pl-1 pr-2 rounded-full border border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
-          >
-            <div className="h-7 w-7 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-[10px] font-bold text-indigo-400">
-               AE
-            </div>
-            <ChevronDown className={cn("h-3 w-3 text-slate-500 transition-transform duration-200", isDropdownOpen && "rotate-180")} />
-          </button>
+        {/* USER PROFILE */}
+        <div className="flex items-center gap-4">
+          <div className="relative" ref={dropdownRef}>
+            <button 
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="group flex items-center gap-3 p-1 pl-3 rounded-full border border-white/[0.08] bg-white/[0.02] hover:border-white/20 transition-all"
+            >
+              <div className="hidden sm:flex flex-col items-end mr-1">
+                <p className="text-[10px] font-bold text-white uppercase">Rohith S.</p>
+                <p className="text-[8px] font-medium text-accent-cyan/80 uppercase tracking-widest">Root Control</p>
+              </div>
+              <div className="h-7 w-7 rounded-full bg-gradient-to-tr from-accent-indigo to-accent-indigo-light flex items-center justify-center text-[10px] font-black text-white shadow-lg shadow-accent-indigo/20">
+                 RS
+              </div>
+              <ChevronDown className={cn("h-3 w-3 text-slate-500 transition-transform duration-300 mr-1", isDropdownOpen && "rotate-180")} />
+            </button>
 
-          <AnimatePresence>
-            {isDropdownOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-                className="absolute right-0 mt-2 w-48 py-2 glass rounded-2xl shadow-2xl z-[60]"
-              >
-                <div className="px-4 py-2 border-bottom border-white/5">
-                  <p className="text-xs font-semibold text-white">Administrator</p>
-                  <p className="text-[10px] text-slate-500 truncate">admin@aegis-global.ai</p>
-                </div>
-                <div className="h-[1px] bg-white/5 my-1" />
-                <button className="w-full flex items-center gap-3 px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
-                  <User className="h-3.5 w-3.5" /> Profile
-                </button>
-                <button className="w-full flex items-center gap-3 px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
-                  <Settings className="h-3.5 w-3.5" /> Settings
-                </button>
-                <div className="h-[1px] bg-white/5 my-1" />
-                <button className="w-full flex items-center gap-3 px-4 py-2 text-xs text-red-400 hover:bg-red-500/5 transition-colors">
-                  <LogOut className="h-3.5 w-3.5" /> Logout
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+            <AnimatePresence>
+              {isDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                  transition={{ duration: 0.1, ease: "easeOut" }}
+                  className="absolute right-0 mt-3 w-48 bg-surface/95 border border-white/10 rounded-2xl shadow-2xl z-[60] backdrop-blur-xl p-1.5"
+                >
+                  <Link href="/settings" className="flex items-center gap-3 px-3 py-2 text-[11px] font-bold text-slate-400 hover:text-white hover:bg-white/[0.05] rounded-xl transition-all">
+                    <User className="h-3.5 w-3.5" /> Profile
+                  </Link>
+                  <Link href="/settings" className="flex items-center gap-3 px-3 py-2 text-[11px] font-bold text-slate-400 hover:text-white hover:bg-white/[0.05] rounded-xl transition-all">
+                    <Settings className="h-3.5 w-3.5" /> System Configuration
+                  </Link>
+                  <div className="h-px bg-white/5 my-1 mx-2" />
+                  <button className="w-full flex items-center gap-3 px-3 py-2 text-[11px] font-bold text-red-400 hover:bg-red-400/10 rounded-xl transition-all">
+                    <LogOut className="h-3.5 w-3.5" /> Deactivate Session
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </motion.nav>
   );
 };
+
 

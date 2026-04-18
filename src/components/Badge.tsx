@@ -17,10 +17,10 @@ export const Badge = ({
   dot = true,
 }: BadgeProps) => {
   const variants = {
-    critical: "bg-red-500/5 text-red-400 border-red-500/10",
-    high: "bg-amber-500/5 text-amber-400 border-amber-500/10",
-    medium: "bg-yellow-500/5 text-yellow-400 border-yellow-500/10",
-    low: "bg-indigo-500/5 text-indigo-400 border-indigo-500/10",
+    critical: "bg-red-500/10 text-red-400 border-red-500/20",
+    high: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    medium: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+    low: "bg-accent-cyan/10 text-accent-cyan border-accent-cyan/20",
     neutral: "bg-white/5 text-slate-400 border-white/10",
   };
 
@@ -28,14 +28,14 @@ export const Badge = ({
     critical: "bg-red-500",
     high: "bg-amber-500",
     medium: "bg-yellow-500",
-    low: "bg-indigo-500",
+    low: "bg-accent-cyan",
     neutral: "bg-slate-500",
   };
 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border",
         variants[variant],
         className
       )}
@@ -49,4 +49,5 @@ export const Badge = ({
     </span>
   );
 };
+
 

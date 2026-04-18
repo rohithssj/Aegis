@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 
 const inter = Inter({ 
   subsets: ["latin"],
   variable: "--font-inter",
+});
+
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
@@ -20,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark h-full antialiased">
-      <body className={`${inter.variable} font-sans min-h-screen bg-[#020617] text-slate-200 flex flex-col`}>
+      <body className={`${inter.variable} ${jetbrains.variable} font-sans min-h-screen bg-[#0B1120] text-slate-200 flex flex-col`}>
         <Navbar />
         <div className="pt-20 flex-1 flex flex-col">
           {children}
@@ -29,3 +34,4 @@ export default function RootLayout({
     </html>
   );
 }
+

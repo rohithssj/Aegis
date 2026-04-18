@@ -7,14 +7,17 @@ import {
   Zap, 
   Clock, 
   ArrowUpRight,
-  ChevronRight,
   AlertTriangle,
   LocateFixed,
-  BarChart2
+  BarChart2,
+  TrendingUp,
+  Globe
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { mockDataService, MetricPoint, Incident } from "@/lib/mockData";
 import { Button } from "@/components/Button";
+import { Badge } from "@/components/Badge";
+import { GlassCard } from "@/components/GlassCard";
 import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
@@ -36,14 +39,13 @@ export default function Dashboard() {
     [incidents, selectedIncidentId]
   );
 
-  // Memoize chart to avoid unnecessary re-renders
   const LoadChart = useMemo(() => (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={metrics}>
         <defs>
-          <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#6366F1" stopOpacity={0.2}/>
-            <stop offset="95%" stopColor="#6366F1" stopOpacity={0}/>
+          <linearGradient id="colorIndigo" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="#5B4CF0" stopOpacity={0.15}/>
+            <stop offset="95%" stopColor="#5B4CF0" stopOpacity={0}/>
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
@@ -51,28 +53,30 @@ export default function Dashboard() {
           dataKey="time" 
           axisLine={false} 
           tickLine={false} 
-          tick={{fill: 'rgba(255,255,255,0.2)', fontSize: 10}}
+          tick={{fill: 'rgba(255,255,255,0.2)', fontSize: 10, fontFamily: 'var(--font-mono)'}}
           interval={6}
         />
         <YAxis hide domain={['auto', 'auto']} />
         <Tooltip 
           contentStyle={{ 
-            backgroundColor: '#020617', 
-            border: '1px solid rgba(255,255,255,0.05)',
+            backgroundColor: '#0F172A', 
+            border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: '12px',
             fontSize: '11px',
-            color: '#fff'
+            color: '#fff',
+            fontFamily: 'var(--font-mono)'
           }} 
-          itemStyle={{ color: '#6366F1' }}
+          itemStyle={{ color: '#5B4CF0' }}
+          cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
         />
         <Area 
           type="monotone" 
           dataKey="value" 
-          stroke="#6366F1" 
-          strokeWidth={1.5}
+          stroke="#5B4CF0" 
+          strokeWidth={2}
           fillOpacity={1} 
-          fill="url(#colorValue)" 
-          isAnimationActive={false} // Performance optimization
+          fill="url(#colorIndigo)" 
+          isAnimationActive={false}
         />
       </AreaChart>
     </ResponsiveContainer>
@@ -84,202 +88,185 @@ export default function Dashboard() {
   };
 
   return (
-    <main className="flex-1 max-w-7xl mx-auto w-full px-4 md:px-8 py-10 space-y-10">
-      {/* 1. COMMAND HEADER */}
-      <section className="relative">
+    <main className="flex-1 max-w-[1600px] mx-auto w-full px-6 md:px-10 py-12 space-y-12">
+      
+      {/* 🚀 HERO SECTION: Command Status */}
+      <section className="space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/5 border border-indigo-500/10 text-indigo-400 text-[10px] font-bold uppercase tracking-widest">
-              <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-              SYSTEM CORE: OPTIMAL
-            </div>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white">
-              Tactical Command
+          <div className="space-y-5">
+            <Badge variant="low" dot={true} className="bg-accent-cyan/5 text-accent-cyan border-accent-cyan/10">
+              System Core: Operational
+            </Badge>
+            <h1 className="text-4xl md:text-7xl font-bold tracking-tight text-white leading-[1.1]">
+              Strategic <span className="text-slate-500 italic font-medium">Command</span>
             </h1>
-            <div className="flex flex-wrap gap-8 pt-2">
-              <div className="space-y-1">
-                <p className="section-label">Neural Load</p>
-                <p className="text-2xl font-bold text-white tracking-tight">84.2%</p>
-              </div>
-              <div className="h-10 w-[1px] bg-white/5 hidden md:block" />
-              <div className="space-y-1">
-                <p className="section-label">Latency</p>
-                <p className="text-2xl font-bold text-white tracking-tight">42ms</p>
-              </div>
-              <div className="h-10 w-[1px] bg-white/5 hidden md:block" />
-              <div className="space-y-1">
-                <p className="section-label">Active Nodes</p>
-                <p className="text-2xl font-bold text-white tracking-tight">1,204</p>
-              </div>
-            </div>
           </div>
-          <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-4 bg-white/[0.02] p-2 rounded-2xl border border-white/[0.05]">
+            <div className="flex flex-col items-end px-4">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Protocol Status</span>
+              <span className="text-xs font-mono font-bold text-accent-cyan tracking-tight">ENFORCE_v4.2</span>
+            </div>
             <Button 
               variant="primary" 
               size="lg" 
               onClick={handleProtocolAction}
               disabled={isDeploying}
-              className={cn(
-                "w-full md:w-auto transition-all duration-300",
-                isDeploying ? "opacity-50" : "shadow-lg shadow-indigo-500/10"
-              )}
+              className="min-w-[200px]"
             >
-              {isDeploying ? "Deploying Protocol..." : "Emergency Protocol"}
+              {isDeploying ? "Synchronizing..." : "Emergency Protocol"}
             </Button>
-            <p className="text-[10px] text-slate-600 text-center md:text-right font-medium">
-              AUTH: LEVEL 5 ADMINISTRATOR
-            </p>
           </div>
+        </div>
+
+        {/* Global Metrics Strip */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: "Neural Load", val: "84.2%", icon: Activity, trend: "+2.1%" },
+            { label: "Network Latency", val: "42ms", icon: Zap, trend: "-12ms" },
+            { label: "Active Nodes", val: "1,204", icon: Globe, trend: "Stable" },
+            { label: "Threat Index", val: "0.04", icon: AlertTriangle, trend: "Minimal" },
+          ].map((m, i) => (
+            <GlassCard key={i} className="p-5 flex flex-col gap-3" hover={false}>
+              <div className="flex items-center justify-between">
+                <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05]">
+                  <m.icon className="h-4 w-4 text-slate-500" />
+                </div>
+                <span className="font-mono text-[10px] text-accent-cyan font-bold">{m.trend}</span>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{m.label}</p>
+                <p className="text-2xl font-mono font-bold text-white tracking-tight">{m.val}</p>
+              </div>
+            </GlassCard>
+          ))}
         </div>
       </section>
 
-      {/* 2. OPERATIONAL GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+      {/* 📊 PRIMARY PANEL: Analytics & Intelligence */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* Left Column: Metrics & Analytics (8 cols) */}
-        <div className="lg:col-span-8 space-y-8">
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                <BarChart2 className="h-4 w-4" /> Neural Distribution
-              </h2>
-            </div>
-            
-            <div className="h-[360px] w-full bg-white/[0.01] rounded-3xl border border-white/[0.05] p-6 relative group overflow-hidden">
-               {LoadChart}
+        {/* Distribution Chart (8 cols) */}
+        <div className="lg:col-span-8 space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <BarChart2 className="h-4 w-4 text-accent-indigo" /> Neural Load Distribution
+            </h2>
+            <div className="flex items-center gap-4">
+               <span className="flex items-center gap-2 text-[10px] font-mono text-slate-500">
+                 <span className="h-2 w-2 rounded-full bg-accent-indigo" /> Real-time
+               </span>
             </div>
           </div>
+          
+          <GlassCard className="h-[400px] p-8" hover={false}>
+             {LoadChart}
+          </GlassCard>
 
-          {/* Selected Incident Details (The updated details panel) */}
-          <div className="glass rounded-[2rem] p-8 space-y-6 border border-white/[0.03]">
-            {selectedIncident ? (
-              <>
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <span className={cn(
-                        "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
-                        selectedIncident.status === 'critical' ? 'bg-red-500/10 text-red-400' : 'bg-amber-500/10 text-amber-400'
-                      )}>
-                        {selectedIncident.status}
-                      </span>
-                      <span className="text-xs text-slate-500 font-mono">{selectedIncident.id}</span>
-                    </div>
-                    <h3 className="text-2xl font-bold text-white tracking-tight">{selectedIncident.title}</h3>
+          {/* Detailed Context Panel */}
+          {selectedIncident && (
+            <GlassCard className="p-8 space-y-8 border-accent-indigo/10">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Badge variant={selectedIncident.status as any}>{selectedIncident.status}</Badge>
+                    <span className="text-[10px] text-slate-500 font-mono tracking-widest">{selectedIncident.id}</span>
                   </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-slate-600 uppercase mb-1">Impact Score</p>
-                    <p className="text-3xl font-black text-white">{selectedIncident.neuralImpact}%</p>
-                  </div>
+                  <h3 className="text-3xl font-bold text-white tracking-tight">
+                    {selectedIncident.title}
+                  </h3>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                  <div className="space-y-3">
-                    <p className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
-                      <LocateFixed className="h-3 w-3" /> Location
-                    </p>
-                    <p className="text-sm text-slate-300 bg-white/[0.02] p-3 rounded-xl border border-white/[0.05]">
-                      {selectedIncident.location}
-                    </p>
-                  </div>
-                  <div className="space-y-3">
-                    <p className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
-                      <Activity className="h-3 w-3" /> System Logs
-                    </p>
-                    <p className="text-sm text-slate-300 bg-white/[0.02] p-3 rounded-xl border border-white/[0.05]">
-                      {selectedIncident.description}
-                    </p>
-                  </div>
+                <div className="bg-white/[0.02] border border-white/[0.05] p-5 rounded-3xl min-w-[160px] text-center">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Impact Deviation</p>
+                  <p className="text-4xl font-mono font-bold text-white">{selectedIncident.neuralImpact}%</p>
                 </div>
-
-                <div className="p-5 rounded-2xl bg-indigo-500/[0.03] border border-indigo-500/10 space-y-2">
-                  <p className="text-xs font-bold text-indigo-400 uppercase flex items-center gap-2">
-                    <ShieldCheck className="h-3.5 w-3.5" /> AI Counter-Measures
-                  </p>
-                  <p className="text-sm text-slate-300 leading-relaxed italic">
-                    "{selectedIncident.aiAnalysis}"
-                  </p>
-                </div>
-              </>
-            ) : (
-              <div className="h-48 flex items-center justify-center text-slate-600 italic">
-                Select an incident from the intelligence feed to view details.
               </div>
-            )}
-          </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2">
+                    <LocateFixed className="h-3 w-3" /> Vectors
+                  </p>
+                  <p className="text-sm text-slate-300 leading-relaxed font-medium">
+                    {selectedIncident.location}
+                  </p>
+                </div>
+                <div className="md:col-span-2 space-y-2">
+                  <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2">
+                    <TrendingUp className="h-3 w-3" /> Intelligence Logs
+                  </p>
+                  <p className="text-sm text-slate-400 leading-relaxed">
+                    {selectedIncident.description}
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-6 rounded-2xl bg-surface border border-white/[0.08] relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                  <ShieldCheck className="h-20 w-20 text-accent-cyan" />
+                </div>
+                <p className="text-[10px] font-bold text-accent-cyan uppercase tracking-widest flex items-center gap-2 mb-3">
+                  <ShieldCheck className="h-3.5 w-3.5" /> AI Predictive Response
+                </p>
+                <p className="text-sm text-slate-300 leading-relaxed italic z-10 relative">
+                  &quot;{selectedIncident.aiAnalysis}&quot;
+                </p>
+              </div>
+            </GlassCard>
+          )}
         </div>
 
-        {/* Right Column: Intelligence Feed (4 cols) */}
+        {/* 📋 SECONDARY: Intelligence Feed (4 cols) */}
         <aside className="lg:col-span-4 space-y-6">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2 px-2">
-            <AlertTriangle className="h-4 w-4" /> Intelligence Feed
+          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 px-2">
+            Intelligence Feed
           </h2>
           
-          <div className="space-y-3">
+          <div className="space-y-2">
             {incidents.map((incident) => (
-              <button 
+              <GlassCard 
                 key={incident.id}
-                onClick={() => setSelectedIncidentId(incident.id)}
+                hover={true}
                 className={cn(
-                  "w-full text-left p-4 rounded-2xl transition-all duration-200 border",
+                  "p-4 cursor-pointer transition-all",
                   selectedIncidentId === incident.id
-                    ? "bg-white/[0.04] border-white/10 shadow-lg"
-                    : "bg-white/[0.01] border-white/[0.03] hover:border-white/10 hover:bg-white/[0.02]"
+                    ? "bg-white/[0.06] border-accent-indigo/30"
+                    : "bg-white/[0.01]"
                 )}
+                onClick={() => setSelectedIncidentId(incident.id)}
               >
                 <div className="flex justify-between items-start mb-2">
-                  <span className={cn(
-                    "w-1.5 h-1.5 rounded-full mt-1",
-                    incident.status === 'critical' ? 'bg-red-500' : 
-                    incident.status === 'high' ? 'bg-amber-500' : 'bg-indigo-500'
-                  )} />
-                  <span className="text-[10px] font-mono text-slate-500">{incident.id}</span>
+                   <div className="flex items-center gap-2">
+                    <div className={cn(
+                      "w-1 h-1 rounded-full",
+                      incident.status === 'critical' ? 'bg-red-500' : 'bg-accent-indigo'
+                    )} />
+                    <span className="text-[9px] font-mono text-slate-500 font-bold tracking-widest uppercase">{incident.id}</span>
+                   </div>
+                   <span className="text-[9px] font-mono text-slate-600">
+                    {new Date(incident.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                   </span>
                 </div>
-                <p className="text-sm font-semibold text-white mb-1 truncate">{incident.title}</p>
-                <p className="text-[10px] text-slate-500 flex items-center gap-2">
-                  <Clock className="h-3 w-3" /> {new Date(incident.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </p>
-              </button>
+                <p className="text-[13px] font-bold text-white mb-0.5 truncate">{incident.title}</p>
+              </GlassCard>
             ))}
           </div>
 
-          <div className="p-6 rounded-3xl bg-white/[0.01] border border-white/[0.05] space-y-4">
-            <div className="p-2.5 rounded-xl bg-indigo-500/10 w-fit">
-              <Zap className="h-5 w-5 text-indigo-500" />
+          <GlassCard className="p-6 space-y-4" hover={false}>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-accent-indigo/10 border border-accent-indigo/20">
+                <BarChart2 className="h-4 w-4 text-accent-indigo" />
+              </div>
+              <h3 className="text-[10px] font-bold text-white uppercase tracking-widest">Efficiency</h3>
             </div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Neural Speed</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Inference is currently running at 1.2 Petaflops across the edge network.
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Neural efficiency is performing at <span className="text-white font-bold">1.2 Petaflops</span> with 99.9% autonomous mitigation.
             </p>
-            <Button variant="ghost" className="w-full text-[10px] py-1.5 uppercase font-bold tracking-widest border-white/5">
-              Node Map
-            </Button>
-          </div>
+            <Button variant="ghost" className="w-full">View Detailed Nodes</Button>
+          </GlassCard>
         </aside>
       </div>
-
-      {/* 3. LOWER HUB STATISTICS */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-8 border-t border-white/[0.05] pt-10">
-         {[
-           { icon: Activity, title: "Mitigation Rate", val: "99.9%", desc: "Autonomous efficiency" },
-           { icon: Clock, title: "Response Mean", val: "2.4s", desc: "Human loop delay" },
-           { icon: ArrowUpRight, title: "Flow Velocity", val: "1.2 TB/s", desc: "Ingress aggregate" },
-         ].map((stat, i) => (
-           <div key={i} className="flex gap-4 group">
-             <div className="h-10 w-10 rounded-xl bg-white/[0.02] border border-white/[0.05] flex items-center justify-center group-hover:border-indigo-500/20 transition-all duration-300">
-               <stat.icon className="h-4 w-4 text-slate-500 group-hover:text-indigo-400 transition-colors" />
-             </div>
-             <div className="space-y-0.5">
-               <h4 className="section-label mb-0">{stat.title}</h4>
-               <div className="flex items-baseline gap-2">
-                <span className="text-xl font-bold text-white tracking-tight">{stat.val}</span>
-                <span className="text-[10px] text-slate-600 font-medium">{stat.desc}</span>
-               </div>
-             </div>
-           </div>
-         ))}
-      </section>
     </main>
   );
 }
+
 
