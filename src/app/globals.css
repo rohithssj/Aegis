@@ -40,12 +40,14 @@ body {
 }
 
 .glass-interactive {
-  @apply glass transition-all duration-300;
+  @apply backdrop-blur-md bg-white/[0.02] border border-white/[0.05] transition-all duration-300;
+  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
 }
 .glass-interactive:hover {
   @apply bg-white/[0.04] border-white/[0.1];
   box-shadow: 0 8px 32px -1px rgba(0, 0, 0, 0.3);
 }
+
 
 /* Visual Hierarchy Support */
 .section-label {
