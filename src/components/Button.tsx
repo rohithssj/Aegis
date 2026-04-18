@@ -19,36 +19,30 @@ export const Button = ({
   ...props
 }: ButtonProps) => {
   const variants = {
-    primary: "bg-accent-primary text-white shadow-glow hover:bg-accent-primary/90",
-    danger: "bg-critical text-white shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:bg-critical/90",
-    ghost: "bg-white/5 border border-white/10 text-white hover:bg-white/10",
+    primary: "bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/10",
+    danger: "bg-red-500 text-white hover:bg-red-400 shadow-lg shadow-red-500/10",
+    ghost: "bg-white/[0.02] border border-white/[0.05] text-slate-400 hover:text-white hover:bg-white/[0.05]",
   };
 
   const sizes = {
-    sm: "px-4 py-1.5 text-sm",
-    md: "px-6 py-2.5 text-base",
-    lg: "px-8 py-3.5 text-lg",
+    sm: "px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest",
+    md: "px-5 py-2 text-xs font-bold uppercase tracking-widest",
+    lg: "px-8 py-3 text-sm font-bold uppercase tracking-widest",
   };
 
   return (
     <motion.button
-      whileHover={{ scale: 1.02, y: -1 }}
       whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
+      transition={{ duration: 0.1, ease: "easeOut" }}
       className={cn(
-        "relative inline-flex items-center justify-center font-medium transition-colors",
-        "rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/50",
+        "relative inline-flex items-center justify-center transition-all duration-200",
+        "rounded-full outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50",
         variants[variant],
         sizes[size],
         className
       )}
       {...props}
     >
-      {/* Subtle Inner Highlight for Premium Feel */}
-      {variant !== "ghost" && (
-        <div className="absolute inset-x-4 top-[1px] h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
-      )}
-      
       <span className="relative z-10">{children as React.ReactNode}</span>
     </motion.button>
   );
