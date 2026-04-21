@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { 
-  Shield, 
   LayoutDashboard, 
   AlertCircle, 
   BarChart3, 
@@ -15,6 +14,7 @@ import {
   ChevronDown 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AegisLogo } from "./AegisLogo";
 
 const NAV_ITEMS = [
   { name: "Command", path: "/", icon: LayoutDashboard },
@@ -64,11 +64,8 @@ export const Navbar = () => {
     >
       <div className="max-w-[1400px] mx-auto w-full flex items-center justify-between">
         {/* LOGO */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="p-1.5 rounded-xl bg-accent-indigo/10 group-hover:bg-accent-indigo/20 transition-all border border-accent-indigo/20">
-            <Shield className="h-4.5 w-4.5 text-accent-indigo" />
-          </div>
-          <span className="font-bold text-sm tracking-widest text-white uppercase">AEGIS<span className="text-accent-indigo opacity-80">AI</span></span>
+        <Link href="/" className="hover:opacity-90 transition-opacity">
+          <AegisLogo className="w-8 h-8" />
         </Link>
 
         {/* INTEGRATED NAV (Linear style) */}
