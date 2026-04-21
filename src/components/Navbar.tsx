@@ -60,9 +60,9 @@ export const Navbar = () => {
         borderBottom,
         WebkitBackdropFilter: "blur(12px)"
       } as any}
-      className="fixed top-0 left-0 right-0 z-50 flex items-center px-6 md:px-10 transition-colors"
+      className="fixed top-0 left-0 right-0 z-50 flex items-center transition-colors"
     >
-      <div className="max-w-[1400px] mx-auto w-full flex items-center justify-between">
+      <div className="container-premium flex items-center justify-between">
         {/* LOGO */}
         <Link href="/" className="hover:opacity-90 transition-opacity">
           <AegisLogo className="w-8 h-8" />

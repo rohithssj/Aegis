@@ -51,22 +51,24 @@ const SETTING_GROUPS = [
 
 export default function SettingsPage() {
   return (
-    <main className="flex-1 max-w-5xl mx-auto w-full px-6 md:px-10 py-16 space-y-16 pb-40">
+    <main className="flex-1 container-premium py-16 section-spacing pb-40">
       <header className="space-y-4 max-w-3xl">
-        <Badge variant="neutral" dot={false} className="tracking-[0.2em] font-black">System Preferences</Badge>
-        <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white leading-none">
+        <div className="flex items-center gap-3">
+          <Badge variant="neutral" dot={false} className="font-bold rounded-lg px-2">v4.2.0</Badge>
+        </div>
+        <h1 className="hero-heading">
           Global <span className="text-slate-500">Configuration</span>
         </h1>
-        <p className="text-slate-500 text-sm leading-relaxed font-medium">
+        <p className="body-text">
           Fine-tune the Aegis orchestrator and neural defense layers. Changes apply globally to the edge network within 5ms.
         </p>
       </header>
 
       <div className="space-y-16">
         {SETTING_GROUPS.map((group, i) => (
-          <section key={i} className="space-y-8">
+          <section key={i} className="space-y-8 animate-in">
             <div className="space-y-2 px-1">
-              <h2 className="text-xl font-bold text-white tracking-tight leading-none">{group.title}</h2>
+              <h2 className="section-heading text-white">{group.title}</h2>
               <p className="text-xs text-slate-500 font-medium">{group.description}</p>
             </div>
 
@@ -74,20 +76,20 @@ export default function SettingsPage() {
               {group.items.map((item) => (
                 <GlassCard 
                   key={item.id} 
-                  className="flex flex-col md:flex-row items-start md:items-center justify-between p-6 transition-all duration-300 gap-6"
+                  className="flex flex-col md:flex-row items-start md:items-center justify-between p-5 md:p-6 transition-all duration-300 gap-6 rounded-2xl"
                   hover={true}
                 >
                   <div className="flex items-center gap-5">
-                    <div className="p-2.5 rounded-xl bg-accent-indigo/5 border border-accent-indigo/20 text-accent-indigo">
+                    <div className="p-2.5 rounded-2xl bg-accent-indigo/[0.03] border border-white/[0.05] text-accent-indigo">
                       <item.icon className="h-5 w-5" />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm font-bold text-white uppercase tracking-tight leading-none">{item.name}</p>
+                      <p className="text-sm font-bold text-white tracking-tight leading-none uppercase">{item.name}</p>
                       <p className="text-[11px] text-slate-500 font-medium leading-none">{item.desc}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
-                    <span className="text-[10px] font-mono font-bold text-accent-cyan bg-accent-cyan/5 px-3 py-1.5 rounded-lg border border-accent-cyan/10 uppercase tracking-widest leading-none">
+                    <span className="text-[10px] font-mono font-bold text-accent-cyan bg-accent-cyan/[0.03] px-3 py-1.5 rounded-lg border border-white/[0.05] uppercase tracking-widest leading-none">
                       {item.val}
                     </span>
                     <Button variant="ghost" size="sm" className="hidden md:flex py-2 border-white/[0.05] h-9">Modify</Button>
@@ -100,13 +102,13 @@ export default function SettingsPage() {
         ))}
       </div>
 
-      <GlassCard className="p-10 flex flex-col md:flex-row items-center justify-between gap-8 border-accent-indigo/20" hover={false}>
+      <GlassCard className="p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 border-accent-indigo/10 rounded-3xl" hover={false}>
          <div className="flex items-center gap-6">
-            <div className="h-12 w-12 rounded-full bg-accent-indigo/10 flex items-center justify-center text-accent-indigo border border-accent-indigo/20 shadow-lg shadow-accent-indigo/10">
+            <div className="h-12 w-12 rounded-full bg-accent-indigo/10 flex items-center justify-center text-accent-indigo border border-white/[0.05] shadow-lg">
               <History className="h-5 w-5" />
             </div>
             <div className="space-y-1">
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Protocol Version Control</p>
+              <p className="label-text mb-0">Protocol Version Control</p>
               <p className="text-xs text-slate-400 font-mono font-bold tracking-widest">v4.2.0-STABLE_b2026.04.18</p>
             </div>
          </div>

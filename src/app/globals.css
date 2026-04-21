@@ -15,8 +15,10 @@
   --color-low: #22D3EE;
 
   --rounded-premium: 1rem;
-  --rounded-premium-lg: 1.5rem;
-  --rounded-premium-xl: 2rem;
+  --rounded-premium-lg: 1rem;
+  --rounded-premium-xl: 1.5rem;
+  --rounded-premium-2xl: 1.5rem;
+  --rounded-premium-full: 9999px;
 
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --transition-premium: cubic-bezier(0.4, 0, 0.2, 1);
@@ -36,44 +38,47 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* Refined Premium Glass - Linear/Stripe Style */
-.glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px -1px rgba(0, 0, 0, 0.3);
+/* Premium Typography System */
+h1, h2, h3, h4, h5, h6 {
+  @apply tracking-tight font-bold text-white;
 }
 
-.glass-interactive {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
+.hero-heading {
+  @apply text-5xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight;
 }
 
-.glass-interactive:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.12);
-  transform: translateY(-1px);
-  box-shadow: 0 12px 40px -2px rgba(0, 0, 0, 0.4);
+.section-heading {
+  @apply text-2xl md:text-3xl tracking-tight;
 }
 
+.body-text {
+  @apply text-sm text-white/70 leading-relaxed;
+}
 
-/* Visual Hierarchy Support */
-.section-label {
+.label-text {
   @apply text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2;
 }
 
-.metric-value {
-  @apply text-3xl font-bold tracking-tight text-white;
+/* Standardized Layout Containers */
+.container-premium {
+  @apply max-w-7xl mx-auto px-4 md:px-6 w-full;
 }
 
-/* Scroll Smoothing */
-html {
-  scroll-behavior: smooth;
+.section-spacing {
+  @apply space-y-20 md:space-y-24;
+}
+
+/* Refined Glass - Linear/SaaS Style */
+.glass {
+  @apply bg-white/[0.03] backdrop-blur-md border border-white/[0.05] shadow-sm;
+}
+
+.glass-interactive {
+  @apply bg-white/[0.03] backdrop-blur-md border border-white/[0.05] shadow-sm transition-all duration-200 ease-out;
+}
+
+.glass-interactive:hover {
+  @apply bg-white/[0.05] border-white/[0.08] -translate-y-0.5 scale-[1.01] shadow-lg shadow-black/10;
 }
 
 /* Custom Scrollbar */
@@ -87,8 +92,17 @@ html {
   @apply bg-white/5 rounded-full hover:bg-white/10 transition-colors;
 }
 
-/* Remove common continuous animations that cause lag */
+/* Utility Animations */
 .no-pulse {
   animation: none !important;
+}
+
+.animate-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 

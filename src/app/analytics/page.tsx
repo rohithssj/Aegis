@@ -18,16 +18,25 @@ import {
 import { mockDataService, MetricPoint } from "@/lib/mockData";
 import { Badge } from "@/components/Badge";
 import { GlassCard } from "@/components/GlassCard";
-import { Activity, Zap, Cpu, TrendingUp } from "lucide-react";
+import { MetricSkeleton, ChartSkeleton } from "@/components/Skeleton";
+import { Activity, Zap, Cpu, TrendingUp, BarChart2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function AnalyticsPage() {
   const [loadData, setLoadData] = useState<MetricPoint[]>([]);
   const [latencyData, setLatencyData] = useState<MetricPoint[]>([]);
 
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    mockDataService.getMetrics("load").then(setLoadData);
-    mockDataService.getMetrics("latency").then(setLatencyData);
+    Promise.all([
+      mockDataService.getMetrics("load"),
+      mockDataService.getMetrics("latency")
+    ]).then(([load, latency]) => {
+      setLoadData(load);
+      setLatencyData(latency);
+      setLoading(false);
+    });
   }, []);
 
   const MainReliabilityChart = useMemo(() => (
@@ -157,12 +166,16 @@ export default function AnalyticsPage() {
   ), []);
 
   return (
-    <main className="flex-1 max-w-[1400px] mx-auto w-full px-6 md:px-10 py-12 space-y-16">
+    <main className="flex-1 container-premium py-12 section-spacing">
       {/* Page Header */}
       <header className="space-y-4 max-w-3xl">
-        <Badge variant="low" className="bg-accent-indigo/10 text-accent-indigo border-accent-indigo/20">System Intelligence</Badge>
-        <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white italic">Neural <span className="text-slate-500 not-italic font-medium">Analytics</span></h1>
-        <p className="text-slate-500 text-sm leading-relaxed font-medium">
+        <div className="flex items-center gap-3">
+          <Badge variant="low" className="bg-accent-indigo/10 text-accent-indigo border-accent-indigo/20">System Intelligence</Badge>
+        </div>
+        <h1 className="hero-heading">
+          Neural <span className="bg-gradient-to-r from-accent-indigo to-accent-indigo-light bg-clip-text text-transparent italic font-medium">Analytics</span>
+        </h1>
+        <p className="body-text">
           Deep-dive analysis of neural network efficiency, response patterns, and cross-border data velocity metrics across the Aegis core.
         </p>
       </header>
@@ -170,7 +183,7 @@ export default function AnalyticsPage() {
       {/* Primary Trend Chart (Full Width) */}
       <section className="space-y-6">
         <div className="flex items-center justify-between px-2">
-          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 flex items-center gap-3">
+          <h2 className="label-text mb-0 flex items-center gap-3">
             <Activity className="h-4 w-4 text-accent-indigo" /> Global Reliability Metric
           </h2>
           <div className="flex items-center gap-4">
@@ -178,51 +191,67 @@ export default function AnalyticsPage() {
           </div>
         </div>
         
-        <GlassCard className="h-[450px] p-8" hover={false}>
-          {MainReliabilityChart}
-        </GlassCard>
+        {loading ? (
+          <ChartSkeleton />
+        ) : (
+          <GlassCard className="h-[450px] p-8 rounded-3xl" hover={false}>
+            {MainReliabilityChart}
+          </GlassCard>
+        )}
       </section>
 
       {/* Comparisons Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <section className="space-y-6">
-          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 flex items-center gap-3">
+          <h2 className="label-text mb-0 flex items-center gap-3">
             <Zap className="h-4 w-4 text-accent-cyan" /> Ingress Latency (ms)
           </h2>
-          <GlassCard className="h-[320px] p-6" hover={false}>
-            {LatencyChart}
-          </GlassCard>
+          {loading ? (
+            <div className="h-[320px] glass rounded-3xl animate-pulse" />
+          ) : (
+            <GlassCard className="h-[320px] p-6 rounded-3xl" hover={false}>
+              {LatencyChart}
+            </GlassCard>
+          )}
         </section>
 
         <section className="space-y-6">
-          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 flex items-center gap-3">
+          <h2 className="label-text mb-0 flex items-center gap-3">
             <Cpu className="h-4 w-4 text-accent-indigo" /> Node Efficiency Index
           </h2>
-          <GlassCard className="h-[320px] p-6" hover={false}>
-            {NodeEfficiencyChart}
-          </GlassCard>
+          {loading ? (
+            <div className="h-[320px] glass rounded-3xl animate-pulse" />
+          ) : (
+            <GlassCard className="h-[320px] p-6 rounded-3xl" hover={false}>
+              {NodeEfficiencyChart}
+            </GlassCard>
+          )}
         </section>
       </div>
 
       {/* Metrics Summary Strip */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-20">
-        {[
-          { label: "Neural Flow", val: "18.4 PB", trend: "+12%", bg: "bg-accent-indigo/5", border: "border-accent-indigo/10" },
-          { label: "Threats Blocked", val: "142,000", trend: "+0.4%", bg: "bg-red-500/5", border: "border-red-500/10" },
-          { label: "Nodes Active", val: "12,402", trend: "0.0%", bg: "bg-accent-cyan/5", border: "border-accent-cyan/10" },
-          { label: "Sync Latency", val: "0.08ms", trend: "-0.01", bg: "bg-emerald-500/5", border: "border-emerald-500/10" }
-        ].map((item, i) => (
-          <GlassCard key={i} className={cn("p-6 space-y-3", item.bg, item.border)} hover={true}>
-             <div className="flex items-center justify-between">
-               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{item.label}</p>
-               <TrendingUp className="h-3 w-3 text-slate-600" />
-             </div>
-             <div className="flex items-baseline justify-between">
-               <h4 className="text-2xl font-mono font-bold text-white tracking-tight">{item.val}</h4>
-               <span className="text-[9px] font-mono font-bold text-accent-cyan">{item.trend}</span>
-             </div>
-          </GlassCard>
-        ))}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => <MetricSkeleton key={i} />)
+        ) : (
+          [
+            { label: "Neural Flow", val: "18.4 PB", trend: "+12%", bg: "bg-accent-indigo/5", border: "border-accent-indigo/10" },
+            { label: "Threats Blocked", val: "142,000", trend: "+0.4%", bg: "bg-red-500/5", border: "border-red-500/10" },
+            { label: "Nodes Active", val: "12,402", trend: "0.0%", bg: "bg-accent-cyan/5", border: "border-accent-cyan/10" },
+            { label: "Sync Latency", val: "0.08ms", trend: "-0.01", bg: "bg-emerald-500/5", border: "border-emerald-500/10" }
+          ].map((item, i) => (
+            <GlassCard key={i} className={cn("p-5 md:p-6 flex flex-col gap-5", item.bg, item.border)} hover={true}>
+               <div className="flex items-center justify-between">
+                 <p className="label-text mb-0">{item.label}</p>
+                 <TrendingUp className="h-3 w-3 text-slate-600" />
+               </div>
+               <div className="flex items-baseline justify-between">
+                 <h4 className="text-2xl font-mono font-bold text-white tracking-tight">{item.val}</h4>
+                 <span className="text-[9px] font-mono font-bold text-accent-cyan">{item.trend}</span>
+               </div>
+            </GlassCard>
+          ))
+        )}
       </section>
     </main>
   );

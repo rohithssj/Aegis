@@ -6,18 +6,19 @@ import {
   Activity, 
   Zap, 
   Clock, 
-  ArrowUpRight,
   AlertTriangle,
   LocateFixed,
   BarChart2,
   TrendingUp,
-  Globe
+  Globe,
+  ShieldAlert
 } from "lucide-react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { mockDataService, MetricPoint, Incident } from "@/lib/mockData";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
 import { GlassCard } from "@/components/GlassCard";
+import { MetricSkeleton, ChartSkeleton, FeedSkeleton } from "@/components/Skeleton";
 import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
@@ -25,12 +26,14 @@ export default function Dashboard() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Initialize data and start real-time simulation
   useEffect(() => {
     mockDataService.getIncidents().then(data => {
       setIncidents(data);
-      if (data.length > 0) setSelectedIncidentId(data[0].id);
+      if (data.length > 0 && !selectedIncidentId) setSelectedIncidentId(data[0].id);
+      setLoading(false);
     });
 
     const generateInitialData = () => {
@@ -62,7 +65,7 @@ export default function Dashboard() {
     }, 2500);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedIncidentId]);
 
   const selectedIncident = useMemo(() => 
     incidents.find(inc => inc.id === selectedIncidentId),
@@ -119,9 +122,9 @@ export default function Dashboard() {
   };
 
   return (
-    <main className="flex-1 max-w-[1600px] mx-auto w-full px-4 md:px-10 py-12 space-y-24">
+    <main className="flex-1 container-premium py-12 section-spacing">
       
-      {/* 🚀 HERO SECTION: Command Status */}
+      {/* HERO SECTION: Command Status */}
       <section className="space-y-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-10">
           <div className="space-y-4">
@@ -134,17 +137,17 @@ export default function Dashboard() {
                 Live System Operational
               </Badge>
             </div>
-            <h1 className="text-6xl md:text-8xl font-bold tracking-tighter text-white leading-[0.85]">
+            <h1 className="hero-heading pr-2">
               Strategic <span className="bg-gradient-to-r from-accent-indigo to-accent-indigo-light bg-clip-text text-transparent italic font-medium">Command</span>
             </h1>
-            <p className="text-slate-400 text-sm md:text-base font-medium tracking-tight max-w-md">
+            <p className="body-text max-w-md">
               Real-time neural orchestration across 1,204 active edge nodes
             </p>
           </div>
 
-          <div className="flex items-center gap-2 bg-white/[0.02] p-1.5 rounded-premium-lg border border-white/[0.05] backdrop-blur-md self-start md:self-end group transition-all hover:bg-white/[0.04]">
+          <div className="flex items-center gap-2 bg-white/[0.02] p-1.5 rounded-full border border-white/[0.05] backdrop-blur-md self-start md:self-end group transition-all duration-200">
             <div className="flex flex-col items-end px-4 py-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none mb-1">Protocol Status</span>
+              <span className="label-text mb-1 lowercase">Protocol Status</span>
               <span className="text-xs font-mono font-bold text-accent-cyan tracking-tight">ENFORCE_v4.2</span>
             </div>
             <Button 
@@ -152,7 +155,7 @@ export default function Dashboard() {
               size="lg" 
               onClick={handleProtocolAction}
               disabled={isDeploying}
-              className="min-w-[180px] rounded-premium transition-all hover:scale-[1.02] active:scale-[0.98] border border-white/10 shadow-lg shadow-indigo-500/10"
+              className="min-w-[180px] rounded-full active:scale-[0.98]"
             >
               {isDeploying ? "Synchronizing..." : "Emergency Protocol"}
             </Button>
@@ -161,35 +164,39 @@ export default function Dashboard() {
 
         {/* Global Metrics Strip */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { label: "Neural Load", val: metrics.length > 0 ? `${metrics[metrics.length-1].value.toFixed(1)}%` : "0.0%", icon: Activity, trend: "+2.1%" },
-            { label: "Network Latency", val: "42ms", icon: Zap, trend: "-12ms" },
-            { label: "Active Nodes", val: "1,204", icon: Globe, trend: "Stable" },
-            { label: "Threat Index", val: "0.04", icon: AlertTriangle, trend: "Minimal" },
-          ].map((m, i) => (
-            <GlassCard key={i} className="p-6 flex flex-col gap-5 group" hover={true}>
-              <div className="flex items-center justify-between">
-                <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05] group-hover:border-accent-indigo/20 transition-colors">
-                  <m.icon className="h-4 w-4 text-slate-400 group-hover:text-accent-indigo transition-colors" />
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => <MetricSkeleton key={i} />)
+          ) : (
+            [
+              { label: "Neural Load", val: metrics.length > 0 ? `${metrics[metrics.length-1].value.toFixed(1)}%` : "0.0%", icon: Activity, trend: "+2.1%" },
+              { label: "Network Latency", val: "42ms", icon: Zap, trend: "-12ms" },
+              { label: "Active Nodes", val: "1,204", icon: Globe, trend: "Stable" },
+              { label: "Threat Index", val: "0.04", icon: AlertTriangle, trend: "Minimal" },
+            ].map((m, i) => (
+              <GlassCard key={i} className="p-5 md:p-6 flex flex-col gap-5 group" hover={true}>
+                <div className="flex items-center justify-between">
+                  <div className="p-2.5 rounded-2xl bg-white/[0.03] border border-white/[0.05] group-hover:border-accent-indigo/20 transition-colors">
+                    <m.icon className="h-4 w-4 text-slate-400 group-hover:text-accent-indigo transition-colors" />
+                  </div>
+                  <span className="font-mono text-[10px] text-accent-cyan font-bold leading-none">{m.trend}</span>
                 </div>
-                <span className="font-mono text-[10px] text-accent-cyan font-bold leading-none">{m.trend}</span>
-              </div>
-              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">{m.label}</p>
-                <h4 className="text-2xl font-mono font-bold text-white tracking-tight leading-none">{m.val}</h4>
-              </div>
-            </GlassCard>
-          ))}
+                <div className="space-y-1">
+                  <p className="label-text mb-0">{m.label}</p>
+                  <h4 className="text-2xl font-mono font-bold text-white tracking-tight leading-none">{m.val}</h4>
+                </div>
+              </GlassCard>
+            ))
+          )}
         </div>
       </section>
 
-      {/* 📊 PRIMARY PANEL: Analytics & Intelligence */}
+      {/* PRIMARY PANEL: Analytics & Intelligence */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         
         {/* Distribution Chart (8 cols) */}
         <div className="lg:col-span-8 space-y-10">
           <div className="flex items-center justify-between px-2">
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 flex items-center gap-3">
+            <h2 className="label-text mb-0 flex items-center gap-3">
               <BarChart2 className="h-4 w-4 text-accent-indigo" /> Neural Load Distribution
             </h2>
             <div className="flex items-center gap-6">
@@ -200,37 +207,41 @@ export default function Dashboard() {
           </div>
           
           <div className="relative group">
-            <GlassCard className="h-[300px] md:h-[520px] p-6 relative overflow-hidden" hover={false}>
-               <div className="relative z-0 h-full">
-                 {LoadChart}
-               </div>
-               {/* Bottom Fade Overlay */}
-               <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background via-background/20 to-transparent pointer-events-none z-10" />
-            </GlassCard>
+            {loading ? (
+              <ChartSkeleton />
+            ) : (
+              <GlassCard className="h-[280px] md:h-[520px] p-0 md:p-6 relative overflow-hidden rounded-3xl border-white/[0.08]" hover={false}>
+                 <div className="absolute inset-0 bg-gradient-to-b from-accent-indigo/[0.02] to-transparent pointer-events-none" />
+                 <div className="relative z-0 h-full p-6">
+                   {LoadChart}
+                 </div>
+                 <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background via-background/20 to-transparent pointer-events-none z-10" />
+              </GlassCard>
+            )}
           </div>
 
           {/* Detailed Context Panel */}
           {selectedIncident && (
-            <GlassCard className="p-10 space-y-10 border-accent-indigo/10 bg-accent-indigo/[0.01]" hover={false}>
+            <GlassCard className="p-6 md:p-10 space-y-10 border-accent-indigo/10 bg-accent-indigo/[0.01] rounded-3xl animate-in" hover={false}>
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
-                    <Badge variant={selectedIncident.status as any} className="px-4 py-1 text-[10px]">{selectedIncident.status.toUpperCase()}</Badge>
+                    <Badge variant={selectedIncident.status as any} className="px-4 py-1 text-[10px] rounded-full">{selectedIncident.status.toUpperCase()}</Badge>
                     <span className="text-[11px] text-slate-600 font-mono tracking-[0.3em] font-bold uppercase">{selectedIncident.id}</span>
                   </div>
-                  <h3 className="text-4xl md:text-5xl font-bold text-white tracking-tighter leading-tight">
+                  <h3 className="section-heading text-white">
                     {selectedIncident.title}
                   </h3>
                 </div>
-                <div className="bg-white/[0.02] border border-white/[0.05] p-6 rounded-premium-xl min-w-[200px] text-center">
-                  <p className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.2em] mb-2">Impact Intensity</p>
-                  <p className="text-5xl font-mono font-bold text-white leading-none tracking-tighter">{selectedIncident.neuralImpact}%</p>
+                <div className="bg-white/[0.02] border border-white/[0.05] p-6 rounded-3xl min-w-[200px] text-center">
+                  <p className="label-text lowercase mb-2">Impact Intensity</p>
+                  <p className="text-4xl md:text-5xl font-mono font-bold text-white leading-none tracking-tighter">{selectedIncident.neuralImpact}%</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                 <div className="space-y-3">
-                  <p className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.2em] flex items-center gap-3">
+                  <p className="label-text flex items-center gap-3">
                     <LocateFixed className="h-3.5 w-3.5" /> Target Vectors
                   </p>
                   <p className="text-sm text-slate-400 leading-relaxed font-semibold italic">
@@ -238,24 +249,24 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <div className="md:col-span-2 space-y-3">
-                  <p className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.2em] flex items-center gap-3">
+                  <p className="label-text flex items-center gap-3">
                     <TrendingUp className="h-3.5 w-3.5" /> Intelligence Analysis
                   </p>
-                  <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                  <p className="body-text">
                     {selectedIncident.description}
                   </p>
                 </div>
               </div>
 
-              <div className="p-8 rounded-premium-lg bg-white/[0.01] border border-white/[0.03] relative overflow-hidden">
+              <div className="p-6 md:p-8 rounded-2xl bg-white/[0.01] border border-white/[0.03] relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
                   <ShieldCheck className="h-24 w-24 text-accent-cyan" />
                 </div>
                 <div className="relative z-10 space-y-4">
-                  <p className="text-[10px] font-bold text-accent-cyan uppercase tracking-[0.2em] flex items-center gap-3">
+                  <p className="label-text flex items-center gap-3 lowercase text-accent-cyan/80">
                     <ShieldCheck className="h-4 w-4" /> Aegis Predictive Mitigation
                   </p>
-                  <p className="text-base text-slate-300 leading-relaxed italic font-medium">
+                  <p className="body-text italic">
                     &quot;{selectedIncident.aiAnalysis}&quot;
                   </p>
                 </div>
@@ -264,14 +275,25 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* 📋 SECONDARY: Intelligence Feed (4 cols) */}
+        {/* SECONDARY: Intelligence Feed (4 cols) */}
         <aside className="lg:col-span-4 space-y-8">
-          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 px-3">
+          <h2 className="label-text mb-0 px-3">
             Real-time Intelligence
           </h2>
           
           <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-            {incidents.map((incident) => (
+            {loading ? (
+              <FeedSkeleton />
+            ) : incidents.length === 0 ? (
+              <div className="p-8 text-center glass rounded-2xl space-y-4 opacity-50">
+                <ShieldCheck className="h-8 w-8 mx-auto text-slate-500" />
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-white">No active incidents detected</p>
+                  <p className="text-[10px] text-slate-500 font-medium">System is operating normally</p>
+                </div>
+              </div>
+            ) : (
+              incidents.map((incident) => (
               <button
                 key={incident.id}
                 onClick={() => setSelectedIncidentId(incident.id)}
@@ -280,16 +302,15 @@ export default function Dashboard() {
                 <GlassCard 
                   hover={false}
                   className={cn(
-                    "p-5 transition-all duration-200 border-l-2 relative",
+                    "p-5 transition-all duration-200 border-l-2 relative rounded-xl",
                     selectedIncidentId === incident.id
-                      ? "bg-white/[0.08] border-l-accent-indigo shadow-lg translateX(4px)"
+                      ? "bg-white/[0.08] border-l-accent-indigo shadow-lg translate-x-1"
                       : "bg-white/[0.01] border-l-transparent hover:border-l-slate-700 hover:bg-white/[0.03] hover:translate-x-1"
                   )}
                 >
-                  {/* Status Indicator */}
                   <div className={cn(
                     "w-[2px] h-full absolute left-0 top-0 bottom-0",
-                    incident.status === 'critical' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 
+                    incident.status === 'critical' ? 'bg-red-500' : 
                     incident.status === 'high' ? 'bg-orange-500' :
                     incident.status === 'medium' ? 'bg-yellow-500' : 'bg-accent-cyan'
                   )} />
@@ -310,7 +331,7 @@ export default function Dashboard() {
                   </div>
                 </GlassCard>
               </button>
-            ))}
+            )))}
           </div>
 
           <GlassCard className="p-8 space-y-6 bg-accent-indigo/5 border-accent-indigo/10" hover={false}>
@@ -319,20 +340,17 @@ export default function Dashboard() {
                 <BarChart2 className="h-5 w-5 text-accent-indigo" />
               </div>
               <div>
-                <h3 className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">Flow Efficiency</h3>
+                <h3 className="label-text mb-0">Flow Efficiency</h3>
                 <p className="text-[9px] font-mono text-slate-500 font-bold">BETA_RELEASE_v1.2</p>
               </div>
             </div>
-            <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
+            <p className="text-[11px] text-slate-300 leading-relaxed font-medium">
               Neural efficiency is performing at <span className="text-white font-bold">1.2 Petaflops</span> with 99.9% autonomous mitigation across the edge network.
             </p>
-            <Button variant="ghost" className="w-full border-white/[0.05] h-11 text-xs font-bold hover:bg-white/[0.05]">View Cluster Health</Button>
+            <Button variant="ghost" className="w-full border-white/[0.05] h-11 text-xs font-bold hover:bg-white/[0.05] rounded-xl">View Cluster Health</Button>
           </GlassCard>
         </aside>
       </div>
     </main>
   );
 }
-
-
-

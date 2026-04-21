@@ -14,7 +14,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aegis AI | Mission Critical Command",
+  title: "Aegis | Mission Critical Command",
   description: "Next-generation AI emergency response and neural monitoring platform.",
 };
 

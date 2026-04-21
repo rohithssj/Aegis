@@ -38,7 +38,7 @@ export const AegisLogo = ({ className = "w-8 h-8" }: { className?: string }) => 
       
       {/* Brand Text */}
       <span className="text-xl font-semibold tracking-wide text-white">
-        Aegis<span className="text-[#22D3EE]">AI</span>
+        Aegis
       </span>
     </div>
   );
