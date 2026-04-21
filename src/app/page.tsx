@@ -20,21 +20,19 @@ import { Badge } from "@/components/Badge";
 import { GlassCard } from "@/components/GlassCard";
 import { MetricSkeleton, ChartSkeleton, FeedSkeleton } from "@/components/Skeleton";
 import { cn } from "@/lib/utils";
+import { useIncidents } from "@/context/IncidentContext";
 
 export default function Dashboard() {
   const [metrics, setMetrics] = useState<MetricPoint[]>([]);
-  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const { incidents, loading: incidentsLoading } = useIncidents();
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Initialize data and start real-time simulation
   useEffect(() => {
-    mockDataService.getIncidents().then(data => {
-      setIncidents(data);
-      if (data.length > 0 && !selectedIncidentId) setSelectedIncidentId(data[0].id);
-      setLoading(false);
-    });
+    // Only fetch metrics here, incidents are coming from context
+    setLoading(false);
 
     const generateInitialData = () => {
       const data: MetricPoint[] = [];
@@ -65,7 +63,14 @@ export default function Dashboard() {
     }, 2500);
 
     return () => clearInterval(interval);
-  }, [selectedIncidentId]);
+  }, []);
+
+  // Set initial selection once incidents arrive
+  useEffect(() => {
+    if (incidents.length > 0 && !selectedIncidentId) {
+      setSelectedIncidentId(incidents[0].id);
+    }
+  }, [incidents, selectedIncidentId]);
 
   const selectedIncident = useMemo(() => 
     incidents.find(inc => inc.id === selectedIncidentId),

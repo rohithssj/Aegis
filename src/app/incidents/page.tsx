@@ -16,25 +16,23 @@ import {
   ShieldCheck,
   PackageSearch
 } from "lucide-react";
-import { mockDataService, Incident } from "@/lib/mockData";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { GlassCard } from "@/components/GlassCard";
 import { FeedSkeleton } from "@/components/Skeleton";
 import { cn } from "@/lib/utils";
+import { useIncidents } from "@/context/IncidentContext";
 
 export default function IncidentsPage() {
-  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const { incidents, loading } = useIncidents();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
+  // Set initial selection once incidents arrive
   useEffect(() => {
-    mockDataService.getIncidents().then((data) => {
-      setIncidents(data);
-      if (data.length > 0) setSelectedId(data[0].id);
-      setLoading(false);
-    });
-  }, []);
+    if (incidents.length > 0 && !selectedId) {
+      setSelectedId(incidents[0].id);
+    }
+  }, [incidents, selectedId]);
 
   const selectedIncident = incidents.find((inc) => inc.id === selectedId);
 
