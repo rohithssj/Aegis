@@ -14,8 +14,9 @@
   --color-medium: #FBBF24;
   --color-low: #22D3EE;
 
-  --rounded-premium: 0.75rem;
-  --rounded-premium-lg: 1.25rem;
+  --rounded-premium: 1rem;
+  --rounded-premium-lg: 1.5rem;
+  --rounded-premium-xl: 2rem;
 
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --transition-premium: cubic-bezier(0.4, 0, 0.2, 1);

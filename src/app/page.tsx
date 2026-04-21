@@ -28,13 +28,11 @@ export default function Dashboard() {
 
   // Initialize data and start real-time simulation
   useEffect(() => {
-    // Initial fetch
     mockDataService.getIncidents().then(data => {
       setIncidents(data);
       if (data.length > 0) setSelectedIncidentId(data[0].id);
     });
 
-    // Generate initial 30 points
     const generateInitialData = () => {
       const data: MetricPoint[] = [];
       const now = new Date();
@@ -51,7 +49,6 @@ export default function Dashboard() {
 
     setMetrics(generateInitialData());
 
-    // Start interval
     const interval = setInterval(() => {
       setMetrics(prev => {
         const nextTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -76,9 +73,9 @@ export default function Dashboard() {
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={metrics}>
         <defs>
-          <linearGradient id="colorIndigo" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#5B4CF0" stopOpacity={0.15}/>
-            <stop offset="95%" stopColor="#5B4CF0" stopOpacity={0}/>
+          <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#5B4CF0" stopOpacity={0.06} />
+            <stop offset="100%" stopColor="#5B4CF0" stopOpacity={0} />
           </linearGradient>
         </defs>
         <XAxis 
@@ -96,10 +93,11 @@ export default function Dashboard() {
             borderRadius: '12px',
             fontSize: '11px',
             color: '#fff',
-            fontFamily: 'var(--font-mono)'
+            fontFamily: 'var(--font-mono)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.5), 0 0 10px rgba(91,76,240,0.1)'
           }} 
           itemStyle={{ color: '#5B4CF0' }}
-          cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
+          cursor={{ stroke: 'rgba(255,255,255,0.05)', strokeWidth: 1 }}
         />
         <Area 
           type="monotone" 
@@ -107,9 +105,9 @@ export default function Dashboard() {
           stroke="#5B4CF0" 
           strokeWidth={2}
           fillOpacity={1} 
-          fill="url(#colorIndigo)" 
-          isAnimationActive={true}
-          animationDuration={1500}
+          fill="url(#chartGradient)" 
+          activeDot={{ r: 4, stroke: '#5B4CF0', strokeWidth: 2, fill: '#0B1120' }}
+          isAnimationActive={false}
         />
       </AreaChart>
     </ResponsiveContainer>
@@ -121,22 +119,32 @@ export default function Dashboard() {
   };
 
   return (
-    <main className="flex-1 max-w-[1600px] mx-auto w-full px-6 md:px-10 py-12 space-y-16">
+    <main className="flex-1 max-w-[1600px] mx-auto w-full px-4 md:px-10 py-12 space-y-24">
       
       {/* 🚀 HERO SECTION: Command Status */}
-      <section className="space-y-10">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div className="space-y-6">
-            <Badge variant="low" dot={true} className="bg-accent-cyan/5 text-accent-cyan border-accent-cyan/10">
-              System Core: Operational
-            </Badge>
-            <h1 className="text-5xl md:text-8xl font-bold tracking-tighter text-white leading-[0.9]">
-              Strategic <span className="text-slate-500 italic font-medium">Command</span>
+      <section className="space-y-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-10">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-cyan opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-cyan"></span>
+              </span>
+              <Badge variant="low" className="bg-accent-cyan/5 text-accent-cyan border-accent-cyan/10 px-3 py-0.5">
+                Live System Operational
+              </Badge>
+            </div>
+            <h1 className="text-6xl md:text-8xl font-bold tracking-tighter text-white leading-[0.85]">
+              Strategic <span className="bg-gradient-to-r from-accent-indigo to-accent-indigo-light bg-clip-text text-transparent italic font-medium">Command</span>
             </h1>
+            <p className="text-slate-400 text-sm md:text-base font-medium tracking-tight max-w-md">
+              Real-time neural orchestration across 1,204 active edge nodes
+            </p>
           </div>
-          <div className="flex items-center gap-4 bg-white/[0.02] p-2 rounded-2xl border border-white/[0.05]">
-            <div className="flex flex-col items-end px-4">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none mb-1.5">Protocol Status</span>
+
+          <div className="flex items-center gap-2 bg-white/[0.02] p-1.5 rounded-premium-lg border border-white/[0.05] backdrop-blur-md self-start md:self-end group transition-all hover:bg-white/[0.04]">
+            <div className="flex flex-col items-end px-4 py-1">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none mb-1">Protocol Status</span>
               <span className="text-xs font-mono font-bold text-accent-cyan tracking-tight">ENFORCE_v4.2</span>
             </div>
             <Button 
@@ -144,7 +152,7 @@ export default function Dashboard() {
               size="lg" 
               onClick={handleProtocolAction}
               disabled={isDeploying}
-              className="min-w-[220px]"
+              className="min-w-[180px] rounded-premium transition-all hover:scale-[1.02] active:scale-[0.98] border border-white/10 shadow-lg shadow-indigo-500/10"
             >
               {isDeploying ? "Synchronizing..." : "Emergency Protocol"}
             </Button>
@@ -152,23 +160,23 @@ export default function Dashboard() {
         </div>
 
         {/* Global Metrics Strip */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { label: "Neural Load", val: metrics.length > 0 ? `${metrics[metrics.length-1].value.toFixed(1)}%` : "0.0%", icon: Activity, trend: "+2.1%" },
             { label: "Network Latency", val: "42ms", icon: Zap, trend: "-12ms" },
             { label: "Active Nodes", val: "1,204", icon: Globe, trend: "Stable" },
             { label: "Threat Index", val: "0.04", icon: AlertTriangle, trend: "Minimal" },
           ].map((m, i) => (
-            <GlassCard key={i} className="p-6 flex flex-col gap-4" hover={true}>
+            <GlassCard key={i} className="p-6 flex flex-col gap-5 group" hover={true}>
               <div className="flex items-center justify-between">
-                <div className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                  <m.icon className="h-4.5 w-4.5 text-slate-500" />
+                <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05] group-hover:border-accent-indigo/20 transition-colors">
+                  <m.icon className="h-4 w-4 text-slate-400 group-hover:text-accent-indigo transition-colors" />
                 </div>
                 <span className="font-mono text-[10px] text-accent-cyan font-bold leading-none">{m.trend}</span>
               </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">{m.label}</p>
-                <h4 className="text-3xl font-mono font-bold text-white tracking-tight leading-none">{m.val}</h4>
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">{m.label}</p>
+                <h4 className="text-2xl font-mono font-bold text-white tracking-tight leading-none">{m.val}</h4>
               </div>
             </GlassCard>
           ))}
@@ -176,10 +184,10 @@ export default function Dashboard() {
       </section>
 
       {/* 📊 PRIMARY PANEL: Analytics & Intelligence */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         
         {/* Distribution Chart (8 cols) */}
-        <div className="lg:col-span-8 space-y-8">
+        <div className="lg:col-span-8 space-y-10">
           <div className="flex items-center justify-between px-2">
             <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 flex items-center gap-3">
               <BarChart2 className="h-4 w-4 text-accent-indigo" /> Neural Load Distribution
@@ -191,17 +199,19 @@ export default function Dashboard() {
             </div>
           </div>
           
-          <GlassCard className="h-[500px] p-8 relative overflow-hidden" hover={false}>
-             {/* Gradient Depth Overlay */}
-             <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent opacity-40 pointer-events-none z-10" />
-             <div className="relative z-0 h-full">
-               {LoadChart}
-             </div>
-          </GlassCard>
+          <div className="relative group">
+            <GlassCard className="h-[300px] md:h-[520px] p-6 relative overflow-hidden" hover={false}>
+               <div className="relative z-0 h-full">
+                 {LoadChart}
+               </div>
+               {/* Bottom Fade Overlay */}
+               <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background via-background/20 to-transparent pointer-events-none z-10" />
+            </GlassCard>
+          </div>
 
           {/* Detailed Context Panel */}
           {selectedIncident && (
-            <GlassCard className="p-10 space-y-10 border-accent-indigo/10" hover={false}>
+            <GlassCard className="p-10 space-y-10 border-accent-indigo/10 bg-accent-indigo/[0.01]" hover={false}>
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
@@ -212,7 +222,7 @@ export default function Dashboard() {
                     {selectedIncident.title}
                   </h3>
                 </div>
-                <div className="bg-white/[0.02] border border-white/[0.05] p-6 rounded-[2.5rem] min-w-[200px] text-center shadow-inner">
+                <div className="bg-white/[0.02] border border-white/[0.05] p-6 rounded-premium-xl min-w-[200px] text-center">
                   <p className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.2em] mb-2">Impact Intensity</p>
                   <p className="text-5xl font-mono font-bold text-white leading-none tracking-tighter">{selectedIncident.neuralImpact}%</p>
                 </div>
@@ -237,7 +247,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="p-8 rounded-[2rem] bg-surface/50 border border-white/[0.08] relative overflow-hidden">
+              <div className="p-8 rounded-premium-lg bg-white/[0.01] border border-white/[0.03] relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
                   <ShieldCheck className="h-24 w-24 text-accent-cyan" />
                 </div>
@@ -260,31 +270,31 @@ export default function Dashboard() {
             Real-time Intelligence
           </h2>
           
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
             {incidents.map((incident) => (
               <button
                 key={incident.id}
                 onClick={() => setSelectedIncidentId(incident.id)}
-                className="w-full text-left focus:outline-none block"
+                className="w-full text-left focus:outline-none block group/item"
               >
                 <GlassCard 
-                  hover={true}
+                  hover={false}
                   className={cn(
-                    "p-5 transition-all flex items-center gap-5 border-l-2",
+                    "p-5 transition-all duration-200 border-l-2 relative",
                     selectedIncidentId === incident.id
-                      ? "bg-white/[0.08] border-accent-indigo shadow-lg"
-                      : "bg-white/[0.01] border-l-transparent hover:border-l-slate-700"
+                      ? "bg-white/[0.08] border-l-accent-indigo shadow-lg translateX(4px)"
+                      : "bg-white/[0.01] border-l-transparent hover:border-l-slate-700 hover:bg-white/[0.03] hover:translate-x-1"
                   )}
                 >
-                  {/* Priority Indicator */}
+                  {/* Status Indicator */}
                   <div className={cn(
-                    "w-1 h-full absolute left-0 top-0 bottom-0",
-                    incident.status === 'critical' ? 'bg-red-500' : 
-                    incident.status === 'high' ? 'bg-accent-indigo' :
-                    incident.status === 'medium' ? 'bg-accent-cyan' : 'bg-slate-700'
+                    "w-[2px] h-full absolute left-0 top-0 bottom-0",
+                    incident.status === 'critical' ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 
+                    incident.status === 'high' ? 'bg-orange-500' :
+                    incident.status === 'medium' ? 'bg-yellow-500' : 'bg-accent-cyan'
                   )} />
                   
-                  <div className="flex-1 space-y-1.5">
+                  <div className="flex-1 space-y-1.5 pl-2">
                     <div className="flex justify-between items-center">
                       <span className="text-[9px] font-mono text-slate-500 font-bold tracking-[0.2em] uppercase leading-none">{incident.id}</span>
                       <span className="text-[9px] font-mono text-slate-600 font-bold">
@@ -293,7 +303,7 @@ export default function Dashboard() {
                     </div>
                     <p className={cn(
                       "text-xs font-bold leading-snug transition-colors",
-                      selectedIncidentId === incident.id ? "text-white" : "text-slate-400"
+                      selectedIncidentId === incident.id ? "text-white" : "text-slate-400 group-hover/item:text-slate-200"
                     )}>
                       {incident.title}
                     </p>
@@ -316,7 +326,7 @@ export default function Dashboard() {
             <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
               Neural efficiency is performing at <span className="text-white font-bold">1.2 Petaflops</span> with 99.9% autonomous mitigation across the edge network.
             </p>
-            <Button variant="ghost" className="w-full border-white/[0.05] h-11 text-xs font-bold">View Cluster Health</Button>
+            <Button variant="ghost" className="w-full border-white/[0.05] h-11 text-xs font-bold hover:bg-white/[0.05]">View Cluster Health</Button>
           </GlassCard>
         </aside>
       </div>
