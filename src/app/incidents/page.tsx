@@ -14,7 +14,8 @@ import {
   Binary,
   Layers,
   ShieldCheck,
-  PackageSearch
+  PackageSearch,
+  ArrowLeft
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/Badge";
@@ -28,7 +29,7 @@ import { Incident } from "@/lib/mockData";
 
 export default function IncidentsPage() {
   const router = useRouter();
-  const { incidents, loading, updateIncident, dismissIncident } = useIncidents();
+  const { incidents, loading, updateIncidentStatus, dismissIncident } = useIncidents();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
@@ -56,7 +57,7 @@ export default function IncidentsPage() {
 
   const handleStatusUpdate = async (status: Incident["status"]) => {
     if (!selectedIncident) return;
-    await updateIncident(selectedIncident.id, { status });
+    await updateIncidentStatus(selectedIncident.id, status);
     toast.success(`Incident state updated`, {
       description: `${selectedIncident.trackingId} is now in ${status} state.`,
     });
@@ -76,7 +77,10 @@ export default function IncidentsPage() {
   return (
     <main className="flex-1 flex flex-col md:flex-row h-screen pt-16 overflow-hidden bg-background">
       {/* LEFT: Incident Feed (400px fixed) */}
-      <aside className="w-full md:w-[400px] border-r border-white/5 flex flex-col bg-surface/30 backdrop-blur-md">
+      <aside className={cn(
+        "w-full md:w-[400px] border-r border-white/5 flex flex-col bg-surface/30 backdrop-blur-md transition-all duration-500",
+        selectedId && "hidden md:flex"
+      )}>
         <div className="p-6 border-b border-white/5 space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -169,7 +173,10 @@ export default function IncidentsPage() {
       </aside>
 
       {/* RIGHT: Incident Detail Area */}
-      <section className="flex-1 overflow-y-auto bg-background md:p-16 p-8 custom-scrollbar">
+      <section className={cn(
+        "flex-1 overflow-y-auto bg-background md:p-16 p-8 custom-scrollbar transition-all duration-500",
+        !selectedId && "hidden md:block"
+      )}>
         <AnimatePresence mode="wait">
           {selectedIncident ? (
             <motion.div
@@ -180,6 +187,18 @@ export default function IncidentsPage() {
               transition={{ duration: 0.2, ease: "easeOut" }}
               className={cn("max-w-4xl mx-auto space-y-16 animate-in", selectedIncident.isIsolated && "opacity-80 scale-[0.99] grayscale-[0.2]")}
             >
+              {/* MOBILE BACK BUTTON */}
+              <div className="md:hidden mt-4 mb-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setSelectedId(null)}
+                  className="pl-0 text-slate-500 hover:text-white"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" /> Back to Feed
+                </Button>
+              </div>
+
               {/* Header Info */}
               <div className="space-y-10">
                 <div className="flex flex-wrap items-center gap-4">
@@ -203,7 +222,7 @@ export default function IncidentsPage() {
                   <span className="text-slate-700 font-mono text-xs tracking-widest ml-auto">/</span>
                   <div className="flex items-center gap-2 px-3 py-1 bg-white/[0.02] border border-white/[0.05] rounded-full">
                     <Binary className="h-3 w-3 text-accent-cyan" />
-                    <span className="text-slate-400 font-mono text-[10px] font-bold tracking-widest leading-none lowercase">{selectedIncident.id}</span>
+                    <span className="text-slate-400 font-mono text-[10px] font-bold tracking-widest leading-none lowercase tracking-tighter">{selectedIncident.id}</span>
                   </div>
                 </div>
 
@@ -217,33 +236,35 @@ export default function IncidentsPage() {
                 </div>
                 
                 {/* STATUS TIMELINE */}
-                <div className="bg-white/[0.01] border border-white/[0.04] p-8 rounded-[2rem] space-y-8">
+                <div className="bg-white/[0.01] border border-white/[0.04] p-8 rounded-[2rem] space-y-8 overflow-hidden">
                    <div className="flex items-center justify-between">
                       <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">Incident Lifecycle</h3>
                       <span className="text-[10px] font-mono font-bold text-accent-cyan">AEGIS_REALTIME_SYNC</span>
                    </div>
-                   <div className="flex justify-between relative px-2">
-                     {/* Connector Line */}
-                     <div className="absolute top-3 left-0 right-0 h-[1px] bg-white/5 -z-0 mx-8" />
-                     {["processing", "analyzing", "responding", "resolved"].map((step, idx, arr) => {
-                       const isCurrent = step === selectedIncident.status;
-                       const isPast = arr.indexOf(selectedIncident.status) >= idx;
-                       return (
-                         <div key={step} className="flex flex-col items-center gap-4 relative z-10">
-                            <div className={cn(
-                              "w-6 h-6 rounded-full border-4 border-background transition-all duration-500 flex items-center justify-center",
-                              isCurrent ? "bg-accent-indigo scale-125 shadow-[0_0_15px_rgba(91,76,240,0.4)]" : 
-                              isPast ? "bg-accent-indigo/40" : "bg-white/5"
-                            )}>
-                              {isPast && !isCurrent && <ShieldCheck className="w-3 h-3 text-white/50" />}
-                            </div>
-                            <span className={cn(
-                              "text-[10px] font-mono uppercase tracking-widest transition-colors duration-500",
-                              isCurrent ? "text-white font-bold" : isPast ? "text-slate-500" : "text-slate-700"
-                            )}>{step}</span>
-                         </div>
-                       );
-                     })}
+                   <div className="overflow-x-auto pb-4 -mx-2 px-2 custom-scrollbar-horizontal scroll-smooth">
+                     <div className="flex justify-between relative min-w-[500px]">
+                       {/* Connector Line */}
+                       <div className="absolute top-3 left-0 right-0 h-[1px] bg-white/5 -z-0 mx-8" />
+                       {["processing", "analyzing", "responding", "resolved"].map((step, idx, arr) => {
+                         const isCurrent = step === selectedIncident.status;
+                         const isPast = arr.indexOf(selectedIncident.status) >= idx;
+                         return (
+                           <div key={step} className="flex flex-col items-center gap-4 relative z-10">
+                              <div className={cn(
+                                "w-6 h-6 rounded-full border-4 border-background transition-all duration-500 flex items-center justify-center",
+                                isCurrent ? "bg-accent-indigo scale-125 shadow-[0_0_15px_rgba(91,76,240,0.4)]" : 
+                                isPast ? "bg-accent-indigo/40" : "bg-white/5"
+                              )}>
+                                {isPast && !isCurrent && <ShieldCheck className="w-3 h-3 text-white/50" />}
+                              </div>
+                              <span className={cn(
+                                "text-[10px] font-mono uppercase tracking-widest transition-colors duration-500",
+                                isCurrent ? "text-white font-bold" : isPast ? "text-slate-500" : "text-slate-700"
+                              )}>{step}</span>
+                           </div>
+                         );
+                       })}
+                     </div>
                    </div>
                 </div>
 
@@ -327,7 +348,7 @@ export default function IncidentsPage() {
                 </Button>
                 <Button 
                   variant="ghost" 
-                  className="rounded-full px-8 text-slate-600 hover:text-red-400 hover:bg-red-400/5 transition-all ml-auto"
+                  className="rounded-full px-8 text-slate-600 hover:text-red-400 hover:bg-red-400/10 transition-all sm:ml-auto"
                   onClick={handleDismiss}
                 >
                   Dismiss Intelligence
@@ -349,4 +370,3 @@ export default function IncidentsPage() {
     </main>
   );
 }
-

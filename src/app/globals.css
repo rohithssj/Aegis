@@ -106,3 +106,13 @@ h1, h2, h3, h4, h5, h6 {
   to { opacity: 1; transform: translateY(0); }
 }
 
+.custom-scrollbar-horizontal::-webkit-scrollbar {
+  height: 4px;
+}
+.custom-scrollbar-horizontal::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar-horizontal::-webkit-scrollbar-thumb {
+  @apply bg-white/5 rounded-full hover:bg-white/10 transition-colors;
+}
+

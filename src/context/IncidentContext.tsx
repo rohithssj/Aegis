@@ -18,6 +18,7 @@ interface IncidentContextType {
   incidents: Incident[];
   addIncident: (incident: { type: string; severity: "low" | "medium" | "high" | "critical"; location: string; description: string }) => Promise<string>;
   updateIncident: (id: string, updates: Partial<Incident>) => Promise<void>;
+  updateIncidentStatus: (id: string, status: Incident["status"]) => Promise<void>;
   dismissIncident: (id: string) => Promise<void>;
   triggerEmergencyProtocol: () => Promise<void>;
   isEmergency: boolean;
@@ -38,7 +39,17 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const incidentData: Incident[] = [];
       snapshot.forEach((doc) => {
-        incidentData.push({ id: doc.id, ...doc.data() } as Incident);
+        const data = doc.data();
+        // Convert Firestore Timestamp to ISO string for the frontend state if needed, 
+        // or just keep it as is if Incident interface supports Date/Timestamp.
+        // The Incident interface currently uses string for timestamp/createdAt.
+        // I will map them to ISO strings here for UI compatibility.
+        incidentData.push({ 
+          id: doc.id, 
+          ...data,
+          timestamp: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : data.timestamp,
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt
+        } as Incident);
       });
       setIncidents(incidentData);
       setLoading(false);
@@ -79,6 +90,11 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
   const updateIncident = async (id: string, updates: Partial<Incident>) => {
     const docRef = doc(db, "incidents", id);
     await updateDoc(docRef, updates);
+  };
+
+  const updateIncidentStatus = async (id: string, status: Incident["status"]) => {
+    const docRef = doc(db, "incidents", id);
+    await updateDoc(docRef, { status });
   };
 
   const dismissIncident = async (id: string) => {
@@ -123,8 +139,8 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       title: `${newIncidentData.type} Detection`,
       severity: isEmergency ? "critical" : newIncidentData.severity,
       status: (isEmergency ? "responding" : "processing") as any,
-      timestamp: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
+      timestamp: new Date(),
+      createdAt: new Date(),
       location: newIncidentData.location,
       description: newIncidentData.description,
       aiAnalysis: generateAISummary(newIncidentData.type, isEmergency ? "critical" : newIncidentData.severity),
@@ -140,7 +156,8 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
     <IncidentContext.Provider value={{ 
       incidents: incidents.filter(i => !i.dismissed), 
       addIncident, 
-      updateIncident, 
+      updateIncident,
+      updateIncidentStatus,
       dismissIncident,
       triggerEmergencyProtocol,
       isEmergency,

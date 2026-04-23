@@ -233,10 +233,10 @@ export default function Dashboard() {
       </section>
 
       {/* PRIMARY PANEL: Analytics & Intelligence */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
         
         {/* Distribution Chart (8 cols) */}
-        <div className="lg:col-span-8 space-y-10">
+        <div className="md:col-span-8 space-y-10">
           <div className="flex items-center justify-between px-2">
             <h2 className="label-text mb-0 flex items-center gap-3">
               <BarChart2 className="h-4 w-4 text-accent-indigo" /> Neural Load Distribution
@@ -328,7 +328,7 @@ export default function Dashboard() {
         </div>
 
         {/* SECONDARY: Intelligence Feed (4 cols) */}
-        <aside className="lg:col-span-4 space-y-8">
+        <aside className="md:col-span-4 space-y-8">
           <h2 className="label-text mb-0 px-3">
             Real-time Intelligence
           </h2>

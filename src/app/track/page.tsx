@@ -197,28 +197,30 @@ export default function TrackPage() {
                           <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">Tactical Lifecycle</h3>
                           <Badge variant="neutral" className="bg-white/5 text-slate-500 border-none font-mono text-[9px] px-3">{Math.round((currentStepIndex + 1) / 4 * 100)}% COMPLETE</Badge>
                        </div>
-                       <div className="flex justify-between relative px-2">
-                         <div className="absolute top-4 left-0 right-0 h-[1px] bg-white/5 -z-0 mx-8" />
-                         {steps.map((step, idx, arr) => {
-                           const isCurrent = step === incident.status;
-                           const isPast = arr.indexOf(incident.status) >= idx;
-                           return (
-                             <div key={step} className="flex flex-col items-center gap-6 relative z-10">
-                                <div className={cn(
-                                  "w-8 h-8 rounded-full border-4 border-[#0B1120] transition-all duration-700 flex items-center justify-center",
-                                  isCurrent ? "bg-accent-indigo scale-125 shadow-[0_0_20px_rgba(91,76,240,0.4)]" : 
-                                  isPast ? "bg-accent-indigo/40" : "bg-white/10"
-                                )}>
-                                  {isPast && !isCurrent && <ShieldCheck className="w-4 h-4 text-white/50" />}
-                                  {isCurrent && <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />}
-                                </div>
-                                <span className={cn(
-                                  "text-[10px] font-mono uppercase tracking-[0.2em] transition-colors duration-700 font-bold",
-                                  isCurrent ? "text-white" : isPast ? "text-slate-500" : "text-slate-700"
-                                )}>{step}</span>
-                             </div>
-                           );
-                         })}
+                       <div className="overflow-x-auto pb-4 -mx-2 px-2 custom-scrollbar-horizontal scroll-smooth">
+                         <div className="flex justify-between relative min-w-[500px] px-2">
+                           <div className="absolute top-4 left-0 right-0 h-[1px] bg-white/5 -z-0 mx-8" />
+                           {steps.map((step, idx, arr) => {
+                             const isCurrent = step === incident.status;
+                             const isPast = arr.indexOf(incident.status) >= idx;
+                             return (
+                               <div key={step} className="flex flex-col items-center gap-6 relative z-10">
+                                  <div className={cn(
+                                    "w-8 h-8 rounded-full border-4 border-[#0B1120] transition-all duration-700 flex items-center justify-center",
+                                    isCurrent ? "bg-accent-indigo scale-125 shadow-[0_0_20px_rgba(91,76,240,0.4)]" : 
+                                    isPast ? "bg-accent-indigo/40" : "bg-white/10"
+                                  )}>
+                                    {isPast && !isCurrent && <ShieldCheck className="w-4 h-4 text-white/50" />}
+                                    {isCurrent && <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />}
+                                  </div>
+                                  <span className={cn(
+                                    "text-[10px] font-mono uppercase tracking-[0.2em] transition-colors duration-700 font-bold",
+                                    isCurrent ? "text-white" : isPast ? "text-slate-500" : "text-slate-700"
+                                  )}>{step}</span>
+                               </div>
+                             );
+                           })}
+                         </div>
                        </div>
                     </div>
 
