@@ -136,17 +136,19 @@ export default function Dashboard() {
     </ResponsiveContainer>
   ), [metrics, isEmergency]);
 
-  const handleProtocolAction = () => {
+  const handleProtocolAction = async () => {
     if (isEmergency) return;
     setIsDeploying(true);
-    setTimeout(() => {
-      triggerEmergencyProtocol();
-      setIsDeploying(false);
-      toast.error("EMERGENCY PROTOCOL ACTIVATED", {
-        description: "Global response initiated. All node statuses updated to responding.",
-        duration: 5000,
-      });
-    }, 2000);
+    
+    // Simulate tactical delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    await triggerEmergencyProtocol();
+    setIsDeploying(false);
+    toast.error("EMERGENCY PROTOCOL ACTIVATED", {
+      description: "Global response initiated. All node statuses updated to responding.",
+      duration: 5000,
+    });
   };
 
   if (!isAuthorized) return null;

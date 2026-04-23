@@ -1,14 +1,25 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Incident, mockDataService } from "@/lib/mockData";
+import { db } from "@/lib/firebase";
+import { 
+  collection, 
+  addDoc, 
+  onSnapshot, 
+  query, 
+  orderBy, 
+  updateDoc, 
+  doc,
+  writeBatch
+} from "firebase/firestore";
+import { Incident } from "@/lib/mockData";
 
 interface IncidentContextType {
   incidents: Incident[];
-  addIncident: (incident: { type: string; severity: "low" | "medium" | "high" | "critical"; location: string; description: string }) => string;
-  updateIncident: (id: string, updates: Partial<Incident>) => void;
-  dismissIncident: (id: string) => void;
-  triggerEmergencyProtocol: () => void;
+  addIncident: (incident: { type: string; severity: "low" | "medium" | "high" | "critical"; location: string; description: string }) => Promise<string>;
+  updateIncident: (id: string, updates: Partial<Incident>) => Promise<void>;
+  dismissIncident: (id: string) => Promise<void>;
+  triggerEmergencyProtocol: () => Promise<void>;
   isEmergency: boolean;
   loading: boolean;
 }
@@ -20,37 +31,65 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isEmergency, setIsEmergency] = useState(false);
 
-  // Load initial data
+  // Real-time listener for incidents
   useEffect(() => {
-    mockDataService.getIncidents().then((data) => {
-      setIncidents(data);
+    const q = query(collection(db, "incidents"), orderBy("createdAt", "desc"));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const incidentData: Incident[] = [];
+      snapshot.forEach((doc) => {
+        incidentData.push({ id: doc.id, ...doc.data() } as Incident);
+      });
+      setIncidents(incidentData);
+      setLoading(false);
+    }, (error) => {
+      console.error("Firestore error:", error);
       setLoading(false);
     });
+
+    return () => unsubscribe();
   }, []);
 
-  const triggerEmergencyProtocol = () => {
+  // Sync isEmergency based on active incidents
+  useEffect(() => {
+    const hasEmergency = incidents.some(inc => inc.severity === "critical" && inc.status === "responding");
+    if (hasEmergency !== isEmergency) {
+      setIsEmergency(hasEmergency);
+    }
+  }, [incidents, isEmergency]);
+
+  const triggerEmergencyProtocol = async () => {
     setIsEmergency(true);
-    setIncidents(prev => prev.map(inc => ({
-      ...inc,
-      status: "responding",
-      severity: "critical",
-      neuralImpact: Math.max(inc.neuralImpact, 90)
-    })));
+    const batch = writeBatch(db);
+    
+    incidents.forEach((incident) => {
+      if (incident.status !== "dismissed") {
+        const docRef = doc(db, "incidents", incident.id);
+        batch.update(docRef, {
+          status: "responding",
+          severity: "critical",
+          neuralImpact: Math.max(incident.neuralImpact, 90)
+        });
+      }
+    });
+    
+    await batch.commit();
   };
 
-  const updateIncident = (id: string, updates: Partial<Incident>) => {
-    setIncidents(prev => prev.map(inc => 
-      inc.id === id ? { ...inc, ...updates } : inc
-    ));
+  const updateIncident = async (id: string, updates: Partial<Incident>) => {
+    const docRef = doc(db, "incidents", id);
+    await updateDoc(docRef, updates);
   };
 
-  const dismissIncident = (id: string) => {
-    setIncidents(prev => prev.map(inc => 
-      inc.id === id ? { ...inc, status: "dismissed", dismissed: true } : inc
-    ));
+  const dismissIncident = async (id: string) => {
+    const docRef = doc(db, "incidents", id);
+    await updateDoc(docRef, { 
+      status: "dismissed", 
+      dismissed: true 
+    });
   };
 
-  const addIncident = (newIncidentData: { type: string; severity: "low" | "medium" | "high" | "critical"; location: string; description: string }) => {
+  const addIncident = async (newIncidentData: { type: string; severity: "low" | "medium" | "high" | "critical"; location: string; description: string }) => {
     const generateAISummary = (type: string, severity: string) => {
       const themes = {
         "Cyber Attack": "Neural infiltration detected. Recommend immediate isolation of affected nodes.",
@@ -77,41 +116,37 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       low: 5 + Math.floor(Math.random() * 20)
     };
 
-    const newId = `AEG-${Math.floor(1000 + Math.random() * 9000)}`;
-
-    const newIncident: Incident = {
-      id: newId,
+    const newIncidentBase = {
       title: `${newIncidentData.type} Detection`,
       severity: isEmergency ? "critical" : newIncidentData.severity,
-      status: isEmergency ? "responding" : "processing",
+      status: (isEmergency ? "responding" : "processing") as any,
       timestamp: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       location: newIncidentData.location,
       description: newIncidentData.description,
       aiAnalysis: generateAISummary(newIncidentData.type, isEmergency ? "critical" : newIncidentData.severity),
-      neuralImpact: isEmergency ? 95 : impactScores[newIncidentData.severity]
+      neuralImpact: isEmergency ? 95 : impactScores[newIncidentData.severity],
+      dismissed: false
     };
 
-    setIncidents((prev) => [newIncident, ...prev]);
+    const docRef = await addDoc(collection(db, "incidents"), newIncidentBase);
+    const newId = docRef.id;
 
-    // Only set up lifecycle if not already in emergency responding state
+    // Status Engine (Lifecycle)
     if (!isEmergency) {
-      const updateStatus = (status: "analyzing" | "responding" | "resolved", delay: number) => {
-        setTimeout(() => {
-          setIncidents(prev => {
-            // Don't downgrade if system went into emergency
-            const current = prev.find(i => i.id === newId);
-            if (current?.status === "dismissed") return prev;
-            return prev.map(inc => 
-              inc.id === newId ? { ...inc, status } : inc
-            );
-          });
-        }, delay);
-      };
+      const statusSteps: ("analyzing" | "responding" | "resolved")[] = ["analyzing", "responding", "resolved"];
+      const delays = [3000, 6000, 10000];
 
-      updateStatus("analyzing", 3000);
-      updateStatus("responding", 6000);
-      updateStatus("resolved", 10000);
+      statusSteps.forEach((status, index) => {
+        setTimeout(async () => {
+          try {
+            const currentDoc = doc(db, "incidents", newId);
+            await updateDoc(currentDoc, { status });
+          } catch (e) {
+            console.error("Failed to update status lifecycle for", newId, e);
+          }
+        }, delays[index]);
+      });
     }
 
     return newId;

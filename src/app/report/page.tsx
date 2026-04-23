@@ -56,24 +56,26 @@ export default function ReportPage() {
     }
   }, [router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.location || !formData.description) return;
 
     setIsSubmitting(true);
     
-    // Simulate tactical delay
-    setTimeout(() => {
-      const id = addIncident({
+    try {
+      const id = await addIncident({
         type: formData.type,
         severity: formData.status as any,
         location: formData.location,
         description: formData.description
       });
       setTrackingId(id);
-      setIsSubmitting(false);
       setIsSubmitted(true);
-    }, 1500);
+    } catch (error) {
+      console.error("Submission failed:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleLogout = () => {

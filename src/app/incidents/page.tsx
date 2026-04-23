@@ -50,9 +50,9 @@ export default function IncidentsPage() {
 
   const selectedIncident = incidents.find((inc) => inc.id === selectedId);
 
-  const handleCounterMeasures = () => {
+  const handleCounterMeasures = async () => {
     if (!selectedIncident) return;
-    updateIncident(selectedIncident.id, { 
+    await updateIncident(selectedIncident.id, { 
       status: "responding", 
       actionTaken: "counter-measures initiated" 
     });
@@ -61,7 +61,7 @@ export default function IncidentsPage() {
     });
   };
 
-  const handleIsolateNode = () => {
+  const handleIsolateNode = async () => {
     if (!selectedIncident) return;
     const nextSeverity = {
       critical: "high",
@@ -70,7 +70,7 @@ export default function IncidentsPage() {
       low: "low"
     }[selectedIncident.severity] as any;
 
-    updateIncident(selectedIncident.id, { 
+    await updateIncident(selectedIncident.id, { 
       isIsolated: true,
       severity: nextSeverity,
       neuralImpact: Math.max(selectedIncident.neuralImpact - 20, 10)
@@ -80,12 +80,12 @@ export default function IncidentsPage() {
     });
   };
 
-  const handleDismiss = () => {
+  const handleDismiss = async () => {
     if (!selectedIncident) return;
     toast("Intelligence dismissed", {
       description: `Incident ${selectedIncident.id} moved to archive.`,
     });
-    dismissIncident(selectedIncident.id);
+    await dismissIncident(selectedIncident.id);
     setSelectedId(null);
   };
 
