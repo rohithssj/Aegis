@@ -2,13 +2,16 @@ export interface Incident {
   id: string;
   title: string;
   severity: "critical" | "high" | "medium" | "low";
-  status: "processing" | "analyzing" | "responding" | "resolved";
+  status: "processing" | "analyzing" | "responding" | "resolved" | "dismissed";
   timestamp: string;
   createdAt: string;
   location: string;
   description: string;
   aiAnalysis: string;
   neuralImpact: number;
+  actionTaken?: string;
+  isIsolated?: boolean;
+  dismissed?: boolean;
 }
 
 export interface MetricPoint {

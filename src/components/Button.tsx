@@ -4,7 +4,7 @@ import React from "react";
 import { motion, HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-type ButtonVariant = "primary" | "danger" | "ghost";
+type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
 
 interface ButtonProps extends Omit<HTMLMotionProps<"button">, "variant"> {
   variant?: ButtonVariant;
@@ -20,6 +20,7 @@ export const Button = ({
 }: ButtonProps) => {
   const variants = {
     primary: "bg-gradient-to-b from-accent-indigo-light to-accent-indigo text-white border border-white/10 shadow-sm hover:brightness-110",
+    secondary: "bg-accent-indigo/10 border border-accent-indigo/20 text-accent-indigo hover:bg-accent-indigo/20",
     danger: "bg-red-500 text-white border border-red-400/20 hover:bg-red-600",
     ghost: "bg-white/[0.03] border border-white/[0.05] text-slate-400 hover:text-white hover:bg-white/[0.05]",
   };

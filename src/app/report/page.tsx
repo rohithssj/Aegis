@@ -27,6 +27,16 @@ const SEVERITY_LEVELS = ["low", "medium", "high", "critical"];
 export default function ReportPage() {
   const router = useRouter();
   const { addIncident } = useIncidents();
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  useEffect(() => {
+    const role = localStorage.getItem("role");
+    if (role !== "user") {
+      router.push("/");
+    } else {
+      setIsAuthorized(true);
+    }
+  }, [router]);
   
   const [formData, setFormData] = useState({
     type: "Cyber Attack",
@@ -86,6 +96,8 @@ export default function ReportPage() {
   };
 
   const config = statusConfigs[currentStatus as keyof typeof statusConfigs] || statusConfigs.processing;
+
+  if (!isAuthorized) return null;
 
   return (
     <main className="min-h-screen bg-[#0B1120] py-12 px-6 flex items-center justify-center">

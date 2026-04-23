@@ -23,20 +23,19 @@ import { GlassCard } from "@/components/GlassCard";
 import { FeedSkeleton } from "@/components/Skeleton";
 import { cn } from "@/lib/utils";
 import { useIncidents } from "@/context/IncidentContext";
+import { toast } from "sonner";
 
 export default function IncidentsPage() {
   const router = useRouter();
-  const { incidents, loading } = useIncidents();
+  const { incidents, loading, updateIncident, dismissIncident } = useIncidents();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   // Route protection
   useEffect(() => {
     const role = localStorage.getItem("role");
-    if (!role) {
+    if (role !== "admin") {
       router.push("/");
-    } else if (role === "user") {
-      router.push("/report");
     } else {
       setIsAuthorized(true);
     }
@@ -50,6 +49,45 @@ export default function IncidentsPage() {
   }, [incidents, selectedId]);
 
   const selectedIncident = incidents.find((inc) => inc.id === selectedId);
+
+  const handleCounterMeasures = () => {
+    if (!selectedIncident) return;
+    updateIncident(selectedIncident.id, { 
+      status: "responding", 
+      actionTaken: "counter-measures initiated" 
+    });
+    toast.success("Counter-measures deployed", {
+      description: `Tactical response active for ${selectedIncident.id}`,
+    });
+  };
+
+  const handleIsolateNode = () => {
+    if (!selectedIncident) return;
+    const nextSeverity = {
+      critical: "high",
+      high: "medium",
+      medium: "low",
+      low: "low"
+    }[selectedIncident.severity] as any;
+
+    updateIncident(selectedIncident.id, { 
+      isIsolated: true,
+      severity: nextSeverity,
+      neuralImpact: Math.max(selectedIncident.neuralImpact - 20, 10)
+    });
+    toast.info("Node isolated successfully", {
+      description: `Cluster ${selectedIncident.id} disconnected from primary backbone.`,
+    });
+  };
+
+  const handleDismiss = () => {
+    if (!selectedIncident) return;
+    toast("Intelligence dismissed", {
+      description: `Incident ${selectedIncident.id} moved to archive.`,
+    });
+    dismissIncident(selectedIncident.id);
+    setSelectedId(null);
+  };
 
   if (!isAuthorized) return null;
 
@@ -102,6 +140,11 @@ export default function IncidentsPage() {
                   )}
                 >
                   <div className="space-y-4">
+                    {incident.isIsolated && (
+                      <div className="absolute top-0 right-0 p-2 opacity-20">
+                        <Activity className="h-12 w-12 text-slate-500" />
+                      </div>
+                    )}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Hash className="h-3 w-3 text-slate-600" />
@@ -153,7 +196,7 @@ export default function IncidentsPage() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="max-w-4xl mx-auto space-y-16 animate-in"
+              className={cn("max-w-4xl mx-auto space-y-16 animate-in", selectedIncident.isIsolated && "opacity-80 scale-[0.99] grayscale-[0.2]")}
             >
               {/* Header Info */}
               <div className="space-y-10">
@@ -169,7 +212,13 @@ export default function IncidentsPage() {
                     {selectedIncident.status !== 'resolved' && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse shadow-[0_0_8px_currentColor]" />}
                     {selectedIncident.status}
                   </div>
-                  <span className="text-slate-700 font-mono text-xs tracking-widest">/</span>
+                  {selectedIncident.isIsolated && (
+                    <Badge variant="neutral" className="bg-slate-500/10 text-slate-400 border-white/5 font-mono text-[9px] px-3">ISOLATED</Badge>
+                  )}
+                  {selectedIncident.actionTaken && (
+                    <Badge variant="low" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-mono text-[9px] px-3">COUNTER_MEASURES_DEPLOYED</Badge>
+                  )}
+                  <span className="text-slate-700 font-mono text-xs tracking-widest ml-auto">/</span>
                   <div className="flex items-center gap-2 px-3 py-1 bg-white/[0.02] border border-white/[0.05] rounded-full">
                     <Binary className="h-3 w-3 text-accent-cyan" />
                     <span className="text-slate-400 font-mono text-[10px] font-bold tracking-widest leading-none lowercase">{selectedIncident.id}</span>
@@ -258,9 +307,30 @@ export default function IncidentsPage() {
 
               {/* ACTION COMMANDS */}
               <div className="pt-10 border-t border-white/[0.05] flex flex-wrap gap-4">
-                <Button variant="primary" size="lg" className="rounded-xl px-10">Initiate Counter-Measures</Button>
-                <Button variant="ghost" className="rounded-xl px-10 border-white/5 bg-white/[0.02]">Isolate Network Node</Button>
-                <Button variant="ghost" className="rounded-xl px-10 text-slate-600 hover:text-slate-400">Dismiss Intelligence</Button>
+                <Button 
+                  variant="primary" 
+                  size="lg" 
+                  className="rounded-xl px-10"
+                  onClick={handleCounterMeasures}
+                  disabled={!!selectedIncident.actionTaken}
+                >
+                  {selectedIncident.actionTaken ? "Counter-Measures Active" : "Initiate Counter-Measures"}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="rounded-xl px-10 border-white/5 bg-white/[0.02]"
+                  onClick={handleIsolateNode}
+                  disabled={selectedIncident.isIsolated}
+                >
+                  {selectedIncident.isIsolated ? "Node Isolated" : "Isolate Network Node"}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="rounded-xl px-10 text-slate-600 hover:text-slate-400"
+                  onClick={handleDismiss}
+                >
+                  Dismiss Intelligence
+                </Button>
               </div>
             </motion.div>
           ) : (

@@ -22,10 +22,11 @@ import { GlassCard } from "@/components/GlassCard";
 import { MetricSkeleton, ChartSkeleton, FeedSkeleton } from "@/components/Skeleton";
 import { cn } from "@/lib/utils";
 import { useIncidents } from "@/context/IncidentContext";
+import { toast } from "sonner";
 
 export default function Dashboard() {
   const router = useRouter();
-  const { incidents, loading: incidentsLoading } = useIncidents();
+  const { incidents, loading: incidentsLoading, triggerEmergencyProtocol, isEmergency } = useIncidents();
   const [metrics, setMetrics] = useState<MetricPoint[]>([]);
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
@@ -35,10 +36,8 @@ export default function Dashboard() {
   // Route protection
   useEffect(() => {
     const role = localStorage.getItem("role");
-    if (!role) {
+    if (role !== "admin") {
       router.push("/");
-    } else if (role === "user") {
-      router.push("/report");
     } else {
       setIsAuthorized(true);
     }
@@ -126,61 +125,79 @@ export default function Dashboard() {
         <Area 
           type="monotone" 
           dataKey="value" 
-          stroke="#5B4CF0" 
+          stroke={isEmergency ? "#ef4444" : "#5B4CF0"}
           strokeWidth={2}
           fillOpacity={1} 
           fill="url(#chartGradient)" 
-          activeDot={{ r: 4, stroke: '#5B4CF0', strokeWidth: 2, fill: '#0B1120' }}
+          activeDot={{ r: 4, stroke: isEmergency ? "#ef4444" : "#5B4CF0", strokeWidth: 2, fill: '#0B1120' }}
           isAnimationActive={false}
         />
       </AreaChart>
     </ResponsiveContainer>
-  ), [metrics]);
+  ), [metrics, isEmergency]);
 
   const handleProtocolAction = () => {
+    if (isEmergency) return;
     setIsDeploying(true);
-    setTimeout(() => setIsDeploying(false), 2000);
+    setTimeout(() => {
+      triggerEmergencyProtocol();
+      setIsDeploying(false);
+      toast.error("EMERGENCY PROTOCOL ACTIVATED", {
+        description: "Global response initiated. All node statuses updated to responding.",
+        duration: 5000,
+      });
+    }, 2000);
   };
 
   if (!isAuthorized) return null;
 
   return (
-    <main className="flex-1 container-premium pt-32 pb-12 section-spacing">
+    <main className="flex-1 container-premium pt-32 pb-12 section-spacing relative">
       
+      {isEmergency && (
+        <div className="fixed top-16 left-0 right-0 z-50 bg-red-600/90 backdrop-blur-md py-3 text-center border-b border-red-500 shadow-[0_0_30px_rgba(220,38,38,0.3)] animate-in">
+           <span className="text-[10px] sm:text-xs font-black tracking-[0.3em] sm:tracking-[0.5em] text-white flex items-center justify-center gap-4">
+             <AlertTriangle className="h-4 w-4 animate-pulse" /> EMERGENCY MODE ACTIVE // ALL SYSTEMS RESPONDING <AlertTriangle className="h-4 w-4 animate-pulse" />
+           </span>
+        </div>
+      )}
+
       {/* HERO SECTION: Command Status */}
       <section className="space-y-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-10">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-cyan opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-cyan"></span>
+                <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", isEmergency ? "bg-red-500" : "bg-accent-cyan")}></span>
+                <span className={cn("relative inline-flex rounded-full h-2 w-2", isEmergency ? "bg-red-500" : "bg-accent-cyan")}></span>
               </span>
-              <Badge variant="low" className="bg-accent-cyan/5 text-accent-cyan border-accent-cyan/10 px-3 py-0.5">
-                Live System Operational
+              <Badge variant={isEmergency ? "critical" : "low"} className={cn("px-3 py-0.5", isEmergency ? "" : "bg-accent-cyan/5 text-accent-cyan border-accent-cyan/10")}>
+                {isEmergency ? "Emergency Protocol Active" : "Live System Operational"}
               </Badge>
             </div>
             <h1 className="hero-heading pr-2">
-              Strategic <span className="bg-gradient-to-r from-accent-indigo to-accent-indigo-light bg-clip-text text-transparent italic font-medium">Command</span>
+              Strategic <span className={cn("bg-gradient-to-r bg-clip-text text-transparent italic font-medium", isEmergency ? "from-red-500 to-orange-500" : "from-accent-indigo to-accent-indigo-light")}>Command</span>
             </h1>
             <p className="body-text max-w-md">
-              Real-time neural orchestration across 1,204 active edge nodes
+              {isEmergency ? "System-wide response active. Tactical agents deployed to all edge nodes." : "Real-time neural orchestration across 1,204 active edge nodes"}
             </p>
           </div>
 
           <div className="flex items-center gap-2 bg-white/[0.02] p-1.5 rounded-full border border-white/[0.05] backdrop-blur-md self-start md:self-end group transition-all duration-200">
             <div className="flex flex-col items-end px-4 py-1">
               <span className="label-text mb-1 lowercase">Protocol Status</span>
-              <span className="text-xs font-mono font-bold text-accent-cyan tracking-tight">ENFORCE_v4.2</span>
+              <span className={cn("text-xs font-mono font-bold tracking-tight", isEmergency ? "text-red-500" : "text-accent-cyan")}>
+                {isEmergency ? "PROTOCOL_ALPHA_ACTIVE" : "ENFORCE_v4.2"}
+              </span>
             </div>
             <Button 
-              variant="primary" 
+              variant={isEmergency ? "secondary" : "primary"} 
               size="lg" 
               onClick={handleProtocolAction}
-              disabled={isDeploying}
-              className="min-w-[180px] rounded-full active:scale-[0.98]"
+              disabled={isDeploying || isEmergency}
+              className={cn("min-w-[180px] rounded-full active:scale-[0.98]", isEmergency && "cursor-not-allowed opacity-50")}
             >
-              {isDeploying ? "Synchronizing..." : "Emergency Protocol"}
+              {isDeploying ? "Synchronizing..." : isEmergency ? "Protocol Active" : "Emergency Protocol"}
             </Button>
           </div>
         </div>

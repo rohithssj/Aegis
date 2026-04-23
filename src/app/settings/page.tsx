@@ -58,10 +58,8 @@ export default function SettingsPage() {
   // Route protection
   useEffect(() => {
     const role = localStorage.getItem("role");
-    if (!role) {
+    if (role !== "admin") {
       router.push("/");
-    } else if (role === "user") {
-      router.push("/report");
     } else {
       setIsAuthorized(true);
     }

@@ -6,6 +6,10 @@ import { Incident, mockDataService } from "@/lib/mockData";
 interface IncidentContextType {
   incidents: Incident[];
   addIncident: (incident: { type: string; severity: "low" | "medium" | "high" | "critical"; location: string; description: string }) => string;
+  updateIncident: (id: string, updates: Partial<Incident>) => void;
+  dismissIncident: (id: string) => void;
+  triggerEmergencyProtocol: () => void;
+  isEmergency: boolean;
   loading: boolean;
 }
 
@@ -14,6 +18,7 @@ const IncidentContext = createContext<IncidentContextType | undefined>(undefined
 export const IncidentProvider = ({ children }: { children: ReactNode }) => {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEmergency, setIsEmergency] = useState(false);
 
   // Load initial data
   useEffect(() => {
@@ -23,8 +28,29 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
+  const triggerEmergencyProtocol = () => {
+    setIsEmergency(true);
+    setIncidents(prev => prev.map(inc => ({
+      ...inc,
+      status: "responding",
+      severity: "critical",
+      neuralImpact: Math.max(inc.neuralImpact, 90)
+    })));
+  };
+
+  const updateIncident = (id: string, updates: Partial<Incident>) => {
+    setIncidents(prev => prev.map(inc => 
+      inc.id === id ? { ...inc, ...updates } : inc
+    ));
+  };
+
+  const dismissIncident = (id: string) => {
+    setIncidents(prev => prev.map(inc => 
+      inc.id === id ? { ...inc, status: "dismissed", dismissed: true } : inc
+    ));
+  };
+
   const addIncident = (newIncidentData: { type: string; severity: "low" | "medium" | "high" | "critical"; location: string; description: string }) => {
-    // Modular AI Generator placeholder
     const generateAISummary = (type: string, severity: string) => {
       const themes = {
         "Cyber Attack": "Neural infiltration detected. Recommend immediate isolation of affected nodes.",
@@ -56,36 +82,51 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
     const newIncident: Incident = {
       id: newId,
       title: `${newIncidentData.type} Detection`,
-      severity: newIncidentData.severity,
-      status: "processing",
+      severity: isEmergency ? "critical" : newIncidentData.severity,
+      status: isEmergency ? "responding" : "processing",
       timestamp: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       location: newIncidentData.location,
       description: newIncidentData.description,
-      aiAnalysis: generateAISummary(newIncidentData.type, newIncidentData.severity),
-      neuralImpact: impactScores[newIncidentData.severity]
+      aiAnalysis: generateAISummary(newIncidentData.type, isEmergency ? "critical" : newIncidentData.severity),
+      neuralImpact: isEmergency ? 95 : impactScores[newIncidentData.severity]
     };
 
     setIncidents((prev) => [newIncident, ...prev]);
 
-    // Live Status Engine - Lifecycle Simulation
-    const updateStatus = (status: "analyzing" | "responding" | "resolved", delay: number) => {
-      setTimeout(() => {
-        setIncidents(prev => prev.map(inc => 
-          inc.id === newId ? { ...inc, status } : inc
-        ));
-      }, delay);
-    };
+    // Only set up lifecycle if not already in emergency responding state
+    if (!isEmergency) {
+      const updateStatus = (status: "analyzing" | "responding" | "resolved", delay: number) => {
+        setTimeout(() => {
+          setIncidents(prev => {
+            // Don't downgrade if system went into emergency
+            const current = prev.find(i => i.id === newId);
+            if (current?.status === "dismissed") return prev;
+            return prev.map(inc => 
+              inc.id === newId ? { ...inc, status } : inc
+            );
+          });
+        }, delay);
+      };
 
-    updateStatus("analyzing", 3000);
-    updateStatus("responding", 6000);
-    updateStatus("resolved", 10000);
+      updateStatus("analyzing", 3000);
+      updateStatus("responding", 6000);
+      updateStatus("resolved", 10000);
+    }
 
     return newId;
   };
 
   return (
-    <IncidentContext.Provider value={{ incidents, addIncident, loading }}>
+    <IncidentContext.Provider value={{ 
+      incidents: incidents.filter(i => !i.dismissed), 
+      addIncident, 
+      updateIncident, 
+      dismissIncident,
+      triggerEmergencyProtocol,
+      isEmergency,
+      loading 
+    }}>
       {children}
     </IncidentContext.Provider>
   );
