@@ -11,17 +11,22 @@ import {
   Settings, 
   User, 
   LogOut, 
-  ChevronDown 
+  ChevronDown,
+  Search
 } from "lucide-react";
 import { Button } from "./Button";
 import { cn } from "@/lib/utils";
 import { AegisLogo } from "./AegisLogo";
 import { ReportIncidentModal } from "./ReportIncidentModal";
 
-const NAV_ITEMS = [
+const ADMIN_NAV = [
   { name: "Command", path: "/dashboard", icon: LayoutDashboard },
   { name: "Intelligence", path: "/incidents", icon: AlertCircle },
   { name: "Analytics", path: "/analytics", icon: BarChart3 },
+];
+
+const USER_NAV = [
+  { name: "Track", path: "/track", icon: Search },
 ];
 
 export const Navbar = () => {
@@ -88,8 +93,8 @@ export const Navbar = () => {
           </Link>
 
           {/* INTEGRATED NAV (Linear style) */}
-          <div className="hidden md:flex items-center gap-1 bg-white/[0.03] border border-white/[0.08] p-1 rounded-full">
-            {NAV_ITEMS.map((item) => {
+          <div className="hidden md:flex items-center gap-1 bg-white/[0.03] border border-white/[0.08] p-1 rounded-full text-slate-100">
+            {(role === "admin" ? ADMIN_NAV : USER_NAV).map((item) => {
               const isActive = pathname === item.path;
               return (
                 <Link

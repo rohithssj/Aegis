@@ -24,6 +24,7 @@ import { FeedSkeleton } from "@/components/Skeleton";
 import { cn } from "@/lib/utils";
 import { useIncidents } from "@/context/IncidentContext";
 import { toast } from "sonner";
+import { Incident } from "@/lib/mockData";
 
 export default function IncidentsPage() {
   const router = useRouter();
@@ -50,40 +51,21 @@ export default function IncidentsPage() {
 
   const selectedIncident = incidents.find((inc) => inc.id === selectedId);
 
-  const handleCounterMeasures = async () => {
-    if (!selectedIncident) return;
-    await updateIncident(selectedIncident.id, { 
-      status: "responding", 
-      actionTaken: "counter-measures initiated" 
-    });
-    toast.success("Counter-measures deployed", {
-      description: `Tactical response active for ${selectedIncident.id}`,
-    });
-  };
+  const STATUS_ORDER = ["processing", "analyzing", "responding", "resolved"];
+  const currentIdx = selectedIncident ? STATUS_ORDER.indexOf(selectedIncident.status) : -1;
 
-  const handleIsolateNode = async () => {
+  const handleStatusUpdate = async (status: Incident["status"]) => {
     if (!selectedIncident) return;
-    const nextSeverity = {
-      critical: "high",
-      high: "medium",
-      medium: "low",
-      low: "low"
-    }[selectedIncident.severity] as any;
-
-    await updateIncident(selectedIncident.id, { 
-      isIsolated: true,
-      severity: nextSeverity,
-      neuralImpact: Math.max(selectedIncident.neuralImpact - 20, 10)
-    });
-    toast.info("Node isolated successfully", {
-      description: `Cluster ${selectedIncident.id} disconnected from primary backbone.`,
+    await updateIncident(selectedIncident.id, { status });
+    toast.success(`Incident state updated`, {
+      description: `${selectedIncident.trackingId} is now in ${status} state.`,
     });
   };
 
   const handleDismiss = async () => {
     if (!selectedIncident) return;
     toast("Intelligence dismissed", {
-      description: `Incident ${selectedIncident.id} moved to archive.`,
+      description: `Incident ${selectedIncident.trackingId} moved to archive.`,
     });
     await dismissIncident(selectedIncident.id);
     setSelectedId(null);
@@ -148,7 +130,7 @@ export default function IncidentsPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Hash className="h-3 w-3 text-slate-600" />
-                        <span className="text-[10px] font-mono font-bold text-slate-500 tracking-widest uppercase">{incident.id}</span>
+                        <span className="text-[10px] font-mono font-bold text-slate-500 tracking-widest uppercase">{incident.trackingId}</span>
                       </div>
                       <div className={cn(
                         "px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider",
@@ -310,23 +292,42 @@ export default function IncidentsPage() {
                 <Button 
                   variant="primary" 
                   size="lg" 
-                  className="rounded-xl px-10"
-                  onClick={handleCounterMeasures}
-                  disabled={!!selectedIncident.actionTaken}
+                  className={cn(
+                    "rounded-full px-8 hover:scale-[1.02] active:scale-[0.98] transition-all",
+                    currentIdx >= 1 && "opacity-50 grayscale cursor-not-allowed"
+                  )}
+                  onClick={() => handleStatusUpdate("analyzing")}
+                  disabled={currentIdx >= 1}
                 >
-                  {selectedIncident.actionTaken ? "Counter-Measures Active" : "Initiate Counter-Measures"}
+                  {currentIdx >= 1 ? "Analyzed" : "Start Analysis"}
+                </Button>
+                <Button 
+                  variant="primary" 
+                  size="lg" 
+                  className={cn(
+                    "rounded-full px-8 hover:scale-[1.02] active:scale-[0.98] transition-all bg-accent-cyan hover:bg-accent-cyan/90 border-none",
+                    currentIdx >= 2 && "opacity-50 grayscale cursor-not-allowed"
+                  )}
+                  onClick={() => handleStatusUpdate("responding")}
+                  disabled={currentIdx >= 2}
+                >
+                  {currentIdx >= 2 ? "Responded" : "Start Response"}
+                </Button>
+                <Button 
+                  variant="primary" 
+                  size="lg" 
+                  className={cn(
+                    "rounded-full px-8 hover:scale-[1.02] active:scale-[0.98] transition-all bg-emerald-500 hover:bg-emerald-600 border-none text-white",
+                    currentIdx >= 3 && "opacity-50 grayscale cursor-not-allowed"
+                  )}
+                  onClick={() => handleStatusUpdate("resolved")}
+                  disabled={currentIdx >= 3}
+                >
+                  {currentIdx === 3 ? "Resolved" : "Mark Resolved"}
                 </Button>
                 <Button 
                   variant="ghost" 
-                  className="rounded-xl px-10 border-white/5 bg-white/[0.02]"
-                  onClick={handleIsolateNode}
-                  disabled={selectedIncident.isIsolated}
-                >
-                  {selectedIncident.isIsolated ? "Node Isolated" : "Isolate Network Node"}
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  className="rounded-xl px-10 text-slate-600 hover:text-slate-400"
+                  className="rounded-full px-8 text-slate-600 hover:text-red-400 hover:bg-red-400/5 transition-all ml-auto"
                   onClick={handleDismiss}
                 >
                   Dismiss Intelligence

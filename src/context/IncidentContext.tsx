@@ -116,7 +116,10 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       low: 5 + Math.floor(Math.random() * 20)
     };
 
+    const trackingId = `AEG-${Math.floor(1000 + Math.random() * 9000)}`;
+
     const newIncidentBase = {
+      trackingId,
       title: `${newIncidentData.type} Detection`,
       severity: isEmergency ? "critical" : newIncidentData.severity,
       status: (isEmergency ? "responding" : "processing") as any,
@@ -130,26 +133,7 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const docRef = await addDoc(collection(db, "incidents"), newIncidentBase);
-    const newId = docRef.id;
-
-    // Status Engine (Lifecycle)
-    if (!isEmergency) {
-      const statusSteps: ("analyzing" | "responding" | "resolved")[] = ["analyzing", "responding", "resolved"];
-      const delays = [3000, 6000, 10000];
-
-      statusSteps.forEach((status, index) => {
-        setTimeout(async () => {
-          try {
-            const currentDoc = doc(db, "incidents", newId);
-            await updateDoc(currentDoc, { status });
-          } catch (e) {
-            console.error("Failed to update status lifecycle for", newId, e);
-          }
-        }, delays[index]);
-      });
-    }
-
-    return newId;
+    return docRef.id;
   };
 
   return (

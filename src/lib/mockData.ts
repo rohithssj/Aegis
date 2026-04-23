@@ -1,5 +1,7 @@
 export interface Incident {
   id: string;
+  trackingId: string;
+  userId?: string;
   title: string;
   severity: "critical" | "high" | "medium" | "low";
   status: "processing" | "analyzing" | "responding" | "resolved" | "dismissed";
@@ -23,6 +25,7 @@ export interface MetricPoint {
 const MOCK_INCIDENTS: Incident[] = [
   {
     id: "INC-001",
+    trackingId: "AEG-1101",
     title: "Neural Firewall Breach Attempt",
     severity: "critical",
     status: "resolved",
@@ -35,6 +38,7 @@ const MOCK_INCIDENTS: Incident[] = [
   },
   {
     id: "INC-002",
+    trackingId: "AEG-1102",
     title: "Data Ingress Latency Spike",
     severity: "high",
     status: "resolved",
@@ -47,6 +51,7 @@ const MOCK_INCIDENTS: Incident[] = [
   },
   {
     id: "INC-003",
+    trackingId: "AEG-1103",
     title: "Anomalous CPU Load Distribution",
     severity: "medium",
     status: "resolved",
@@ -59,6 +64,7 @@ const MOCK_INCIDENTS: Incident[] = [
   },
   {
     id: "INC-004",
+    trackingId: "AEG-1104",
     title: "Backup Integrity Check Failed",
     severity: "low",
     status: "resolved",

@@ -316,7 +316,7 @@ export default function ReportPage() {
               
               <div className="flex items-center justify-center gap-3 opacity-30">
                 <Clock className="w-3 h-3 text-slate-500" />
-                <span className="text-[9px] font-mono text-slate-500 uppercase tracking-[0.3em]">Neural acknowledgement received // 200 OK</span>
+                <span className="text-[9px] font-mono text-slate-500 uppercase tracking-[0.3em]">Neural acknowledgement received — 200 OK</span>
               </div>
             </motion.div>
           )}

@@ -370,7 +370,7 @@ export default function Dashboard() {
                   <div className="flex-1 space-y-2.5 pl-2">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-3">
-                        <span className="text-[9px] font-mono text-slate-500 font-bold tracking-[0.2em] uppercase leading-none">{incident.id}</span>
+                        <span className="text-[9px] font-mono text-slate-500 font-bold tracking-[0.2em] uppercase leading-none">{incident.trackingId}</span>
                         <div className={cn(
                           "px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider flex items-center gap-1.5",
                           incident.status === 'processing' ? 'text-slate-400 bg-slate-400/10' :
