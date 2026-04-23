@@ -1,8 +1,10 @@
 export interface Incident {
   id: string;
   title: string;
-  status: "critical" | "high" | "medium" | "low";
+  severity: "critical" | "high" | "medium" | "low";
+  status: "processing" | "analyzing" | "responding" | "resolved";
   timestamp: string;
+  createdAt: string;
   location: string;
   description: string;
   aiAnalysis: string;
@@ -19,8 +21,10 @@ const MOCK_INCIDENTS: Incident[] = [
   {
     id: "INC-001",
     title: "Neural Firewall Breach Attempt",
-    status: "critical",
+    severity: "critical",
+    status: "resolved",
     timestamp: "2026-04-17T22:15:00Z",
+    createdAt: "2026-04-17T22:15:00Z",
     location: "Sector 7-G / Core Node",
     description: "Unauthorized access attempt detected on the primary neural firewall. Behavioral patterns suggest an adaptive adversarial agent.",
     aiAnalysis: "The intruder is utilizing a polymorphic decryption algorithm. Aegis AI recommends immediate isolation of Node 7-G and deployment of the tactical counter-response protocol.",
@@ -29,8 +33,10 @@ const MOCK_INCIDENTS: Incident[] = [
   {
     id: "INC-002",
     title: "Data Ingress Latency Spike",
-    status: "high",
+    severity: "high",
+    status: "resolved",
     timestamp: "2026-04-17T21:40:00Z",
+    createdAt: "2026-04-17T21:40:00Z",
     location: "Oceanic Gateway / APAC",
     description: "Intermittent packet loss and significant latency increases across the APAC oceanic fiber routes.",
     aiAnalysis: "Latency spikes correlate with seismic activity in the Philippine Sea. Reroute traffic via the Arctic backbone to maintain stability.",
@@ -39,8 +45,10 @@ const MOCK_INCIDENTS: Incident[] = [
   {
     id: "INC-003",
     title: "Anomalous CPU Load Distribution",
-    status: "medium",
+    severity: "medium",
+    status: "resolved",
     timestamp: "2026-04-17T20:10:00Z",
+    createdAt: "2026-04-17T20:10:00Z",
     location: "Edge Computing Cluster / EU-West",
     description: "Unexpected load balancing behavior in the European edge nodes. Some nodes are operating at 95% while others remain idle.",
     aiAnalysis: "Scheduler logic anomaly detected. Re-syncing node state with the central orchestrator should resolve the imbalance.",
@@ -49,8 +57,10 @@ const MOCK_INCIDENTS: Incident[] = [
   {
     id: "INC-004",
     title: "Backup Integrity Check Failed",
-    status: "low",
+    severity: "low",
+    status: "resolved",
     timestamp: "2026-04-17T18:30:00Z",
+    createdAt: "2026-04-17T18:30:00Z",
     location: "Secondary Vault / Lunar Edge",
     description: "Routine checksum verification failed for the secondary backup archives on the Lunar edge station.",
     aiAnalysis: "Cosmic ray interference suspected. Initiate a deep-scrub repair and re-verify integrity from the primary vault.",

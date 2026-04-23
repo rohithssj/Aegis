@@ -2,7 +2,7 @@
 
 import React from "react";
 
-export const AegisLogo = ({ className = "w-8 h-8" }: { className?: string }) => {
+export const AegisLogo = ({ className = "w-8 h-8", showText = true }: { className?: string; showText?: boolean }) => {
   return (
     <div className="flex items-center gap-3">
       <svg
@@ -37,9 +37,11 @@ export const AegisLogo = ({ className = "w-8 h-8" }: { className?: string }) => 
       </svg>
       
       {/* Brand Text */}
-      <span className="text-xl font-semibold tracking-wide text-white">
-        Aegis
-      </span>
+      {showText && (
+        <span className="text-xl font-semibold tracking-wide text-white">
+          Aegis
+        </span>
+      )}
     </div>
   );
 };

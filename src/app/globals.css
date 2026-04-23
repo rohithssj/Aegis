@@ -44,19 +44,19 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .hero-heading {
-  @apply text-5xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight;
+  @apply text-3xl sm:text-4xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight;
 }
 
 .section-heading {
-  @apply text-2xl md:text-3xl tracking-tight;
+  @apply text-xl md:text-3xl tracking-tight;
 }
 
 .body-text {
-  @apply text-sm text-white/70 leading-relaxed;
+  @apply text-[13px] md:text-sm text-white/70 leading-relaxed;
 }
 
 .label-text {
-  @apply text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2;
+  @apply text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2;
 }
 
 /* Standardized Layout Containers */
@@ -65,7 +65,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .section-spacing {
-  @apply space-y-20 md:space-y-24;
+  @apply space-y-12 md:space-y-24;
 }
 
 /* Refined Glass - Linear/SaaS Style */

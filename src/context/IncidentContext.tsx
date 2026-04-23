@@ -5,7 +5,7 @@ import { Incident, mockDataService } from "@/lib/mockData";
 
 interface IncidentContextType {
   incidents: Incident[];
-  addIncident: (incident: Omit<Incident, "id" | "title" | "timestamp" | "aiAnalysis" | "neuralImpact"> & { type: string }) => void;
+  addIncident: (incident: { type: string; severity: "low" | "medium" | "high" | "critical"; location: string; description: string }) => string;
   loading: boolean;
 }
 
@@ -23,7 +23,7 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
-  const addIncident = (newIncidentData: Omit<Incident, "id" | "title" | "timestamp" | "aiAnalysis" | "neuralImpact"> & { type: string }) => {
+  const addIncident = (newIncidentData: { type: string; severity: "low" | "medium" | "high" | "critical"; location: string; description: string }) => {
     // Modular AI Generator placeholder
     const generateAISummary = (type: string, severity: string) => {
       const themes = {
@@ -51,18 +51,37 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       low: 5 + Math.floor(Math.random() * 20)
     };
 
+    const newId = `AEG-${Math.floor(1000 + Math.random() * 9000)}`;
+
     const newIncident: Incident = {
-      id: `INC-${Date.now().toString().slice(-4)}`,
+      id: newId,
       title: `${newIncidentData.type} Detection`,
-      status: newIncidentData.status,
+      severity: newIncidentData.severity,
+      status: "processing",
       timestamp: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
       location: newIncidentData.location,
       description: newIncidentData.description,
-      aiAnalysis: generateAISummary(newIncidentData.type, newIncidentData.status),
-      neuralImpact: impactScores[newIncidentData.status]
+      aiAnalysis: generateAISummary(newIncidentData.type, newIncidentData.severity),
+      neuralImpact: impactScores[newIncidentData.severity]
     };
 
     setIncidents((prev) => [newIncident, ...prev]);
+
+    // Live Status Engine - Lifecycle Simulation
+    const updateStatus = (status: "analyzing" | "responding" | "resolved", delay: number) => {
+      setTimeout(() => {
+        setIncidents(prev => prev.map(inc => 
+          inc.id === newId ? { ...inc, status } : inc
+        ));
+      }, delay);
+    };
+
+    updateStatus("analyzing", 3000);
+    updateStatus("responding", 6000);
+    updateStatus("resolved", 10000);
+
+    return newId;
   };
 
   return (

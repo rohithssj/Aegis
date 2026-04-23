@@ -11,10 +11,13 @@ import {
   CheckCircle2, 
   ArrowLeft,
   Loader2,
-  Clock
+  Clock,
+  Activity,
+  Zap
 } from "lucide-react";
 import { Button } from "@/components/Button";
 import { GlassCard } from "@/components/GlassCard";
+import { cn } from "@/lib/utils";
 import { useIncidents } from "@/context/IncidentContext";
 import { AegisLogo } from "@/components/AegisLogo";
 
@@ -51,9 +54,13 @@ export default function ReportPage() {
     
     // Simulate tactical delay
     setTimeout(() => {
-      addIncident(formData);
-      const generatedId = "AEG-" + Math.floor(1000 + Math.random() * 9000);
-      setTrackingId(generatedId);
+      const id = addIncident({
+        type: formData.type,
+        severity: formData.status as any,
+        location: formData.location,
+        description: formData.description
+      });
+      setTrackingId(id);
       setIsSubmitting(false);
       setIsSubmitted(true);
     }, 1500);
@@ -63,6 +70,22 @@ export default function ReportPage() {
     localStorage.removeItem("role");
     router.push("/");
   };
+
+  const { incidents } = useIncidents();
+  const currentIncident = incidents.find(inc => inc.id === trackingId);
+  const currentStatus = currentIncident?.status || "processing";
+
+  const steps = ["processing", "analyzing", "responding", "resolved"];
+  const currentStepIndex = steps.indexOf(currentStatus);
+
+  const statusConfigs = {
+    processing: { color: "text-slate-400", bg: "bg-slate-400/10", icon: Loader2 },
+    analyzing: { color: "text-accent-cyan", bg: "bg-accent-cyan/10", icon: Activity },
+    responding: { color: "text-accent-indigo", bg: "bg-accent-indigo/10", icon: Zap },
+    resolved: { color: "text-emerald-500", bg: "bg-emerald-500/10", icon: CheckCircle2 },
+  };
+
+  const config = statusConfigs[currentStatus as keyof typeof statusConfigs] || statusConfigs.processing;
 
   return (
     <main className="min-h-screen bg-[#0B1120] py-12 px-6 flex items-center justify-center">
@@ -83,7 +106,7 @@ export default function ReportPage() {
                 >
                   <ArrowLeft className="w-4 h-4" /> Exit Portal
                 </button>
-                <AegisLogo className="w-8 h-8" />
+                <AegisLogo className="w-8 h-8" showText={false} />
               </div>
 
               <GlassCard className="p-8 md:p-10 rounded-[2.5rem] border-white/5 bg-white/[0.01]">
@@ -184,43 +207,77 @@ export default function ReportPage() {
               transition={{ type: "spring", damping: 15 }}
               className="text-center space-y-8"
             >
-              <GlassCard className="p-12 md:p-16 rounded-[3rem] border-white/5 bg-white/[0.02] shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-accent-cyan to-transparent" />
+              <GlassCard className="p-8 md:p-12 rounded-[3.5rem] border-white/5 bg-white/[0.01] shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-accent-cyan to-transparent animate-pulse" />
                 
                 <div className="flex flex-col items-center gap-8">
-                  <div className="p-6 rounded-full bg-accent-cyan/10 text-accent-cyan relative">
-                    <CheckCircle2 className="w-16 h-16" />
+                  <div className={cn("p-6 rounded-full relative transition-all duration-500", config.bg, config.color)}>
+                    <config.icon className={cn("w-12 h-12 transition-all", currentStatus === 'processing' && 'animate-spin')} />
                     <motion.div 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: [1, 1.2, 1] }}
+                      key={currentStatus}
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
                       transition={{ duration: 2, repeat: Infinity }}
-                      className="absolute inset-0 rounded-full border-2 border-accent-cyan/20"
+                      className={cn("absolute inset-0 rounded-full border-2", currentStepIndex === 3 ? "border-emerald-500/30" : "border-accent-cyan/30")}
                     />
                   </div>
 
                   <div className="space-y-3">
                     <h2 className="text-4xl font-bold text-white tracking-tight">Incident Reported</h2>
-                    <p className="text-slate-400 text-lg">Authorities have been notified and response protocols are active.</p>
+                    <p className="text-slate-400 text-sm max-w-sm">Emergency signal transmitted. Aegis Intelligence is orchestrating tactical response.</p>
                   </div>
 
-                  <div className="w-full max-w-sm bg-white/[0.03] border border-white/5 rounded-3xl p-8 space-y-6">
-                    <div className="flex justify-between items-center border-b border-white/5 pb-4">
-                      <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Tracking ID</span>
-                      <span className="text-sm font-mono font-bold text-accent-cyan">{trackingId}</span>
+                  <div className="w-full max-w-md bg-white/[0.02] border border-white/5 rounded-[2.5rem] p-8 space-y-8">
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 text-left">
+                        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-1">Tracking ID</span>
+                        <span className="text-xs font-mono font-bold text-white">{trackingId}</span>
+                      </div>
+                      <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 text-left">
+                        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-1">Live Status</span>
+                        <span className={cn("text-xs font-bold uppercase flex items-center gap-2", config.color)}>
+                          <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", currentStepIndex === 3 ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-current")} />
+                          {currentStatus}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Status</span>
-                      <span className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-accent-cyan animate-pulse" />
-                        <span className="text-sm font-mono font-bold text-white uppercase italic">Processing...</span>
-                      </span>
+
+                    {/* Progress Indicator */}
+                    <div className="px-2">
+                       <div className="flex justify-between mb-5">
+                         {steps.map((step, idx) => (
+                           <div key={step} className="flex flex-col items-center gap-3">
+                              <motion.div 
+                                animate={{ scale: idx === currentStepIndex ? 1.2 : 1 }}
+                                className={cn(
+                                "w-2.5 h-2.5 rounded-full transition-all duration-500",
+                                idx <= currentStepIndex ? config.color.replace('text-', 'bg-') : "bg-white/10"
+                              )} />
+                              <span className={cn(
+                                "text-[9px] font-mono uppercase tracking-widest transition-all",
+                                idx <= currentStepIndex ? "text-slate-200 font-bold" : "text-slate-600"
+                              )}>
+                                {step}
+                              </span>
+                           </div>
+                         ))}
+                       </div>
+                       <div className="relative h-1.5 bg-white/5 rounded-full overflow-hidden">
+                          <motion.div 
+                            initial={{ width: "0%" }}
+                            animate={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }}
+                            className={cn("absolute h-full transition-all duration-500", 
+                              currentStepIndex === 3 ? "bg-emerald-500" : "bg-accent-indigo"
+                            )}
+                          />
+                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-4 w-full pt-4">
+                  <div className="flex flex-col sm:flex-row gap-4 w-full">
                     <Button 
                       variant="ghost" 
-                      className="flex-1 h-14 rounded-2xl border-white/5 hover:bg-white/5 font-bold"
+                      className="flex-1 h-14 rounded-2xl border-white/5 hover:bg-white/5 font-bold text-xs tracking-widest uppercase"
                       onClick={() => {
                         setIsSubmitted(false);
                         setFormData({
@@ -234,7 +291,7 @@ export default function ReportPage() {
                       Report Another
                     </Button>
                     <Button 
-                      className="flex-1 h-14 rounded-2xl font-bold"
+                      className="flex-1 h-14 rounded-2xl font-bold text-xs tracking-widest uppercase"
                       onClick={handleLogout}
                     >
                       Close Portal

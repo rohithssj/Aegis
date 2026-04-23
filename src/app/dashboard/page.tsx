@@ -245,18 +245,28 @@ export default function Dashboard() {
 
           {/* Detailed Context Panel */}
           {selectedIncident && (
-            <GlassCard className="p-6 md:p-10 space-y-10 border-accent-indigo/10 bg-accent-indigo/[0.01] rounded-3xl animate-in" hover={false}>
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <Badge variant={selectedIncident.status as any} className="px-4 py-1 text-[10px] rounded-full">{selectedIncident.status.toUpperCase()}</Badge>
+            <GlassCard className="p-6 md:p-10 space-y-10 border-accent-indigo/10 bg-accent-indigo/[0.01] rounded-[2.5rem] animate-in" hover={false}>
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-8">
+                <div className="space-y-6">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <Badge variant={selectedIncident.severity as any} className="px-4 py-1 text-[10px] rounded-full uppercase">{selectedIncident.severity}</Badge>
+                    <div className={cn(
+                      "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2",
+                      selectedIncident.status === 'processing' ? 'text-slate-400 bg-slate-400/10' :
+                      selectedIncident.status === 'analyzing' ? 'text-accent-cyan bg-accent-cyan/10' :
+                      selectedIncident.status === 'responding' ? 'text-accent-indigo bg-accent-indigo/10' :
+                      'text-emerald-500 bg-emerald-500/10'
+                    )}>
+                      {selectedIncident.status !== 'resolved' && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />}
+                      Status: {selectedIncident.status}
+                    </div>
                     <span className="text-[11px] text-slate-600 font-mono tracking-[0.3em] font-bold uppercase">{selectedIncident.id}</span>
                   </div>
-                  <h3 className="section-heading text-white">
+                  <h3 className="text-3xl md:text-4xl font-bold text-white leading-tight">
                     {selectedIncident.title}
                   </h3>
                 </div>
-                <div className="bg-white/[0.02] border border-white/[0.05] p-6 rounded-3xl min-w-[200px] text-center">
+                <div className="bg-white/[0.03] border border-white/[0.05] p-6 rounded-3xl min-w-[200px] text-center shrink-0">
                   <p className="label-text lowercase mb-2">Impact Intensity</p>
                   <p className="text-4xl md:text-5xl font-mono font-bold text-white leading-none tracking-tighter">{selectedIncident.neuralImpact}%</p>
                 </div>
@@ -325,7 +335,7 @@ export default function Dashboard() {
                 <GlassCard 
                   hover={false}
                   className={cn(
-                    "p-5 transition-all duration-200 border-l-2 relative rounded-xl",
+                    "p-5 transition-all duration-300 border-l-2 relative rounded-2xl overflow-hidden",
                     selectedIncidentId === incident.id
                       ? "bg-white/[0.08] border-l-accent-indigo shadow-lg translate-x-1"
                       : "bg-white/[0.01] border-l-transparent hover:border-l-slate-700 hover:bg-white/[0.03] hover:translate-x-1"
@@ -333,14 +343,26 @@ export default function Dashboard() {
                 >
                   <div className={cn(
                     "w-[2px] h-full absolute left-0 top-0 bottom-0",
-                    incident.status === 'critical' ? 'bg-red-500' : 
-                    incident.status === 'high' ? 'bg-orange-500' :
-                    incident.status === 'medium' ? 'bg-yellow-500' : 'bg-accent-cyan'
+                    incident.severity === 'critical' ? 'bg-red-500' : 
+                    incident.severity === 'high' ? 'bg-orange-500' :
+                    incident.severity === 'medium' ? 'bg-yellow-500' : 'bg-accent-cyan'
                   )} />
                   
-                  <div className="flex-1 space-y-1.5 pl-2">
+                  <div className="flex-1 space-y-2.5 pl-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-[9px] font-mono text-slate-500 font-bold tracking-[0.2em] uppercase leading-none">{incident.id}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[9px] font-mono text-slate-500 font-bold tracking-[0.2em] uppercase leading-none">{incident.id}</span>
+                        <div className={cn(
+                          "px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider flex items-center gap-1.5",
+                          incident.status === 'processing' ? 'text-slate-400 bg-slate-400/10' :
+                          incident.status === 'analyzing' ? 'text-accent-cyan bg-accent-cyan/10' :
+                          incident.status === 'responding' ? 'text-accent-indigo bg-accent-indigo/10' :
+                          'text-emerald-500 bg-emerald-500/10'
+                        )}>
+                          {incident.status !== 'resolved' && <span className="w-1 h-1 rounded-full bg-current animate-pulse" />}
+                          {incident.status}
+                        </div>
+                      </div>
                       <span className="text-[9px] font-mono text-slate-600 font-bold">
                         {new Date(incident.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
@@ -351,6 +373,11 @@ export default function Dashboard() {
                     )}>
                       {incident.title}
                     </p>
+                    <div className="flex items-center gap-3">
+                       <span className="text-[9px] font-medium text-slate-500 flex items-center gap-1.5">
+                         <LocateFixed className="h-2.5 w-2.5" /> {incident.location}
+                       </span>
+                    </div>
                   </div>
                 </GlassCard>
               </button>

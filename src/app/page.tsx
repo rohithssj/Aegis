@@ -31,7 +31,7 @@ export default function EntryPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="flex justify-center"
           >
-            <AegisLogo className="w-16 h-16" />
+            <AegisLogo className="w-16 h-16" showText={false} />
           </motion.div>
           <div className="space-y-2">
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">Aegis</h1>

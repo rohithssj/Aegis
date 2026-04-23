@@ -34,7 +34,12 @@ export const ReportIncidentModal = ({ isOpen, onClose }: ReportIncidentModalProp
     setIsSubmitting(true);
     // Simulate tactical delay
     setTimeout(() => {
-      addIncident(formData);
+      addIncident({
+        type: formData.type,
+        severity: formData.status as any,
+        location: formData.location,
+        description: formData.description
+      });
       setIsSubmitting(false);
       onClose();
       // Reset form
