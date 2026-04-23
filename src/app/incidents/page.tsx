@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   PackageSearch
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { GlassCard } from "@/components/GlassCard";
@@ -24,8 +25,22 @@ import { cn } from "@/lib/utils";
 import { useIncidents } from "@/context/IncidentContext";
 
 export default function IncidentsPage() {
+  const router = useRouter();
   const { incidents, loading } = useIncidents();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  // Route protection
+  useEffect(() => {
+    const role = localStorage.getItem("role");
+    if (!role) {
+      router.push("/");
+    } else if (role === "user") {
+      router.push("/report");
+    } else {
+      setIsAuthorized(true);
+    }
+  }, [router]);
 
   // Set initial selection once incidents arrive
   useEffect(() => {
@@ -36,8 +51,10 @@ export default function IncidentsPage() {
 
   const selectedIncident = incidents.find((inc) => inc.id === selectedId);
 
+  if (!isAuthorized) return null;
+
   return (
-    <main className="flex-1 flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden bg-background">
+    <main className="flex-1 flex flex-col md:flex-row h-screen pt-16 overflow-hidden bg-background">
       {/* LEFT: Incident Feed (400px fixed) */}
       <aside className="w-full md:w-[400px] border-r border-white/5 flex flex-col bg-surface/30 backdrop-blur-md">
         <div className="p-6 border-b border-white/5 space-y-6">

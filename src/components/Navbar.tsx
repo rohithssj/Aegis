@@ -19,7 +19,7 @@ import { AegisLogo } from "./AegisLogo";
 import { ReportIncidentModal } from "./ReportIncidentModal";
 
 const NAV_ITEMS = [
-  { name: "Command", path: "/", icon: LayoutDashboard },
+  { name: "Command", path: "/dashboard", icon: LayoutDashboard },
   { name: "Intelligence", path: "/incidents", icon: AlertCircle },
   { name: "Analytics", path: "/analytics", icon: BarChart3 },
 ];
@@ -54,6 +54,21 @@ export const Navbar = () => {
     ["1px solid rgba(255, 255, 255, 0)", "1px solid rgba(255, 255, 255, 0.08)"]
   );
 
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check role from localStorage
+    const savedRole = localStorage.getItem("role");
+    setRole(savedRole);
+  }, [pathname]);
+
+  // Hide navbar on entry page
+  if (pathname === "/") return null;
+
+  // For users on the report page, we might want to hide the full navbar 
+  // or show a simplified one. The user asked to hide it on / and /report.
+  if (pathname === "/report") return null;
+
   return (
     <>
       <motion.nav
@@ -68,7 +83,7 @@ export const Navbar = () => {
       >
         <div className="container-premium flex items-center justify-between">
           {/* LOGO */}
-          <Link href="/" className="hover:opacity-90 transition-opacity">
+          <Link href={role === 'admin' ? "/dashboard" : "/"} className="hover:opacity-90 transition-opacity">
             <AegisLogo className="w-8 h-8" />
           </Link>
 
@@ -145,7 +160,13 @@ export const Navbar = () => {
                       <Settings className="h-3.5 w-3.5" /> System Configuration
                     </Link>
                     <div className="h-px bg-white/5 my-1 mx-2" />
-                    <button className="w-full flex items-center gap-3 px-3 py-2 text-[11px] font-bold text-red-400 hover:bg-red-400/10 rounded-xl transition-all">
+                    <button 
+                      onClick={() => {
+                        localStorage.removeItem("role");
+                        window.location.href = "/";
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-[11px] font-bold text-red-400 hover:bg-red-400/10 rounded-xl transition-all"
+                    >
                       <LogOut className="h-3.5 w-3.5" /> Deactivate Session
                     </button>
                   </motion.div>

@@ -15,10 +15,12 @@ import {
   Activity,
   History
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
 import { GlassCard } from "@/components/GlassCard";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 const SETTING_GROUPS = [
   {
@@ -50,8 +52,24 @@ const SETTING_GROUPS = [
 ];
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  // Route protection
+  useEffect(() => {
+    const role = localStorage.getItem("role");
+    if (!role) {
+      router.push("/");
+    } else if (role === "user") {
+      router.push("/report");
+    } else {
+      setIsAuthorized(true);
+    }
+  }, [router]);
+
+  if (!isAuthorized) return null;
   return (
-    <main className="flex-1 container-premium py-16 section-spacing pb-40">
+    <main className="flex-1 container-premium pt-32 pb-16 section-spacing pb-40">
       <header className="space-y-4 max-w-3xl">
         <div className="flex items-center gap-3">
           <Badge variant="neutral" dot={false} className="font-bold rounded-lg px-2">v4.2.0</Badge>

@@ -15,6 +15,7 @@ import {
   AreaChart,
   Area
 } from "recharts";
+import { useRouter } from "next/navigation";
 import { mockDataService, MetricPoint } from "@/lib/mockData";
 import { Badge } from "@/components/Badge";
 import { GlassCard } from "@/components/GlassCard";
@@ -23,10 +24,23 @@ import { Activity, Zap, Cpu, TrendingUp, BarChart2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function AnalyticsPage() {
+  const router = useRouter();
   const [loadData, setLoadData] = useState<MetricPoint[]>([]);
   const [latencyData, setLatencyData] = useState<MetricPoint[]>([]);
-
   const [loading, setLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  // Route protection
+  useEffect(() => {
+    const role = localStorage.getItem("role");
+    if (!role) {
+      router.push("/");
+    } else if (role === "user") {
+      router.push("/report");
+    } else {
+      setIsAuthorized(true);
+    }
+  }, [router]);
 
   useEffect(() => {
     Promise.all([
@@ -165,8 +179,10 @@ export default function AnalyticsPage() {
     </ResponsiveContainer>
   ), []);
 
+  if (!isAuthorized) return null;
+
   return (
-    <main className="flex-1 container-premium py-12 section-spacing">
+    <main className="flex-1 container-premium pt-32 pb-12 section-spacing">
       {/* Page Header */}
       <header className="space-y-4 max-w-3xl">
         <div className="flex items-center gap-3">
