@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   ShieldCheck, 
   Activity, 
@@ -323,21 +324,66 @@ export default function Dashboard() {
                   </p>
                   
                   {selectedIncident.aiAnalysis && (
-                    <div className="mt-8 pt-6 border-t border-white/[0.05]">
-                      <p className="text-[10px] font-mono font-bold text-white/30 uppercase tracking-[0.2em] mb-4">AI Tactical Recommendation</p>
+                    <div className="mt-8 pt-8 border-t border-white/[0.05]">
+                      <div className="flex items-center justify-between mb-6">
+                        <p className="text-[10px] font-mono font-bold text-white/40 uppercase tracking-[0.2em]">AI Decision Breakdown</p>
+                        <Badge variant="low" className="bg-accent-cyan/10 text-accent-cyan border-accent-cyan/20 font-mono text-[8px]">LOGIC_TRACE_v2</Badge>
+                      </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                        <div className="space-y-1 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.03]">
-                          <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Tactical Unit</p>
-                          <p className="text-xs font-bold text-white">{selectedIncident.aiUnit || (selectedIncident as any).aiHospital}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Summary & Factors */}
+                        <div className="space-y-6">
+                          <div className="space-y-2">
+                            <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Logic Summary</p>
+                            <p className="text-sm text-white/90 leading-relaxed italic">
+                              &quot;{selectedIncident.aiExplanation || "Direct tactical allocation based on current neural load."}&quot;
+                            </p>
+                          </div>
+
+                          <div className="space-y-3">
+                            <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Contributing Factors</p>
+                            <div className="space-y-2">
+                              {selectedIncident.aiFactors?.map((factor, idx) => (
+                                <motion.div 
+                                  initial={{ opacity: 0, x: -10 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: idx * 0.1 }}
+                                  key={idx} 
+                                  className="flex items-center gap-3"
+                                >
+                                  <div className="w-1 h-1 rounded-full bg-accent-indigo shrink-0" />
+                                  <p className="text-xs text-white/60 font-medium">{factor}</p>
+                                </motion.div>
+                              ))}
+                              {(!selectedIncident.aiFactors || selectedIncident.aiFactors.length === 0) && (
+                                <p className="text-xs text-slate-600 italic">No specific factors recorded for this decision.</p>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div className="space-y-1 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.03]">
-                          <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Risk Index</p>
-                          <p className="text-xs font-bold text-white">{selectedIncident.aiRisk}</p>
-                        </div>
-                        <div className="space-y-1 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.03]">
-                          <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Confidence Score</p>
-                          <p className="text-xs font-bold text-accent-cyan">{selectedIncident.aiScore}</p>
+
+                        {/* Quick Stats */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.03] flex flex-col justify-center">
+                            <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Tactical Unit</p>
+                            <p className="text-xs font-bold text-white truncate">{selectedIncident.aiUnit}</p>
+                          </div>
+                          <div className="space-y-1 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.03] flex flex-col justify-center">
+                            <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Risk Index</p>
+                            <p className="text-xs font-bold text-white uppercase">{selectedIncident.aiRisk}</p>
+                          </div>
+                          <div className="space-y-1 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.03] flex flex-col justify-center">
+                            <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Confidence</p>
+                            <p className="text-xs font-bold text-accent-cyan">{selectedIncident.aiConfidence}%</p>
+                          </div>
+                          <div className="space-y-1 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.03] flex flex-col justify-center">
+                            <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Priority</p>
+                            <p className={cn(
+                              "text-xs font-bold",
+                              selectedIncident.aiPriority === "P1" ? "text-red-500" :
+                              selectedIncident.aiPriority === "P2" ? "text-orange-500" : "text-emerald-500"
+                            )}>{selectedIncident.aiPriority || "P3"}</p>
+                          </div>
                         </div>
                       </div>
                     </div>

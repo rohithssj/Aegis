@@ -13,6 +13,10 @@ export interface Incident {
   aiUnit?: string;
   aiRisk?: string;
   aiScore?: number;
+  aiConfidence?: number;
+  aiPriority?: string;
+  aiFactors?: string[];
+  aiExplanation?: string;
   neuralImpact: number;
   actionTaken?: string;
   isIsolated?: boolean;

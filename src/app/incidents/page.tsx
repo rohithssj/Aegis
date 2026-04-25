@@ -308,20 +308,60 @@ export default function IncidentsPage() {
                   
                   {selectedIncident.aiAnalysis && (
                     <div className="mt-10 pt-8 border-t border-white/[0.05] relative z-10">
-                      <p className="text-[10px] font-mono font-bold text-white/30 uppercase tracking-[0.2em] mb-5">Neural Intelligence Insights</p>
+                      <div className="flex items-center justify-between mb-8">
+                        <p className="text-[10px] font-mono font-bold text-white/30 uppercase tracking-[0.2em]">Decision Architecture</p>
+                        <div className="flex items-center gap-2 px-3 py-1 bg-accent-indigo/10 rounded-full border border-accent-indigo/20">
+                          <Binary className="h-3 w-3 text-accent-indigo" />
+                          <span className="text-[9px] text-accent-indigo font-bold uppercase tracking-wider">Explainable AI Trace</span>
+                        </div>
+                      </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-                        <div className="space-y-1">
-                          <p className="text-[9px] text-slate-600 uppercase font-bold tracking-widest">Tactical Unit</p>
-                          <p className="text-sm font-bold text-white tracking-tight">{selectedIncident.aiUnit || (selectedIncident as any).aiHospital}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
+                        {/* Summary & Factors (8 cols) */}
+                        <div className="md:col-span-8 space-y-8">
+                          <div className="space-y-3">
+                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest flex items-center gap-2">
+                              <ShieldCheck className="h-3 w-3" /> Logical Summary
+                            </p>
+                            <p className="text-lg text-white/90 font-medium leading-relaxed italic">
+                              &quot;{selectedIncident.aiExplanation || "Direct tactical allocation based on current neural load."}&quot;
+                            </p>
+                          </div>
+
+                          <div className="space-y-4">
+                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest flex items-center gap-2">
+                              <Activity className="h-3 w-3" /> Core Logic Factors
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {selectedIncident.aiFactors?.map((factor, idx) => (
+                                <motion.div 
+                                  initial={{ opacity: 0, y: 5 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: idx * 0.1 }}
+                                  key={idx} 
+                                  className="flex items-center gap-3 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.03]"
+                                >
+                                  <div className="w-1.5 h-1.5 rounded-full bg-accent-indigo shrink-0 shadow-[0_0_8px_rgba(91,76,240,0.4)]" />
+                                  <p className="text-[11px] text-white/70 font-medium leading-snug">{factor}</p>
+                                </motion.div>
+                              ))}
+                            </div>
+                          </div>
                         </div>
-                        <div className="space-y-1">
-                          <p className="text-[9px] text-slate-600 uppercase font-bold tracking-widest">Threat Risk</p>
-                          <p className="text-sm font-bold text-white tracking-tight">{selectedIncident.aiRisk}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[9px] text-slate-600 uppercase font-bold tracking-widest">Decision Confidence</p>
-                          <p className="text-sm font-bold text-accent-indigo tracking-tight">{selectedIncident.aiScore}</p>
+
+                        {/* Quick Metrics (4 cols) */}
+                        <div className="md:col-span-4 space-y-4">
+                          {[
+                            { label: "Tactical Unit", val: selectedIncident.aiUnit, color: "text-white" },
+                            { label: "Risk Matrix", val: selectedIncident.aiRisk, color: "text-white" },
+                            { label: "Confidence", val: `${selectedIncident.aiConfidence || 0}%`, color: "text-accent-indigo" },
+                            { label: "Command Priority", val: selectedIncident.aiPriority || "P3", color: selectedIncident.aiPriority === 'P1' ? 'text-red-500' : 'text-emerald-500' }
+                          ].map((stat, i) => (
+                            <div key={i} className="bg-white/[0.03] p-4 rounded-2xl border border-white/[0.05]">
+                              <p className="text-[9px] text-slate-600 uppercase font-bold tracking-widest mb-1">{stat.label}</p>
+                              <p className={cn("text-xs font-bold uppercase", stat.color)}>{stat.val}</p>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </div>

@@ -24,6 +24,10 @@ interface IncidentContextType {
     aiUnit?: string;
     aiRisk?: string;
     aiScore?: number;
+    aiConfidence?: number;
+    aiPriority?: string;
+    aiFactors?: string[];
+    aiExplanation?: string;
     aiAnalysis?: string;
   }) => Promise<string>;
   updateIncident: (id: string, updates: Partial<Incident>) => Promise<void>;
@@ -122,6 +126,10 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
     aiUnit?: string;
     aiRisk?: string;
     aiScore?: number;
+    aiConfidence?: number;
+    aiPriority?: string;
+    aiFactors?: string[];
+    aiExplanation?: string;
     aiAnalysis?: string;
   }) => {
     const generateAISummary = (type: string, severity: string) => {
@@ -165,6 +173,10 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       aiUnit: newIncidentData.aiUnit || "Determining...",
       aiRisk: newIncidentData.aiRisk || "Analyzing...",
       aiScore: newIncidentData.aiScore || 0,
+      aiConfidence: newIncidentData.aiConfidence || 0,
+      aiPriority: newIncidentData.aiPriority || "P3",
+      aiFactors: newIncidentData.aiFactors || [],
+      aiExplanation: newIncidentData.aiExplanation || "Direct tactical allocation based on current neural load.",
       neuralImpact: isEmergency ? 95 : impactScores[newIncidentData.severity],
       dismissed: false
     };

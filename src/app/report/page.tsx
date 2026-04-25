@@ -77,6 +77,7 @@ export default function ReportPage() {
         severity: severityMap[formData.status] || 5,
         wait_time: 5,
         distance: 10,
+        location: formData.location,
       });
       console.log("AI RESPONSE:", aiResponse)
 
@@ -88,6 +89,10 @@ export default function ReportPage() {
         aiUnit: aiResponse.unit,
         aiRisk: aiResponse.risk,
         aiScore: aiResponse.score,
+        aiConfidence: aiResponse.confidence,
+        aiPriority: aiResponse.priority,
+        aiFactors: aiResponse.factors,
+        aiExplanation: aiResponse.explanation,
         aiAnalysis: aiResponse.reason,
       });
       setTrackingId(id);
@@ -354,16 +359,48 @@ export default function ReportPage() {
 
                     <div className="grid grid-cols-3 gap-4 mb-4">
                       <div className="space-y-1">
-                        <p className="text-[9px] text-white/30 uppercase font-bold">Tactical Unit</p>
-                        <p className="text-[11px] text-white/90 font-medium truncate">{currentIncident.aiUnit || (currentIncident as any).aiHospital}</p>
-                      </div>
-                      <div className="space-y-1">
                         <p className="text-[9px] text-white/30 uppercase font-bold">Risk</p>
                         <p className="text-[11px] text-white/90 font-medium">{currentIncident.aiRisk}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[9px] text-white/30 uppercase font-bold">Score</p>
-                        <p className="text-[11px] text-accent-cyan font-bold">{currentIncident.aiScore}</p>
+                        <p className="text-[9px] text-white/30 uppercase font-bold">Confidence</p>
+                        <p className="text-[11px] text-accent-cyan font-bold">{currentIncident.aiConfidence}%</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[9px] text-white/30 uppercase font-bold">Priority</p>
+                        <p className={cn(
+                          "text-[11px] font-bold",
+                          currentIncident.aiPriority === "P1" ? "text-red-500" :
+                          currentIncident.aiPriority === "P2" ? "text-yellow-500" :
+                          "text-green-500"
+                        )}>
+                          {currentIncident.aiPriority}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 border-t border-white/[0.03] pt-4 mb-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-mono font-bold text-white/30 uppercase tracking-[0.2em]">Tactical Breakdown</p>
+                        <div className="px-2 py-0.5 rounded-full bg-accent-cyan/10 border border-accent-cyan/20">
+                          <p className="text-[8px] text-accent-cyan font-bold uppercase tracking-widest">Logic Flow</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        {currentIncident.aiFactors?.map((factor, idx) => (
+                          <div key={idx} className="flex items-start gap-2">
+                            <div className="w-1 h-1 rounded-full bg-accent-indigo mt-1.5 shrink-0" />
+                            <p className="text-[10px] text-white/50 font-medium leading-relaxed">{factor}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="bg-white/[0.02] rounded-xl p-3 border border-white/5">
+                        <p className="text-[9px] text-white/30 uppercase font-bold mb-1.5">Decision Summary</p>
+                        <p className="text-[10px] text-slate-400 leading-relaxed italic">
+                          &quot;{currentIncident.aiExplanation}&quot;
+                        </p>
                       </div>
                     </div>
 
