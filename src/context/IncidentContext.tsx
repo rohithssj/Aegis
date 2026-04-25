@@ -16,7 +16,16 @@ import { Incident } from "@/lib/mockData";
 
 interface IncidentContextType {
   incidents: Incident[];
-  addIncident: (incident: { type: string; severity: "low" | "medium" | "high" | "critical"; location: string; description: string }) => Promise<string>;
+  addIncident: (incident: { 
+    type: string; 
+    severity: "low" | "medium" | "high" | "critical"; 
+    location: string; 
+    description: string;
+    aiUnit?: string;
+    aiRisk?: string;
+    aiScore?: number;
+    aiAnalysis?: string;
+  }) => Promise<string>;
   updateIncident: (id: string, updates: Partial<Incident>) => Promise<void>;
   updateIncidentStatus: (id: string, status: Incident["status"]) => Promise<void>;
   dismissIncident: (id: string) => Promise<void>;
@@ -105,7 +114,16 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const addIncident = async (newIncidentData: { type: string; severity: "low" | "medium" | "high" | "critical"; location: string; description: string }) => {
+  const addIncident = async (newIncidentData: { 
+    type: string; 
+    severity: "low" | "medium" | "high" | "critical"; 
+    location: string; 
+    description: string;
+    aiUnit?: string;
+    aiRisk?: string;
+    aiScore?: number;
+    aiAnalysis?: string;
+  }) => {
     const generateAISummary = (type: string, severity: string) => {
       const themes = {
         "Cyber Attack": "Neural infiltration detected. Recommend immediate isolation of affected nodes.",
@@ -143,7 +161,10 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       createdAt: new Date(),
       location: newIncidentData.location,
       description: newIncidentData.description,
-      aiAnalysis: generateAISummary(newIncidentData.type, isEmergency ? "critical" : newIncidentData.severity),
+      aiAnalysis: newIncidentData.aiAnalysis || generateAISummary(newIncidentData.type, isEmergency ? "critical" : newIncidentData.severity),
+      aiUnit: newIncidentData.aiUnit || "Determining...",
+      aiRisk: newIncidentData.aiRisk || "Analyzing...",
+      aiScore: newIncidentData.aiScore || 0,
       neuralImpact: isEmergency ? 95 : impactScores[newIncidentData.severity],
       dismissed: false
     };

@@ -9,7 +9,10 @@ export interface Incident {
   createdAt: string;
   location: string;
   description: string;
-  aiAnalysis: string;
+  aiAnalysis?: string;
+  aiUnit?: string;
+  aiRisk?: string;
+  aiScore?: number;
   neuralImpact: number;
   actionTaken?: string;
   isIsolated?: boolean;

@@ -321,6 +321,27 @@ export default function Dashboard() {
                   <p className="body-text italic">
                     &quot;{selectedIncident.aiAnalysis}&quot;
                   </p>
+                  
+                  {selectedIncident.aiAnalysis && (
+                    <div className="mt-8 pt-6 border-t border-white/[0.05]">
+                      <p className="text-[10px] font-mono font-bold text-white/30 uppercase tracking-[0.2em] mb-4">AI Tactical Recommendation</p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <div className="space-y-1 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.03]">
+                          <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Tactical Unit</p>
+                          <p className="text-xs font-bold text-white">{selectedIncident.aiUnit || (selectedIncident as any).aiHospital}</p>
+                        </div>
+                        <div className="space-y-1 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.03]">
+                          <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Risk Index</p>
+                          <p className="text-xs font-bold text-white">{selectedIncident.aiRisk}</p>
+                        </div>
+                        <div className="space-y-1 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.03]">
+                          <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Confidence Score</p>
+                          <p className="text-xs font-bold text-accent-cyan">{selectedIncident.aiScore}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </GlassCard>

@@ -20,6 +20,7 @@ import { GlassCard } from "@/components/GlassCard";
 import { cn } from "@/lib/utils";
 import { useIncidents } from "@/context/IncidentContext";
 import { AegisLogo } from "@/components/AegisLogo";
+import { getAIDecision } from "@/lib/crisisflow";
 
 const INCIDENT_TYPES = ["Flood", "Fire", "Earthquake", "Cyber Attack", "Other"];
 const SEVERITY_LEVELS = ["low", "medium", "high", "critical"];
@@ -63,11 +64,31 @@ export default function ReportPage() {
     setIsSubmitting(true);
     
     try {
+      // Convert severity string to numeric for CrisisFlow API
+      const severityMap: Record<string, number> = {
+        low: 3,
+        medium: 6,
+        high: 8,
+        critical: 10,
+      };
+
+      const aiResponse = await getAIDecision({
+        type: formData.type,
+        severity: severityMap[formData.status] || 5,
+        wait_time: 5,
+        distance: 10,
+      });
+      console.log("AI RESPONSE:", aiResponse)
+
       const id = await addIncident({
         type: formData.type,
         severity: formData.status as any,
         location: formData.location,
-        description: formData.description
+        description: formData.description,
+        aiUnit: aiResponse.unit,
+        aiRisk: aiResponse.risk,
+        aiScore: aiResponse.score,
+        aiAnalysis: aiResponse.reason,
       });
       setTrackingId(id);
       setIsSubmitted(true);
@@ -209,6 +230,13 @@ export default function ReportPage() {
                         "Upload Intelligence Report"
                       )}
                     </Button>
+                    {isSubmitting && (
+                      <div className="flex justify-center pt-2">
+                        <p className="text-accent-cyan animate-pulse text-[10px] font-mono font-bold uppercase tracking-widest">
+                          Generating AI response...
+                        </p>
+                      </div>
+                    )}
                   </form>
                 </div>
               </GlassCard>
@@ -313,6 +341,38 @@ export default function ReportPage() {
                   </div>
                 </div>
               </GlassCard>
+
+              {currentIncident?.aiAnalysis && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="mt-6 w-full max-w-md mx-auto"
+                >
+                  <div className="rounded-2xl bg-white/[0.03] border border-white/[0.05] p-5 backdrop-blur-sm">
+                    <p className="text-[10px] font-mono font-bold text-white/30 uppercase tracking-[0.2em] mb-3">AI Intelligence Response</p>
+
+                    <div className="grid grid-cols-3 gap-4 mb-4">
+                      <div className="space-y-1">
+                        <p className="text-[9px] text-white/30 uppercase font-bold">Tactical Unit</p>
+                        <p className="text-[11px] text-white/90 font-medium truncate">{currentIncident.aiUnit || (currentIncident as any).aiHospital}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[9px] text-white/30 uppercase font-bold">Risk</p>
+                        <p className="text-[11px] text-white/90 font-medium">{currentIncident.aiRisk}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[9px] text-white/30 uppercase font-bold">Score</p>
+                        <p className="text-[11px] text-accent-cyan font-bold">{currentIncident.aiScore}</p>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-white/60 leading-relaxed italic border-t border-white/[0.03] pt-3">
+                      &quot;{currentIncident.aiAnalysis}&quot;
+                    </p>
+                  </div>
+                </motion.div>
+              )}
               
               <div className="flex items-center justify-center gap-3 opacity-30">
                 <Clock className="w-3 h-3 text-slate-500" />

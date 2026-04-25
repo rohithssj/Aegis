@@ -305,6 +305,27 @@ export default function IncidentsPage() {
                   <p className="text-xl md:text-2xl body-text italic z-10 relative font-medium leading-relaxed pr-8">
                     &quot;{selectedIncident.aiAnalysis}&quot;
                   </p>
+                  
+                  {selectedIncident.aiAnalysis && (
+                    <div className="mt-10 pt-8 border-t border-white/[0.05] relative z-10">
+                      <p className="text-[10px] font-mono font-bold text-white/30 uppercase tracking-[0.2em] mb-5">Neural Intelligence Insights</p>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                        <div className="space-y-1">
+                          <p className="text-[9px] text-slate-600 uppercase font-bold tracking-widest">Tactical Unit</p>
+                          <p className="text-sm font-bold text-white tracking-tight">{selectedIncident.aiUnit || (selectedIncident as any).aiHospital}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[9px] text-slate-600 uppercase font-bold tracking-widest">Threat Risk</p>
+                          <p className="text-sm font-bold text-white tracking-tight">{selectedIncident.aiRisk}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[9px] text-slate-600 uppercase font-bold tracking-widest">Decision Confidence</p>
+                          <p className="text-sm font-bold text-accent-indigo tracking-tight">{selectedIncident.aiScore}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </GlassCard>
               </div>
 
