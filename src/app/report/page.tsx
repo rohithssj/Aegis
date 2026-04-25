@@ -128,8 +128,9 @@ export default function ReportPage() {
   if (!isAuthorized) return null;
 
   return (
-    <main className="min-h-screen bg-[#0B1120] py-12 px-6 flex items-center justify-center">
-      <div className="max-w-2xl w-full">
+    <main className="min-h-screen bg-[#0B1120] py-12 md:py-24 px-4 md:px-6 flex items-center justify-center relative overflow-hidden">
+      <div className="max-w-7xl mx-auto w-full relative z-10 flex items-center justify-center">
+        <div className="max-w-2xl w-full">
         <AnimatePresence mode="wait">
           {!isSubmitted ? (
             <motion.div
@@ -149,10 +150,10 @@ export default function ReportPage() {
                 <AegisLogo className="w-8 h-8" showText={false} />
               </div>
 
-              <GlassCard className="p-8 md:p-10 rounded-[2.5rem] border-white/5 bg-white/[0.01]">
+              <GlassCard className="p-6 md:p-10 rounded-2xl md:rounded-[2.5rem] border-white/5 bg-white/[0.01] hover:scale-[1.005] transition-all duration-300">
                 <div className="space-y-8">
                   <div className="space-y-2">
-                    <h1 className="text-3xl font-bold text-white">Report Incident</h1>
+                    <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight">Report <span className="text-accent-indigo italic">Incident</span></h1>
                     <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.2em]">Transmission Protocol Initialized</p>
                   </div>
 
@@ -418,6 +419,7 @@ export default function ReportPage() {
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </div>
     </main>
   );

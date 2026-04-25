@@ -17,6 +17,16 @@ export interface Incident {
   aiPriority?: string;
   aiFactors?: string[];
   aiExplanation?: string;
+  timeline?: {
+    status: string;
+    timestamp: string;
+  }[];
+  lastUpdated?: string;
+  assignedUnit?: string;
+  logs?: {
+    message: string;
+    timestamp: string;
+  }[];
   neuralImpact: number;
   actionTaken?: string;
   isIsolated?: boolean;
@@ -41,6 +51,13 @@ const MOCK_INCIDENTS: Incident[] = [
     location: "Sector 7-G / Core Node",
     description: "Unauthorized access attempt detected on the primary neural firewall. Behavioral patterns suggest an adaptive adversarial agent.",
     aiAnalysis: "The intruder is utilizing a polymorphic decryption algorithm. Aegis AI recommends immediate isolation of Node 7-G and deployment of the tactical counter-response protocol.",
+    timeline: [
+      { status: "Request received", timestamp: "2026-04-17T22:15:00Z" },
+      { status: "AI evaluating scenario", timestamp: "2026-04-17T22:18:00Z" },
+      { status: "Units dispatched", timestamp: "2026-04-17T22:20:00Z" },
+      { status: "Incident closed", timestamp: "2026-04-17T22:45:00Z" }
+    ],
+    lastUpdated: "2026-04-17T22:45:00Z",
     neuralImpact: 88,
   },
   {
@@ -54,6 +71,13 @@ const MOCK_INCIDENTS: Incident[] = [
     location: "Oceanic Gateway / APAC",
     description: "Intermittent packet loss and significant latency increases across the APAC oceanic fiber routes.",
     aiAnalysis: "Latency spikes correlate with seismic activity in the Philippine Sea. Reroute traffic via the Arctic backbone to maintain stability.",
+    timeline: [
+      { status: "Request received", timestamp: "2026-04-17T21:40:00Z" },
+      { status: "AI evaluating scenario", timestamp: "2026-04-17T21:42:00Z" },
+      { status: "Units dispatched", timestamp: "2026-04-17T21:45:00Z" },
+      { status: "Incident closed", timestamp: "2026-04-17T22:10:00Z" }
+    ],
+    lastUpdated: "2026-04-17T22:10:00Z",
     neuralImpact: 45,
   },
   {
@@ -67,6 +91,12 @@ const MOCK_INCIDENTS: Incident[] = [
     location: "Edge Computing Cluster / EU-West",
     description: "Unexpected load balancing behavior in the European edge nodes. Some nodes are operating at 95% while others remain idle.",
     aiAnalysis: "Scheduler logic anomaly detected. Re-syncing node state with the central orchestrator should resolve the imbalance.",
+    timeline: [
+      { status: "Request received", timestamp: "2026-04-17T20:10:00Z" },
+      { status: "AI evaluating scenario", timestamp: "2026-04-17T20:15:00Z" },
+      { status: "Incident closed", timestamp: "2026-04-17T20:45:00Z" }
+    ],
+    lastUpdated: "2026-04-17T20:45:00Z",
     neuralImpact: 12,
   },
   {
@@ -80,6 +110,11 @@ const MOCK_INCIDENTS: Incident[] = [
     location: "Secondary Vault / Lunar Edge",
     description: "Routine checksum verification failed for the secondary backup archives on the Lunar edge station.",
     aiAnalysis: "Cosmic ray interference suspected. Initiate a deep-scrub repair and re-verify integrity from the primary vault.",
+    timeline: [
+      { status: "Request received", timestamp: "2026-04-17T18:30:00Z" },
+      { status: "Incident closed", timestamp: "2026-04-17T19:00:00Z" }
+    ],
+    lastUpdated: "2026-04-17T19:00:00Z",
     neuralImpact: 5,
   },
 ];

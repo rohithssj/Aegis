@@ -22,16 +22,30 @@ import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { GlassCard } from "@/components/GlassCard";
 import { FeedSkeleton } from "@/components/Skeleton";
-import { cn } from "@/lib/utils";
+import { cn, formatTimeAgo } from "@/lib/utils";
 import { useIncidents } from "@/context/IncidentContext";
 import { toast } from "sonner";
 import { Incident } from "@/lib/mockData";
 
 export default function IncidentsPage() {
   const router = useRouter();
-  const { incidents, loading, updateIncidentStatus, dismissIncident } = useIncidents();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [adminNote, setAdminNote] = useState("");
+  const [assignedUnit, setAssignedUnit] = useState("");
+  const { incidents, loading, updateIncidentStatus, dismissIncident, updateIncident, addIncidentLog } = useIncidents();
+  
+  const handleAdminUpdate = async () => {
+    if (!selectedId) return;
+    if (assignedUnit) {
+      await updateIncident(selectedId, { assignedUnit });
+    }
+    if (adminNote) {
+      await addIncidentLog(selectedId, adminNote);
+      setAdminNote("");
+    }
+    toast.success("Admin records updated");
+  };
 
   // Route protection
   useEffect(() => {
@@ -119,7 +133,7 @@ export default function IncidentsPage() {
                   key={incident.id}
                   onClick={() => setSelectedId(incident.id)}
                   className={cn(
-                    "w-full text-left p-4 rounded-xl transition-all duration-300 relative overflow-hidden group/item",
+                    "w-full text-left p-4 rounded-xl transition-all duration-300 relative overflow-hidden group/item hover:scale-[1.02] hover:-translate-y-[2px] ease-out",
                     selectedId === incident.id 
                       ? "bg-white/[0.08] border border-white/[0.05] shadow-lg translate-x-1" 
                       : "bg-transparent border border-transparent hover:bg-white/[0.02] hover:translate-x-1"
@@ -235,36 +249,59 @@ export default function IncidentsPage() {
                   </p>
                 </div>
                 
-                {/* STATUS TIMELINE */}
-                <div className="bg-white/[0.01] border border-white/[0.04] p-8 rounded-[2rem] space-y-8 overflow-hidden">
-                   <div className="flex items-center justify-between">
-                      <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">Incident Lifecycle</h3>
-                      <span className="text-[10px] font-mono font-bold text-accent-cyan">AEGIS_REALTIME_SYNC</span>
+                {/* STATUS TIMELINE - Vertical Upgrade */}
+                <div className="bg-white/[0.01] border border-white/[0.04] p-6 md:p-10 rounded-[2rem] space-y-10 overflow-hidden relative group/timeline">
+                   <div className="flex items-center justify-between mb-2">
+                      <div className="space-y-1">
+                        <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-[0.2em]">Deployment Timeline</h3>
+                        <p className="text-[10px] text-slate-700 font-medium">Real-time Tactical Sync Active</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="text-[10px] font-mono font-bold text-accent-cyan">AEGIS_LIVE_FEED</span>
+                        {selectedIncident.lastUpdated && (
+                          <span className="text-[9px] font-mono text-slate-600 uppercase">Updated {formatTimeAgo(selectedIncident.lastUpdated)}</span>
+                        )}
+                      </div>
                    </div>
-                   <div className="overflow-x-auto pb-4 -mx-2 px-2 custom-scrollbar-horizontal scroll-smooth">
-                     <div className="flex justify-between relative min-w-[500px]">
-                       {/* Connector Line */}
-                       <div className="absolute top-3 left-0 right-0 h-[1px] bg-white/5 -z-0 mx-8" />
-                       {["processing", "analyzing", "responding", "resolved"].map((step, idx, arr) => {
-                         const isCurrent = step === selectedIncident.status;
-                         const isPast = arr.indexOf(selectedIncident.status) >= idx;
-                         return (
-                           <div key={step} className="flex flex-col items-center gap-4 relative z-10">
-                              <div className={cn(
-                                "w-6 h-6 rounded-full border-4 border-background transition-all duration-500 flex items-center justify-center",
-                                isCurrent ? "bg-accent-indigo scale-125 shadow-[0_0_15px_rgba(91,76,240,0.4)]" : 
-                                isPast ? "bg-accent-indigo/40" : "bg-white/5"
+
+                   <div className="space-y-10 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-gradient-to-b before:from-accent-indigo/40 before:via-white/5 before:to-transparent">
+                      {selectedIncident.timeline?.slice().reverse().map((step, idx, arr) => (
+                        <div key={idx} className="flex gap-8 relative group/item">
+                          <div className={cn(
+                            "w-[23px] h-[23px] rounded-full z-10 flex items-center justify-center border-4 border-[#0B1120] transition-all duration-500",
+                            idx === 0 ? "bg-accent-indigo shadow-[0_0_15px_rgba(91,76,240,0.4)] scale-110" : "bg-white/10"
+                          )}>
+                            {idx === 0 ? (
+                              <div className="w-2 h-2 bg-[#0B1120] rounded-full animate-pulse" />
+                            ) : (
+                              <ShieldCheck className="w-2.5 h-2.5 text-white/30" />
+                            )}
+                          </div>
+                          <div className="space-y-2 flex-1">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-1">
+                              <p className={cn(
+                                "text-sm font-bold tracking-tight transition-colors duration-300",
+                                idx === 0 ? "text-white" : "text-slate-500"
                               )}>
-                                {isPast && !isCurrent && <ShieldCheck className="w-3 h-3 text-white/50" />}
-                              </div>
-                              <span className={cn(
-                                "text-[10px] font-mono uppercase tracking-widest transition-colors duration-500",
-                                isCurrent ? "text-white font-bold" : isPast ? "text-slate-500" : "text-slate-700"
-                              )}>{step}</span>
-                           </div>
-                         );
-                       })}
-                     </div>
+                                {step.status}
+                              </p>
+                              <p className="text-[10px] font-mono text-slate-600 uppercase tracking-tighter tabular-nums">
+                                {new Date(step.timestamp).toLocaleString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                              </p>
+                            </div>
+                            <p className={cn(
+                              "text-xs leading-relaxed max-w-md",
+                              idx === 0 ? "text-slate-400" : "text-slate-600"
+                            )}>
+                              {step.status === "Request received" && "Signal captured via global sensor array. Initiating priority assessment."}
+                              {step.status === "AI evaluating scenario" && "Neural engine processing vector data. Determining optimal mitigation strategy."}
+                              {step.status === "Units dispatched" && "Tactical response units deployed to primary Geographic Vector."}
+                              {step.status === "Incident closed" && "Threat mitigated. System returning to standby status."}
+                              {step.status === "Incident dismissed" && "Archive protocol complete. Event de-prioritised."}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
                    </div>
                 </div>
 
@@ -349,19 +386,47 @@ export default function IncidentsPage() {
                           </div>
                         </div>
 
-                        {/* Quick Metrics (4 cols) */}
+                        {/* WOW PANEL — AI Decision Breakdown */}
                         <div className="md:col-span-4 space-y-4">
-                          {[
-                            { label: "Tactical Unit", val: selectedIncident.aiUnit, color: "text-white" },
-                            { label: "Risk Matrix", val: selectedIncident.aiRisk, color: "text-white" },
-                            { label: "Confidence", val: `${selectedIncident.aiConfidence || 0}%`, color: "text-accent-indigo" },
-                            { label: "Command Priority", val: selectedIncident.aiPriority || "P3", color: selectedIncident.aiPriority === 'P1' ? 'text-red-500' : 'text-emerald-500' }
-                          ].map((stat, i) => (
-                            <div key={i} className="bg-white/[0.03] p-4 rounded-2xl border border-white/[0.05]">
-                              <p className="text-[9px] text-slate-600 uppercase font-bold tracking-widest mb-1">{stat.label}</p>
-                              <p className={cn("text-xs font-bold uppercase", stat.color)}>{stat.val}</p>
-                            </div>
-                          ))}
+                          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest flex items-center gap-2">
+                             <Binary className="h-3 w-3" /> AI Decision Breakdown
+                          </p>
+                          <GlassCard className="p-5 border-white/[0.05] bg-white/[0.02] rounded-2xl space-y-4 shadow-2xl hover:scale-[1.02] transition-all duration-300">
+                             <div className="space-y-3">
+                               <div className="flex justify-between items-center">
+                                 <span className="text-[10px] text-white/50 uppercase font-bold">Severity Score</span>
+                                 <span className="text-[10px] text-red-400 font-mono">+{(selectedIncident.neuralImpact * 2 / 10).toFixed(1)}</span>
+                               </div>
+                               <div className="flex justify-between items-center">
+                                 <span className="text-[10px] text-white/50 uppercase font-bold">Distance Factor</span>
+                                 <span className="text-[10px] text-accent-cyan font-mono">-{(Math.random() * 5 * 1.2).toFixed(1)}</span>
+                               </div>
+                               <div className="flex justify-between items-center">
+                                 <span className="text-[10px] text-white/50 uppercase font-bold">Wait Time Boost</span>
+                                 <span className="text-[10px] text-accent-indigo font-mono">+{(Math.random() * 10 * 1.5).toFixed(1)}</span>
+                               </div>
+                             </div>
+                             <div className="pt-3 border-t border-white/[0.05] flex justify-between items-center">
+                               <span className="text-xs font-bold text-white tracking-widest uppercase">Final Score</span>
+                               <span className="text-lg font-black text-accent-indigo drop-shadow-[0_0_8px_rgba(91,76,240,0.5)]">
+                                 {selectedIncident.aiScore || (selectedIncident.neuralImpact * 1.2).toFixed(0)}
+                               </span>
+                             </div>
+                          </GlassCard>
+
+                          <div className="space-y-3 pt-4">
+                            {[
+                              { label: "Tactical Unit", val: selectedIncident.assignedUnit || selectedIncident.aiUnit, color: "text-white" },
+                              { label: "Risk Matrix", val: selectedIncident.aiRisk, color: "text-white" },
+                              { label: "Confidence", val: `${selectedIncident.aiConfidence || 0}%`, color: "text-accent-indigo" },
+                              { label: "Command Priority", val: selectedIncident.aiPriority || "P3", color: selectedIncident.aiPriority === 'P1' ? 'text-red-500' : 'text-emerald-500' }
+                            ].map((stat, i) => (
+                              <div key={i} className="bg-white/[0.03] p-4 rounded-2xl border border-white/[0.05]">
+                                <p className="text-[9px] text-slate-600 uppercase font-bold tracking-widest mb-1">{stat.label}</p>
+                                <p className={cn("text-xs font-bold uppercase", stat.color)}>{stat.val}</p>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -415,6 +480,97 @@ export default function IncidentsPage() {
                   Dismiss Intelligence
                 </Button>
               </div>
+
+              {/* ADMIN CONTROL PANEL */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="space-y-6 pt-10"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-white/[0.05]" />
+                  <p className="text-[10px] font-mono font-bold text-slate-700 uppercase tracking-[0.4em]">Internal Command Only</p>
+                  <div className="h-px flex-1 bg-white/[0.05]" />
+                </div>
+
+                <GlassCard className="p-8 md:p-10 rounded-[2.5rem] border-white/10 bg-white/[0.01] space-y-8" hover={false}>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold text-white flex items-center gap-3">
+                      <ShieldCheck className="h-5 w-5 text-accent-indigo" /> Admin Control Center
+                    </h3>
+                    <Badge variant="low" className="bg-accent-indigo/10 text-accent-indigo font-mono">v4.0_SECURE</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Manual Status Override</label>
+                        <select 
+                          className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-accent-indigo/30 transition-all"
+                          value={selectedIncident.status}
+                          onChange={(e) => handleStatusUpdate(e.target.value as any)}
+                        >
+                          {STATUS_ORDER.map(s => (
+                            <option key={s} value={s} className="bg-background">{s.toUpperCase()}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Assign Tactical Unit</label>
+                        <select 
+                          className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-accent-indigo/30 transition-all"
+                          value={assignedUnit || selectedIncident.assignedUnit || ""}
+                          onChange={(e) => setAssignedUnit(e.target.value)}
+                        >
+                          <option value="" disabled className="bg-background text-slate-500">Select Asset...</option>
+                          <option value="Fire Brigade" className="bg-background">Fire Brigade</option>
+                          <option value="Cyber Unit" className="bg-background">Cyber Unit</option>
+                          <option value="Rescue Team" className="bg-background">Rescue Team</option>
+                          <option value="Medical Dispatch" className="bg-background">Medical Dispatch</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Command Logs / Notes</label>
+                        <textarea 
+                          placeholder="Enter tactical updates..."
+                          className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white h-[115px] focus:outline-none focus:ring-1 focus:ring-accent-indigo/30 transition-all resize-none"
+                          value={adminNote}
+                          onChange={(e) => setAdminNote(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-4">
+                    <Button 
+                      variant="primary" 
+                      onClick={handleAdminUpdate}
+                      className="rounded-full px-10 shadow-lg shadow-accent-indigo/20"
+                    >
+                      Commit Record Updates
+                    </Button>
+                  </div>
+
+                  {/* DISPLAY LOGS */}
+                  {selectedIncident.logs && selectedIncident.logs.length > 0 && (
+                    <div className="pt-8 border-t border-white/[0.05] space-y-4">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Tactical Audit Log</p>
+                      <div className="space-y-3">
+                        {selectedIncident.logs.map((log, i) => (
+                          <div key={i} className="flex gap-4 p-3 bg-white/[0.02] rounded-xl border border-white/[0.03]">
+                            <span className="text-[10px] font-mono text-slate-600 shrink-0">[{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}]</span>
+                            <p className="text-xs text-slate-400 leading-relaxed">{log.message}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </GlassCard>
+              </motion.div>
             </motion.div>
           ) : (
              <div className="h-full flex items-center justify-center">

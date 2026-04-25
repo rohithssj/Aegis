@@ -44,7 +44,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .hero-heading {
-  @apply text-3xl sm:text-4xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight;
+  @apply text-4xl md:text-6xl lg:text-7xl leading-[1.1] tracking-tight;
 }
 
 .section-heading {
@@ -52,7 +52,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .body-text {
-  @apply text-[13px] md:text-sm text-white/70 leading-relaxed;
+  @apply text-sm md:text-base text-white/70 leading-relaxed;
 }
 
 .label-text {

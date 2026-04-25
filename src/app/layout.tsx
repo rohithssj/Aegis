@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 import { Navbar } from "@/components/Navbar";
 import { IncidentProvider } from "@/context/IncidentContext";
 

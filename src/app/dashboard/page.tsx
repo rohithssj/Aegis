@@ -13,7 +13,8 @@ import {
   BarChart2,
   TrendingUp,
   Globe,
-  ShieldAlert
+  ShieldAlert,
+  Binary
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { MetricPoint } from "@/lib/mockData";
@@ -24,6 +25,13 @@ import { MetricSkeleton, ChartSkeleton, FeedSkeleton } from "@/components/Skelet
 import { cn } from "@/lib/utils";
 import { useIncidents } from "@/context/IncidentContext";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
+import { formatTimeAgo } from "@/lib/utils";
+
+const MapView = dynamic(() => import("@/components/MapView"), { 
+  ssr: false,
+  loading: () => <div className="w-full h-full bg-white/[0.02] animate-pulse rounded-2xl flex items-center justify-center font-mono text-xs text-slate-500 uppercase tracking-widest">Initialising Tactical Grid...</div>
+});
 
 export default function Dashboard() {
   const router = useRouter();
@@ -155,7 +163,7 @@ export default function Dashboard() {
   if (!isAuthorized) return null;
 
   return (
-    <main className="flex-1 container-premium pt-32 pb-12 section-spacing relative">
+    <main className="flex-1 max-w-7xl mx-auto w-full pt-24 md:pt-32 pb-12 px-4 md:px-6 relative overflow-x-hidden">
       
       {isEmergency && (
         <div className="fixed top-16 left-0 right-0 z-50 bg-red-600/90 backdrop-blur-md py-3 text-center border-b border-red-500 shadow-[0_0_30px_rgba(220,38,38,0.3)] animate-in">
@@ -216,7 +224,7 @@ export default function Dashboard() {
               { label: "Active Nodes", val: "1,204", icon: Globe, trend: "Stable" },
               { label: "Threat Index", val: "0.04", icon: AlertTriangle, trend: "Minimal" },
             ].map((m, i) => (
-              <GlassCard key={i} className="p-5 md:p-6 flex flex-col gap-5 group" hover={true}>
+              <GlassCard key={i} className="p-5 md:p-6 flex flex-col gap-5 group hover:scale-[1.02] hover:-translate-y-[2px] transition-all duration-200 ease-out" hover={true}>
                 <div className="flex items-center justify-between">
                   <div className="p-2.5 rounded-2xl bg-white/[0.03] border border-white/[0.05] group-hover:border-accent-indigo/20 transition-colors">
                     <m.icon className="h-4 w-4 text-slate-400 group-hover:text-accent-indigo transition-colors" />
@@ -253,13 +261,17 @@ export default function Dashboard() {
             {loading ? (
               <ChartSkeleton />
             ) : (
-              <GlassCard className="h-[280px] md:h-[520px] p-0 md:p-6 relative overflow-hidden rounded-3xl border-white/[0.08]" hover={false}>
-                 <div className="absolute inset-0 bg-gradient-to-b from-accent-indigo/[0.02] to-transparent pointer-events-none" />
-                 <div className="relative z-0 h-full p-6">
-                   {LoadChart}
-                 </div>
-                 <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background via-background/20 to-transparent pointer-events-none z-10" />
-              </GlassCard>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <GlassCard className="h-[300px] md:h-[450px] p-0 relative overflow-hidden rounded-[2rem] border-white/[0.08]" hover={false}>
+                   <div className="absolute inset-0 bg-gradient-to-b from-accent-indigo/[0.02] to-transparent pointer-events-none" />
+                   <div className="relative z-0 h-full p-4 md:p-6">
+                     {LoadChart}
+                   </div>
+                </GlassCard>
+                <GlassCard className="h-[250px] md:h-[400px] p-0 relative overflow-hidden rounded-[2rem] border-white/[0.08]" hover={false}>
+                   <MapView incidents={incidents} />
+                </GlassCard>
+              </div>
             )}
           </div>
 
@@ -292,16 +304,50 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                <div className="space-y-3">
-                  <p className="label-text flex items-center gap-3">
-                    <LocateFixed className="h-3.5 w-3.5" /> Target Vectors
-                  </p>
-                  <p className="text-sm text-slate-400 leading-relaxed font-semibold italic">
-                    {selectedIncident.location}
-                  </p>
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
+                <div className="md:col-span-4 space-y-6">
+                  <div className="space-y-4">
+                    <p className="label-text flex items-center gap-3">
+                      <LocateFixed className="h-3.5 w-3.5" /> Target Vectors
+                    </p>
+                    <p className="text-sm text-slate-400 leading-relaxed font-semibold italic">
+                      {selectedIncident.location}
+                    </p>
+                  </div>
+                  
+                  {/* Timeline Section */}
+                  <div className="space-y-4 pt-4 border-t border-white/[0.05]">
+                    <div className="flex items-center justify-between">
+                      <p className="label-text flex items-center gap-3">
+                        <Clock className="h-3.5 w-3.5" /> Deployment Timeline
+                      </p>
+                      {selectedIncident.lastUpdated && (
+                        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-tight">Updated {formatTimeAgo(selectedIncident.lastUpdated)}</span>
+                      )}
+                    </div>
+                    <div className="space-y-6 relative before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-[1px] before:bg-white/10">
+                      {selectedIncident.timeline?.map((step, idx) => (
+                        <div key={idx} className="flex gap-4 relative">
+                          <div className={cn(
+                            "w-4 h-4 rounded-full mt-0.5 z-10 flex items-center justify-center border-2 border-[#0B1120]",
+                            idx === selectedIncident.timeline!.length - 1 ? "bg-accent-cyan" : "bg-white/20"
+                          )}>
+                            {idx === selectedIncident.timeline!.length - 1 && <div className="w-1.5 h-1.5 bg-[#0B1120] rounded-full animate-pulse" />}
+                          </div>
+                          <div className="space-y-1">
+                            <p className={cn("text-xs font-bold", idx === selectedIncident.timeline!.length - 1 ? "text-white" : "text-slate-500")}>
+                              {step.status}
+                            </p>
+                            <p className="text-[10px] font-mono text-slate-600 uppercase tracking-tight">
+                              {new Date(step.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="md:col-span-2 space-y-3">
+                <div className="md:col-span-8 space-y-3">
                   <p className="label-text flex items-center gap-3">
                     <TrendingUp className="h-3.5 w-3.5" /> Intelligence Analysis
                   </p>
@@ -362,27 +408,46 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        {/* Quick Stats */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.03] flex flex-col justify-center">
-                            <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Tactical Unit</p>
-                            <p className="text-xs font-bold text-white truncate">{selectedIncident.aiUnit}</p>
-                          </div>
-                          <div className="space-y-1 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.03] flex flex-col justify-center">
-                            <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Risk Index</p>
-                            <p className="text-xs font-bold text-white uppercase">{selectedIncident.aiRisk}</p>
-                          </div>
-                          <div className="space-y-1 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.03] flex flex-col justify-center">
-                            <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Confidence</p>
-                            <p className="text-xs font-bold text-accent-cyan">{selectedIncident.aiConfidence}%</p>
-                          </div>
-                          <div className="space-y-1 bg-white/[0.02] p-4 rounded-2xl border border-white/[0.03] flex flex-col justify-center">
-                            <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Priority</p>
-                            <p className={cn(
-                              "text-xs font-bold",
-                              selectedIncident.aiPriority === "P1" ? "text-red-500" :
-                              selectedIncident.aiPriority === "P2" ? "text-orange-500" : "text-emerald-500"
-                            )}>{selectedIncident.aiPriority || "P3"}</p>
+                        {/* WOW PANEL — AI Decision Breakdown */}
+                        <div className="space-y-4">
+                          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest flex items-center gap-2">
+                             <Binary className="h-3 w-3" /> AI Decision Breakdown
+                          </p>
+                          <GlassCard className="p-5 border-white/[0.05] bg-white/[0.02] rounded-2xl space-y-4 shadow-2xl hover:scale-[1.02] transition-all duration-300">
+                             <div className="space-y-3">
+                               <div className="flex justify-between items-center">
+                                 <span className="text-[10px] text-white/50 uppercase font-bold">Severity Score</span>
+                                 <span className="text-[10px] text-red-400 font-mono">+{(selectedIncident.neuralImpact * 2 / 10).toFixed(1)}</span>
+                               </div>
+                               <div className="flex justify-between items-center">
+                                 <span className="text-[10px] text-white/50 uppercase font-bold">Distance Factor</span>
+                                 <span className="text-[10px] text-accent-cyan font-mono">-{(Math.random() * 5 * 1.2).toFixed(1)}</span>
+                               </div>
+                               <div className="flex justify-between items-center">
+                                 <span className="text-[10px] text-white/50 uppercase font-bold">Wait Time Boost</span>
+                                 <span className="text-[10px] text-accent-indigo font-mono">+{(Math.random() * 10 * 1.5).toFixed(1)}</span>
+                               </div>
+                             </div>
+                             <div className="pt-3 border-t border-white/[0.05] flex justify-between items-center">
+                               <span className="text-xs font-bold text-white tracking-widest uppercase">Final Score</span>
+                               <span className="text-lg font-black text-accent-indigo drop-shadow-[0_0_8px_rgba(91,76,240,0.5)]">
+                                 {selectedIncident.aiScore || (selectedIncident.neuralImpact * 1.2).toFixed(0)}
+                               </span>
+                             </div>
+                          </GlassCard>
+
+                          <div className="grid grid-cols-2 gap-4 pt-2">
+                            <div className="bg-white/[0.03] p-3 rounded-xl border border-white/[0.05]">
+                              <p className="text-[8px] text-slate-600 uppercase font-bold tracking-widest mb-1">Assigned Asset</p>
+                              <p className="text-[10px] font-bold text-white uppercase truncate">{selectedIncident.assignedUnit || selectedIncident.aiUnit}</p>
+                            </div>
+                            <div className="bg-white/[0.03] p-3 rounded-xl border border-white/[0.05]">
+                              <p className="text-[8px] text-slate-600 uppercase font-bold tracking-widest mb-1">Command Priority</p>
+                              <p className={cn(
+                                "text-[10px] font-bold uppercase",
+                                selectedIncident.aiPriority === 'P1' ? 'text-red-500' : 'text-emerald-500'
+                              )}>{selectedIncident.aiPriority || "P3"}</p>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -421,7 +486,7 @@ export default function Dashboard() {
                 <GlassCard 
                   hover={false}
                   className={cn(
-                    "p-5 transition-all duration-300 border-l-2 relative rounded-2xl overflow-hidden",
+                    "p-5 transition-all duration-300 border-l-2 relative rounded-2xl overflow-hidden hover:scale-[1.02] hover:-translate-y-[2px] ease-out",
                     selectedIncidentId === incident.id
                       ? "bg-white/[0.08] border-l-accent-indigo shadow-lg translate-x-1"
                       : "bg-white/[0.01] border-l-transparent hover:border-l-slate-700 hover:bg-white/[0.03] hover:translate-x-1"

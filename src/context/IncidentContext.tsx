@@ -10,7 +10,8 @@ import {
   orderBy, 
   updateDoc, 
   doc,
-  writeBatch
+  writeBatch,
+  arrayUnion
 } from "firebase/firestore";
 import { Incident } from "@/lib/mockData";
 
@@ -33,6 +34,7 @@ interface IncidentContextType {
   updateIncident: (id: string, updates: Partial<Incident>) => Promise<void>;
   updateIncidentStatus: (id: string, status: Incident["status"]) => Promise<void>;
   dismissIncident: (id: string) => Promise<void>;
+  addIncidentLog: (id: string, message: string) => Promise<void>;
   triggerEmergencyProtocol: () => Promise<void>;
   isEmergency: boolean;
   loading: boolean;
@@ -107,7 +109,33 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
 
   const updateIncidentStatus = async (id: string, status: Incident["status"]) => {
     const docRef = doc(db, "incidents", id);
-    await updateDoc(docRef, { status });
+    const now = new Date().toISOString();
+    
+    const statusMap: Record<string, string> = {
+      processing: "Request received",
+      analyzing: "AI evaluating scenario",
+      responding: "Units dispatched",
+      resolved: "Incident closed",
+      dismissed: "Incident dismissed"
+    };
+
+    await updateDoc(docRef, { 
+      status,
+      lastUpdated: now,
+      timeline: arrayUnion({
+        status: statusMap[status] || status.charAt(0).toUpperCase() + status.slice(1),
+        timestamp: now
+      })
+    });
+  };
+  const addIncidentLog = async (id: string, message: string) => {
+    const docRef = doc(db, "incidents", id);
+    await updateDoc(docRef, {
+      logs: arrayUnion({
+        message,
+        timestamp: new Date().toISOString()
+      })
+    });
   };
 
   const dismissIncident = async (id: string) => {
@@ -177,6 +205,10 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       aiPriority: newIncidentData.aiPriority || "P3",
       aiFactors: newIncidentData.aiFactors || [],
       aiExplanation: newIncidentData.aiExplanation || "Direct tactical allocation based on current neural load.",
+      timeline: [
+        { status: "Request received", timestamp: new Date().toISOString() }
+      ],
+      lastUpdated: new Date().toISOString(),
       neuralImpact: isEmergency ? 95 : impactScores[newIncidentData.severity],
       dismissed: false
     };
@@ -192,6 +224,7 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       updateIncident,
       updateIncidentStatus,
       dismissIncident,
+      addIncidentLog,
       triggerEmergencyProtocol,
       isEmergency,
       loading 
