@@ -1,17 +1,20 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldAlert, Terminal, ArrowRight } from "lucide-react";
+import { ShieldAlert, Terminal, ArrowRight, Activity, Globe } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
 import { AegisLogo } from "@/components/AegisLogo";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/Button";
 
-export default function EntryPage() {
+export default function LandingPage() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
 
-  // If already logged in, redirect
   useEffect(() => {
+    setMounted(true);
+    // Role check logic
     const role = localStorage.getItem("role");
     if (role === "admin") router.push("/dashboard");
     if (role === "user") router.push("/report");
@@ -22,77 +25,116 @@ export default function EntryPage() {
     router.push(role === "admin" ? "/dashboard" : "/report");
   };
 
+  if (!mounted) return null;
+
   return (
-    <main className="min-h-screen flex items-center justify-center p-6 bg-[#0B1120]">
-      <div className="max-w-4xl w-full space-y-16 animate-in">
-        <div className="text-center space-y-3">
+    <main className="min-h-screen bg-[#0B1120] relative overflow-hidden flex flex-col items-center justify-center p-6">
+      {/* Background Ambience */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent-indigo/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-cyan/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
+
+      <div className="max-w-5xl w-full z-10 space-y-20">
+        <header className="text-center space-y-6">
           <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center justify-center gap-4 mb-4"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center gap-6"
           >
-            <AegisLogo className="w-12 h-12" showText={false} />
-            <h1 className="text-5xl font-bold tracking-tight text-white leading-none">Aegis</h1>
+            <AegisLogo className="w-20 h-20 drop-shadow-[0_0_15px_rgba(91,76,240,0.3)]" showText={false} />
+            <div className="space-y-2">
+              <h1 className="text-6xl md:text-7xl font-black tracking-tighter text-white">
+                AEGIS <span className="bg-gradient-to-r from-accent-indigo to-accent-cyan bg-clip-text text-transparent italic font-medium">COMMAND</span>
+              </h1>
+              <p className="text-slate-500 font-mono text-[10px] md:text-xs tracking-[0.6em] uppercase font-bold">
+                Next-Gen Tactical Intelligence & Response System
+              </p>
+            </div>
           </motion.div>
-          <p className="text-slate-500 font-mono text-xs tracking-[0.4em] uppercase font-bold">Emergency Response System</p>
-        </div>
+        </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* User Option */}
-          <motion.button
-            whileHover={{ scale: 1.02, y: -4 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => selectRole("user")}
-            className="text-left group outline-none"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          {/* User Entry */}
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
           >
-            <GlassCard className="p-10 h-full flex flex-col gap-8 rounded-3xl border-white/5 group-hover:border-accent-cyan/30 transition-all bg-white/[0.02] relative overflow-hidden group/card shadow-2xl">
-              <div className="absolute inset-0 bg-gradient-to-br from-accent-cyan/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="p-5 rounded-2xl bg-accent-cyan/10 w-fit text-accent-cyan group-hover:scale-110 transition-transform relative z-10">
-                <ShieldAlert className="w-10 h-10" />
+            <GlassCard 
+              className="p-12 h-full flex flex-col gap-10 rounded-[3rem] border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all group cursor-pointer relative overflow-hidden"
+              hover={true}
+              onClick={() => selectRole("user")}
+            >
+              <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                <ShieldAlert className="w-40 h-40" />
               </div>
-              <div className="space-y-4 flex-1 relative z-10">
-                <h3 className="text-3xl font-bold text-white group-hover:text-accent-cyan transition-colors">Report Incident</h3>
-                <p className="text-slate-400 text-base leading-relaxed font-medium">
-                  Provide real-time information about disasters or emergencies for immediate response.
+              
+              <div className="p-6 rounded-3xl bg-accent-cyan/10 w-fit text-accent-cyan ring-1 ring-accent-cyan/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                <ShieldAlert className="w-12 h-12" />
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-4xl font-bold text-white tracking-tight">Report Incident</h3>
+                <p className="text-slate-400 text-lg leading-relaxed font-medium">
+                  Direct uplink to Aegis neural grid. Submit field reports for immediate autonomous triage and unit deployment.
                 </p>
               </div>
-              <div className="flex items-center gap-2 text-[10px] font-mono font-bold text-accent-cyan uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-2 relative z-10">
-                Start Report <ArrowRight className="w-3 h-3" />
+
+              <div className="flex items-center gap-3 text-xs font-mono font-bold text-accent-cyan uppercase tracking-widest mt-auto group-hover:translate-x-3 transition-transform">
+                Initiate Tactical Report <ArrowRight className="w-4 h-4" />
               </div>
             </GlassCard>
-          </motion.button>
+          </motion.div>
 
-          {/* Admin Option */}
-          <motion.button
-            whileHover={{ scale: 1.02, y: -4 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => selectRole("admin")}
-            className="text-left group outline-none"
+          {/* Admin Entry */}
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
           >
-            <GlassCard className="p-10 h-full flex flex-col gap-8 rounded-3xl border-white/5 group-hover:border-accent-indigo/30 transition-all bg-white/[0.02] relative overflow-hidden group/card shadow-2xl">
-              <div className="absolute inset-0 bg-gradient-to-br from-accent-indigo/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="p-5 rounded-2xl bg-accent-indigo/10 w-fit text-accent-indigo group-hover:scale-110 transition-transform relative z-10">
-                <Terminal className="w-10 h-10" />
+            <GlassCard 
+              className="p-12 h-full flex flex-col gap-10 rounded-[3rem] border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all group cursor-pointer relative overflow-hidden"
+              hover={true}
+              onClick={() => selectRole("admin")}
+            >
+              <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                <Terminal className="w-40 h-40" />
               </div>
-              <div className="space-y-4 flex-1 relative z-10">
-                <h3 className="text-3xl font-bold text-white group-hover:text-accent-indigo transition-colors">Command Center</h3>
-                <p className="text-slate-400 text-base leading-relaxed font-medium">
-                  Monitor, analyze and respond to incidents in real-time with tactical precision.
+
+              <div className="p-6 rounded-3xl bg-accent-indigo/10 w-fit text-accent-indigo ring-1 ring-accent-indigo/20 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-500">
+                <Terminal className="w-12 h-12" />
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-4xl font-bold text-white tracking-tight">Command Center</h3>
+                <p className="text-slate-400 text-lg leading-relaxed font-medium">
+                  Strategic oversight and real-time neural monitoring. Authorized access only to global response coordination.
                 </p>
               </div>
-              <div className="flex items-center gap-2 text-[10px] font-mono font-bold text-accent-indigo uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-2 relative z-10">
-                Admin Access <ArrowRight className="w-3 h-3" />
+
+              <div className="flex items-center gap-3 text-xs font-mono font-bold text-accent-indigo uppercase tracking-widest mt-auto group-hover:translate-x-3 transition-transform">
+                Access Command Grid <ArrowRight className="w-4 h-4" />
               </div>
             </GlassCard>
-          </motion.button>
+          </motion.div>
         </div>
-        
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-px w-12 bg-white/10" />
-          <p className="text-center text-[10px] text-slate-700 font-mono tracking-widest uppercase">
-            Secure Entry Point // Node AD-5592
-          </p>
-        </div>
+
+        <footer className="pt-12 border-t border-white/[0.05] flex flex-col items-center gap-8">
+           <div className="flex gap-12">
+             <div className="flex items-center gap-3 opacity-30">
+               <Activity className="w-4 h-4 text-slate-500" />
+               <span className="text-[10px] font-mono text-slate-500 font-bold tracking-widest uppercase">Grid: Indian-Cluster-01</span>
+             </div>
+             <div className="flex items-center gap-3 opacity-30">
+               <Globe className="w-4 h-4 text-slate-500" />
+               <span className="text-[10px] font-mono text-slate-500 font-bold tracking-widest uppercase">Protocol: Secure_L6</span>
+             </div>
+           </div>
+           <p className="text-[10px] text-slate-800 font-mono tracking-[0.5em] uppercase font-black">
+             SYSTEM_STABLE // NO_UNAUTHORIZED_ENTRY_DETECTED
+           </p>
+        </footer>
       </div>
     </main>
   );

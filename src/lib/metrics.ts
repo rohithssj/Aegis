@@ -49,13 +49,13 @@ export const calculateMetrics = (incidents: Incident[], config: any): SystemMetr
 
     // Response time calculation
     if (incident.timeline && incident.timeline.length >= 2) {
-      // Find 'Request received' and 'Incident closed' or 'Threat mitigated'
-      const startEvent = incident.timeline.find(e => e.status.includes("received") || e.status === "Processing");
-      const endEvent = incident.timeline.find(e => e.status.includes("closed") || e.status.includes("mitigated") || e.status === "Resolved");
+      // Find 'Processing' and 'Incident resolved'
+      const startEvent = incident.timeline.find(e => e.status === "Processing");
+      const endEvent = incident.timeline.find(e => e.status === "Incident resolved");
       
       if (startEvent && endEvent) {
-        const start = new Date(startEvent.timestamp).getTime();
-        const end = new Date(endEvent.timestamp).getTime();
+        const start = new Date(startEvent.time).getTime();
+        const end = new Date(endEvent.time).getTime();
         const diff = (end - start) / 1000; // seconds
         if (diff > 0) {
           totalResponseTime += diff;
@@ -75,4 +75,48 @@ export const calculateMetrics = (incidents: Incident[], config: any): SystemMetr
     criticalCount: incidents.filter(i => i.severity === "critical" || (typeof i.severity === 'number' && i.severity >= 8)).length,
     avgResponseTime: resolvedCount > 0 ? Math.round(totalResponseTime / resolvedCount) : 0
   };
+};
+
+export const generateGraphData = (incidents: Incident[]) => {
+  const buckets: Record<string, number> = {};
+  
+  // Initialize last 24 hours with 0
+  const now = new Date();
+  for (let i = 23; i >= 0; i--) {
+    const d = new Date(now.getTime() - i * 3600000);
+    const hour = d.getHours();
+    const label = `${hour}:00`;
+    buckets[label] = 0;
+  }
+
+  incidents.forEach(i => {
+    const date = new Date(i.createdAt);
+    const hour = date.getHours();
+    const label = `${hour}:00`;
+    
+    // Map severity to weight
+    const severityMap: Record<string, number> = {
+      low: 3,
+      medium: 5,
+      high: 8,
+      critical: 10
+    };
+    const weight = typeof i.severity === 'string' ? severityMap[i.severity] : (i.severity || 1);
+    
+    if (buckets[label] !== undefined) {
+      buckets[label] += weight;
+    }
+  });
+
+  return Object.keys(buckets).sort((a, b) => {
+    const ha = parseInt(a.split(':')[0]);
+    const hb = parseInt(b.split(':')[0]);
+    // This sorting is slightly naive for wrapping around midnight, 
+    // but for the sake of the graph it usually works if buckets are created in order.
+    return 0; // Keep insertion order from initialization loop
+  }).map(label => ({
+    time: label,
+    value: buckets[label],
+    expected: 20 // Static baseline for comparison
+  }));
 };

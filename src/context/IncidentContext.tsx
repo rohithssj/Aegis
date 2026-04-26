@@ -87,29 +87,40 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, []);
 
-  // Sync isEmergency based on active incidents
+  // Sync isEmergency from Firebase config
   useEffect(() => {
-    const hasEmergency = incidents.some(inc => inc.severity === "critical" && inc.status === "responding");
-    if (hasEmergency !== isEmergency) {
-      setIsEmergency(hasEmergency);
-    }
-  }, [incidents, isEmergency]);
+    const unsubscribe = onSnapshot(doc(db, "config", "globalSettings"), (snap) => {
+      const data = snap.data();
+      if (data && typeof data.emergencyMode === 'boolean') {
+        setIsEmergency(data.emergencyMode);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const triggerEmergencyProtocol = async () => {
-    setIsEmergency(true);
-    const batch = writeBatch(db);
+    // Update global config
+    await updateDoc(doc(db, "config", "globalSettings"), {
+      emergencyMode: true
+    });
     
-    incidents.forEach((incident) => {
-      if (incident.status !== "dismissed") {
-        const docRef = doc(db, "incidents", incident.id);
-        batch.update(docRef, {
+    const batch = writeBatch(db);
+    incidents.forEach((inc) => {
+      if (inc.status === "processing" || inc.status === "analyzing") {
+        const docRef = doc(db, "incidents", inc.id);
+        const now = new Date().toISOString();
+        const newEvent: TimelineEvent = {
+          status: "Responding",
+          time: now,
+          message: "Tactical units dispatched via global emergency protocol"
+        };
+        batch.update(docRef, { 
           status: "responding",
-          severity: "critical",
-          neuralImpact: Math.max(incident.neuralImpact, 90)
+          lastUpdated: now,
+          timeline: arrayUnion(newEvent)
         });
       }
     });
-    
     await batch.commit();
   };
 
@@ -117,30 +128,21 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
     const docRef = doc(db, "incidents", id);
     await updateDoc(docRef, updates);
   };
-
   const updateIncidentStatus = async (id: string, status: Incident["status"]) => {
     const docRef = doc(db, "incidents", id);
     const now = new Date().toISOString();
-    
-    const statusMap: Record<string, string> = {
-      processing: "Request received",
-      analyzing: "AI evaluating scenario",
-      responding: "Units dispatched",
-      resolved: "Incident closed",
-      dismissed: "Incident dismissed"
-    };
-
-    const descriptionMap: Record<string, string> = {
-      analyzing: "AI evaluating incident parameters",
-      responding: "Tactical units dispatched",
-      resolved: "Incident successfully resolved",
-      processing: "Request received and logged into system"
-    };
 
     const newEvent: TimelineEvent = {
-      status: statusMap[status] || status.charAt(0).toUpperCase() + status.slice(1),
-      timestamp: now,
-      description: descriptionMap[status] || "Status updated"
+      status: status.charAt(0).toUpperCase() + status.slice(1),
+      time: now,
+      message:
+        status === "analyzing"
+          ? "AI evaluating scenario"
+          : status === "responding"
+          ? "Units dispatched"
+          : status === "resolved"
+          ? "Incident resolved"
+          : "Status updated"
     };
 
     await updateDoc(docRef, { 
@@ -227,6 +229,7 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
 
     const newIncidentBase = {
       trackingId,
+      type: newIncidentData.type,
       title: `${newIncidentData.type} Detection`,
       severity: isEmergency ? "critical" : newIncidentData.severity,
       status,

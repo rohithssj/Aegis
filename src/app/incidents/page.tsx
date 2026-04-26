@@ -264,40 +264,31 @@ export default function IncidentsPage() {
                       </div>
                    </div>
 
-                   <div className="space-y-10 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-gradient-to-b before:from-accent-indigo/40 before:via-white/5 before:to-transparent">
-                      {selectedIncident.timeline?.slice().reverse().map((step, idx, arr) => (
-                        <div key={idx} className="flex gap-8 relative group/item">
-                          <div className={cn(
-                            "w-[23px] h-[23px] rounded-full z-10 flex items-center justify-center border-4 border-[#0B1120] transition-all duration-500",
-                            idx === 0 ? "bg-accent-indigo shadow-[0_0_15px_rgba(91,76,240,0.4)] scale-110" : "bg-white/10"
-                          )}>
-                            {idx === 0 ? (
-                              <div className="w-2 h-2 bg-[#0B1120] rounded-full animate-pulse" />
-                            ) : (
-                              <ShieldCheck className="w-2.5 h-2.5 text-white/30" />
-                            )}
-                          </div>
-                          <div className="space-y-2 flex-1">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-1">
-                              <p className={cn(
-                                "text-sm font-bold tracking-tight transition-colors duration-300",
-                                idx === 0 ? "text-white" : "text-slate-500"
-                              )}>
-                                {step.status}
-                              </p>
-                              <p className="text-[10px] font-mono text-slate-600 uppercase tracking-tighter tabular-nums">
-                                {new Date(step.timestamp).toLocaleString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                              </p>
+                   <div className="space-y-4">
+                      {(selectedIncident.timeline?.length ?? 0) > 0 ? (
+                        <div className="space-y-4">
+                          {selectedIncident.timeline?.map((t, i) => (
+                            <div key={i} className="flex items-start gap-3">
+                              <div className="w-2 h-2 mt-2 rounded-full bg-accent-indigo shadow-[0_0_8px_rgba(91,76,240,0.5)]" />
+                              <div>
+                                <p className="text-sm font-medium text-white">
+                                  {t.status}
+                                </p>
+                                <p className="text-xs text-slate-400">
+                                  {t.message}
+                                </p>
+                                <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+                                  {new Date(t.time).toLocaleTimeString()}
+                                </p>
+                              </div>
                             </div>
-                            <p className={cn(
-                              "text-xs leading-relaxed max-w-md",
-                              idx === 0 ? "text-slate-400" : "text-slate-600"
-                            )}>
-                              {step.description}
-                            </p>
-                          </div>
+                          ))}
                         </div>
-                      ))}
+                      ) : (
+                        <p className="text-slate-500 text-sm italic">
+                          No deployment events recorded for this tactical unit.
+                        </p>
+                      )}
                    </div>
                 </div>
 

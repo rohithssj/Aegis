@@ -12,7 +12,9 @@ import {
   User, 
   LogOut, 
   ChevronDown,
-  Search
+  Search,
+  Menu,
+  X
 } from "lucide-react";
 import { Button } from "./Button";
 import { cn } from "@/lib/utils";
@@ -34,6 +36,7 @@ export const Navbar = () => {
   const { scrollY } = useScroll();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -121,6 +124,14 @@ export const Navbar = () => {
             })}
           </div>
 
+          {/* MOBILE TOGGLE */}
+          <button 
+            className="md:hidden p-2 text-slate-400 hover:text-white transition-colors"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+
           {/* RIGHT ACTIONS */}
           <div className="flex items-center gap-4">
             <Button 
@@ -190,6 +201,46 @@ export const Navbar = () => {
             </div>
           </div>
         </div>
+
+        {/* MOBILE MENU OVERLAY */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden absolute top-full left-0 right-0 bg-[#0B1120] border-t border-white/10 overflow-hidden z-[55] shadow-2xl"
+            >
+              <div className="flex flex-col p-4 gap-2">
+                {(role === "admin" ? ADMIN_NAV : USER_NAV).map((item) => (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={cn(
+                      "flex items-center gap-4 p-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
+                      pathname === item.path ? "bg-accent-indigo/10 text-white" : "text-slate-500 hover:text-white hover:bg-white/5"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.name}
+                  </Link>
+                ))}
+                <div className="h-px bg-white/5 my-2" />
+                <Button 
+                  onClick={() => {
+                    setIsReportModalOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full justify-start gap-4 p-4 rounded-xl text-xs font-bold uppercase tracking-widest bg-accent-indigo/20 text-accent-indigo hover:bg-accent-indigo/30"
+                >
+                  <AlertCircle className="h-4 w-4" />
+                  Report Incident
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.nav>
 
       {/* Incident Modal */}

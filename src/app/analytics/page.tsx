@@ -43,9 +43,9 @@ export default function AnalyticsPage() {
 
     resolvedIncidents.forEach(inc => {
       const start = new Date(inc.createdAt).getTime();
-      const resolvedEntry = inc.timeline?.find(t => t.status === "Incident closed");
+      const resolvedEntry = inc.timeline?.find(t => t.status === "Incident resolved");
       if (resolvedEntry) {
-        const end = new Date(resolvedEntry.timestamp).getTime();
+        const end = new Date(resolvedEntry.time).getTime();
         totalMinutes += (end - start) / (1000 * 60);
       }
     });

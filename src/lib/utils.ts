@@ -58,8 +58,8 @@ export const createInitialTimeline = () => {
   return [
     {
       status: "Processing",
-      timestamp: new Date().toISOString(),
-      description: "Request received and logged into system"
+      time: new Date().toISOString(),
+      message: "Request received"
     }
   ];
 };

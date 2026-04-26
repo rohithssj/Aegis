@@ -28,8 +28,10 @@ import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import { formatTimeAgo } from "@/lib/utils";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
-import { calculateMetrics, SystemMetrics } from "@/lib/metrics";
+import { collection, onSnapshot, doc, getDoc, updateDoc } from "firebase/firestore";
+import { calculateMetrics, SystemMetrics, generateGraphData } from "@/lib/metrics";
+import { generateAlerts, PredictiveAlert } from "@/lib/predictive";
+import { NeuralGraph } from "@/components/NeuralGraph";
 
 const MapView = dynamic(() => import("@/components/MapView"), { 
   ssr: false,
@@ -40,26 +42,19 @@ const Timeline = ({ timeline }: { timeline?: any[] }) => {
   if (!timeline || timeline.length === 0) return null;
 
   return (
-    <div className="space-y-6 relative before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-[1px] before:bg-white/10">
-      {timeline.map((event, i) => (
-        <div key={i} className="flex gap-4 relative">
-          <div className={cn(
-            "w-4 h-4 rounded-full mt-0.5 z-10 flex items-center justify-center border-2 border-[#0B1120]",
-            i === timeline.length - 1 ? "bg-accent-cyan shadow-[0_0_8px_#22d3ee]" : "bg-white/20"
-          )}>
-            {i === timeline.length - 1 && <div className="w-1.5 h-1.5 bg-[#0B1120] rounded-full animate-pulse" />}
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between gap-4">
-              <p className={cn("text-xs font-bold", i === timeline.length - 1 ? "text-white" : "text-slate-500")}>
-                {event.status}
-              </p>
-              <p className="text-[10px] font-mono text-slate-600 uppercase tracking-tight">
-                {new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </p>
-            </div>
-            <p className="text-[10px] text-slate-500 leading-relaxed max-w-[200px]">
-              {event.description}
+    <div className="space-y-4">
+      {timeline.map((t, i) => (
+        <div key={i} className="flex items-start gap-3">
+          <div className="w-2 h-2 mt-2 rounded-full bg-accent-indigo shadow-[0_0_8px_rgba(91,76,240,0.5)]" />
+          <div>
+            <p className="text-sm font-medium text-white">
+              {t.status}
+            </p>
+            <p className="text-xs text-slate-400">
+              {t.message}
+            </p>
+            <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+              {new Date(t.time).toLocaleTimeString()}
             </p>
           </div>
         </div>
@@ -73,6 +68,7 @@ export default function Dashboard() {
   const { incidents, loading: incidentsLoading, triggerEmergencyProtocol, isEmergency } = useIncidents();
   const [metrics, setMetrics] = useState<MetricPoint[]>([]);
   const [computedMetrics, setComputedMetrics] = useState<SystemMetrics | null>(null);
+  const [predictiveAlerts, setPredictiveAlerts] = useState<PredictiveAlert[]>([]);
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -100,6 +96,13 @@ export default function Dashboard() {
         const config = configSnap.exists() ? configSnap.data() : { inferenceSensitivity: "normal" };
         const computed = calculateMetrics(incidentsData, config);
         setComputedMetrics(computed);
+        
+        const alerts = generateAlerts(incidentsData, config);
+        setPredictiveAlerts(alerts);
+
+        const graph = generateGraphData(incidentsData);
+        setMetrics(graph);
+
         setLoading(false);
       });
     });
@@ -120,20 +123,8 @@ export default function Dashboard() {
 
     setMetrics(generateInitialData());
 
-    const interval = setInterval(() => {
-      setMetrics(prev => {
-        const nextTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const newPoint = {
-          time: nextTime,
-          value: 65 + Math.random() * 25,
-          expected: 75
-        };
-        return [...prev.slice(1), newPoint];
-      });
-    }, 2500);
-
+    // No longer need interval for random data
     return () => {
-      clearInterval(interval);
       unsubscribeIncidents();
     };
   }, [isAuthorized]);
@@ -151,62 +142,46 @@ export default function Dashboard() {
   );
 
   const LoadChart = useMemo(() => (
-    <ResponsiveContainer width="100%" height="100%">
-      <AreaChart data={metrics}>
-        <defs>
-          <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#5B4CF0" stopOpacity={0.06} />
-            <stop offset="100%" stopColor="#5B4CF0" stopOpacity={0} />
-          </linearGradient>
-        </defs>
-        <XAxis 
-          dataKey="time" 
-          axisLine={false} 
-          tickLine={false} 
-          tick={{fill: 'rgba(255,255,255,0.2)', fontSize: 9, fontFamily: 'var(--font-mono)'}}
-          interval={5}
-        />
-        <YAxis hide domain={[0, 100]} />
-        <Tooltip 
-          contentStyle={{ 
-            backgroundColor: '#0F172A', 
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '12px',
-            fontSize: '11px',
-            color: '#fff',
-            fontFamily: 'var(--font-mono)',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.5), 0 0 10px rgba(91,76,240,0.1)'
-          }} 
-          itemStyle={{ color: '#5B4CF0' }}
-          cursor={{ stroke: 'rgba(255,255,255,0.05)', strokeWidth: 1 }}
-        />
-        <Area 
-          type="monotone" 
-          dataKey="value" 
-          stroke={isEmergency ? "#ef4444" : "#5B4CF0"}
-          strokeWidth={2}
-          fillOpacity={1} 
-          fill="url(#chartGradient)" 
-          activeDot={{ r: 4, stroke: isEmergency ? "#ef4444" : "#5B4CF0", strokeWidth: 2, fill: '#0B1120' }}
-          isAnimationActive={false}
-        />
-      </AreaChart>
-    </ResponsiveContainer>
+    <div className="space-y-4 h-full flex flex-col">
+      <div className="flex items-center justify-between px-2">
+        <div className="flex items-center gap-3">
+          <Activity className="h-3.5 w-3.5 text-accent-indigo animate-pulse" />
+          <span className="text-[10px] font-mono font-bold text-white/40 uppercase tracking-widest">
+            Real-time Neural Load Stream
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[9px] font-mono text-emerald-500/80 font-bold uppercase tracking-tight">System_Optimal</span>
+        </div>
+      </div>
+      <div className="flex-1">
+        <NeuralGraph data={metrics} isEmergency={isEmergency} />
+      </div>
+    </div>
   ), [metrics, isEmergency]);
 
   const handleProtocolAction = async () => {
-    if (isEmergency) return;
     setIsDeploying(true);
     
-    // Simulate tactical delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    await triggerEmergencyProtocol();
-    setIsDeploying(false);
-    toast.error("EMERGENCY PROTOCOL ACTIVATED", {
-      description: "Global response initiated. All node statuses updated to responding.",
-      duration: 5000,
+    // Toggle emergency mode
+    await updateDoc(doc(db, "config", "globalSettings"), {
+      emergencyMode: !isEmergency
     });
+
+    if (!isEmergency) {
+      await triggerEmergencyProtocol();
+      toast.error("EMERGENCY PROTOCOL ACTIVATED", {
+        description: "Global response initiated. All node statuses updated to responding.",
+        duration: 5000,
+      });
+    } else {
+      toast.success("SYSTEM STABILIZED", {
+        description: "Emergency protocol deactivated. Returning to standby monitoring.",
+      });
+    }
+    
+    setIsDeploying(false);
   };
 
   if (!isAuthorized) return null;
@@ -334,16 +309,20 @@ export default function Dashboard() {
             {loading ? (
               <ChartSkeleton />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <GlassCard className="h-[300px] md:h-[450px] p-0 relative overflow-hidden rounded-[2rem] border-white/[0.08]" hover={false}>
-                   <div className="absolute inset-0 bg-gradient-to-b from-accent-indigo/[0.02] to-transparent pointer-events-none" />
-                   <div className="relative z-0 h-full p-4 md:p-6">
-                     {LoadChart}
-                   </div>
-                </GlassCard>
-                <GlassCard className="h-[250px] md:h-[400px] p-0 relative overflow-hidden rounded-[2rem] border-white/[0.08]" hover={false}>
-                   <MapView incidents={incidents} />
-                </GlassCard>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="lg:col-span-7">
+                  <GlassCard className="h-[300px] md:h-[450px] p-4 md:p-6 relative overflow-hidden rounded-[2.5rem] border-white/[0.08]" hover={false}>
+                    <div className="absolute inset-0 bg-gradient-to-b from-accent-indigo/[0.02] to-transparent pointer-events-none" />
+                    <div className="relative z-0 h-full">
+                      {LoadChart}
+                    </div>
+                  </GlassCard>
+                </div>
+                <div className="lg:col-span-5">
+                  <GlassCard className="h-[300px] md:h-[450px] p-0 relative overflow-hidden rounded-[2.5rem] border-white/[0.08]" hover={false}>
+                    <MapView incidents={incidents} />
+                  </GlassCard>
+                </div>
               </div>
             )}
           </div>
@@ -517,6 +496,25 @@ export default function Dashboard() {
 
         {/* SECONDARY: Intelligence Feed (4 cols) */}
         <aside className="md:col-span-4 space-y-8">
+          {predictiveAlerts.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="label-text mb-0 px-3 flex items-center gap-2">
+                <ShieldAlert className="h-4 w-4 text-red-500 animate-pulse" /> Predictive Alerts
+              </h2>
+              <div className="space-y-3">
+                {predictiveAlerts.map(alert => (
+                  <GlassCard key={alert.id} className="p-4 border-red-500/20 bg-red-500/5 rounded-2xl space-y-2 group hover:border-red-500/40 transition-all">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-widest">{alert.type}</span>
+                      <span className="text-[9px] text-slate-600 font-mono">{new Date(alert.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 font-medium leading-relaxed group-hover:text-white transition-colors">{alert.message}</p>
+                  </GlassCard>
+                ))}
+              </div>
+            </div>
+          )}
+
           <h2 className="label-text mb-0 px-3">
             Real-time Intelligence
           </h2>

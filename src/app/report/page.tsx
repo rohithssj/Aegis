@@ -30,7 +30,7 @@ const SEVERITY_LEVELS = ["low", "medium", "high", "critical"];
 
 export default function ReportPage() {
   const router = useRouter();
-  const { addIncident } = useIncidents();
+  const { addIncident, updateIncidentStatus } = useIncidents();
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
@@ -162,6 +162,10 @@ export default function ReportPage() {
       });
       setTrackingId(id);
       setIsSubmitted(true);
+
+      // Auto-flow simulation
+      setTimeout(() => updateIncidentStatus(id, "analyzing"), 3000);
+      setTimeout(() => updateIncidentStatus(id, "responding"), 8000);
     } catch (error) {
       console.error("Submission failed:", error);
       toast.error("Transmission failed", {
