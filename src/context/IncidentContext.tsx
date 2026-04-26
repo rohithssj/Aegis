@@ -10,10 +10,16 @@ import {
   orderBy, 
   updateDoc, 
   doc,
+  getDoc,
   writeBatch,
   arrayUnion
 } from "firebase/firestore";
-import { Incident } from "@/lib/mockData";
+import { Incident, TimelineEvent } from "@/lib/mockData";
+import { 
+  calculateNeuralImpact, 
+  getTransmissionOrigin, 
+  createInitialTimeline 
+} from "@/lib/utils";
 
 interface IncidentContextType {
   incidents: Incident[];
@@ -27,9 +33,14 @@ interface IncidentContextType {
     aiScore?: number;
     aiConfidence?: number;
     aiPriority?: string;
+    aiAnalysis?: string;
     aiFactors?: string[];
     aiExplanation?: string;
-    aiAnalysis?: string;
+    lat?: number;
+    lng?: number;
+    neuralImpact?: number;
+    origin?: string;
+    threatScore?: number;
   }) => Promise<string>;
   updateIncident: (id: string, updates: Partial<Incident>) => Promise<void>;
   updateIncidentStatus: (id: string, status: Incident["status"]) => Promise<void>;
@@ -119,13 +130,23 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       dismissed: "Incident dismissed"
     };
 
+    const descriptionMap: Record<string, string> = {
+      analyzing: "AI evaluating incident parameters",
+      responding: "Tactical units dispatched",
+      resolved: "Incident successfully resolved",
+      processing: "Request received and logged into system"
+    };
+
+    const newEvent: TimelineEvent = {
+      status: statusMap[status] || status.charAt(0).toUpperCase() + status.slice(1),
+      timestamp: now,
+      description: descriptionMap[status] || "Status updated"
+    };
+
     await updateDoc(docRef, { 
       status,
       lastUpdated: now,
-      timeline: arrayUnion({
-        status: statusMap[status] || status.charAt(0).toUpperCase() + status.slice(1),
-        timestamp: now
-      })
+      timeline: arrayUnion(newEvent)
     });
   };
   const addIncidentLog = async (id: string, message: string) => {
@@ -156,9 +177,14 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
     aiScore?: number;
     aiConfidence?: number;
     aiPriority?: string;
+    aiAnalysis?: string;
     aiFactors?: string[];
     aiExplanation?: string;
-    aiAnalysis?: string;
+    lat?: number;
+    lng?: number;
+    neuralImpact?: number;
+    origin?: string;
+    threatScore?: number;
   }) => {
     const generateAISummary = (type: string, severity: string) => {
       const themes = {
@@ -188,11 +214,22 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
 
     const trackingId = `AEG-${Math.floor(1000 + Math.random() * 9000)}`;
 
+    // Fetch config for auto-isolation
+    const configSnap = await getDoc(doc(db, "config", "globalSettings"));
+    const config = configSnap.exists() ? configSnap.data() : { autoIsolation: true };
+
+    let status = (isEmergency ? "responding" : "processing") as any;
+    
+    // Auto-Isolation logic: Escalating critical incidents immediately if enabled
+    if (config.autoIsolation && (newIncidentData.severity === "critical" || isEmergency)) {
+      status = "responding";
+    }
+
     const newIncidentBase = {
       trackingId,
       title: `${newIncidentData.type} Detection`,
       severity: isEmergency ? "critical" : newIncidentData.severity,
-      status: (isEmergency ? "responding" : "processing") as any,
+      status,
       timestamp: new Date(),
       createdAt: new Date(),
       location: newIncidentData.location,
@@ -205,11 +242,14 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       aiPriority: newIncidentData.aiPriority || "P3",
       aiFactors: newIncidentData.aiFactors || [],
       aiExplanation: newIncidentData.aiExplanation || "Direct tactical allocation based on current neural load.",
-      timeline: [
-        { status: "Request received", timestamp: new Date().toISOString() }
-      ],
+      lat: newIncidentData.lat,
+      lng: newIncidentData.lng,
+      neuralImpact: newIncidentData.neuralImpact || calculateNeuralImpact(newIncidentData.severity, newIncidentData.aiScore),
+      origin: newIncidentData.origin || getTransmissionOrigin(newIncidentData.type),
+      threatScore: newIncidentData.threatScore || 0,
+      timeline: createInitialTimeline(),
       lastUpdated: new Date().toISOString(),
-      neuralImpact: isEmergency ? 95 : impactScores[newIncidentData.severity],
+      neuralImpact_legacy: isEmergency ? 95 : impactScores[newIncidentData.severity],
       dismissed: false
     };
 

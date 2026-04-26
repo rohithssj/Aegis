@@ -293,11 +293,7 @@ export default function IncidentsPage() {
                               "text-xs leading-relaxed max-w-md",
                               idx === 0 ? "text-slate-400" : "text-slate-600"
                             )}>
-                              {step.status === "Request received" && "Signal captured via global sensor array. Initiating priority assessment."}
-                              {step.status === "AI evaluating scenario" && "Neural engine processing vector data. Determining optimal mitigation strategy."}
-                              {step.status === "Units dispatched" && "Tactical response units deployed to primary Geographic Vector."}
-                              {step.status === "Incident closed" && "Threat mitigated. System returning to standby status."}
-                              {step.status === "Incident dismissed" && "Archive protocol complete. Event de-prioritised."}
+                              {step.description}
                             </p>
                           </div>
                         </div>
@@ -308,9 +304,9 @@ export default function IncidentsPage() {
                 <div className="flex flex-wrap gap-12 py-8 border-y border-white/[0.03]">
                   <div className="space-y-2">
                     <p className="label-text mb-0 lowercase">Transmission Origin</p>
-                    <p className="text-sm font-bold text-white flex items-center gap-3">
+                    <p className="text-sm font-bold text-accent-cyan flex items-center gap-3">
                       <Layers className="h-4 w-4 text-accent-indigo" />
-                      SECURE_BACKPLANE_v9
+                      {selectedIncident.origin || "SECURE_BACKPLANE_v9"}
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -324,7 +320,7 @@ export default function IncidentsPage() {
                     <p className="label-text mb-0 lowercase">Neural Impact</p>
                     <p className="text-sm font-bold text-white flex items-center gap-3">
                       <Activity className={cn("h-4 w-4", selectedIncident.severity === 'critical' ? 'text-red-500' : 'text-accent-indigo')} />
-                      <span className="font-mono text-xl">{selectedIncident.neuralImpact}%</span>
+                      <span className="font-mono text-xl">{selectedIncident.neuralImpact || 0}%</span>
                     </p>
                   </div>
                 </div>

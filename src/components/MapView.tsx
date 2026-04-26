@@ -10,7 +10,7 @@ interface MapViewProps {
   incidents: Incident[];
 }
 
-// Simple coordinate derivation from location strings for demo purposes
+// Simple coordinate derivation from location strings for demo purposes (FALLBACK)
 const getLocationCoords = (location: string): [number, number] => {
   const loc = location.toLowerCase();
   if (loc.includes("sector 7-g")) return [28.6139, 77.2090]; // Delhi
@@ -22,7 +22,7 @@ const getLocationCoords = (location: string): [number, number] => {
   if (loc.includes("kolkata") || loc.includes("east")) return [22.5726, 88.3639];
   
   // Default to somewhere in India if not matched
-  return [20.5937 + (Math.random() - 0.5) * 5, 78.9629 + (Math.random() - 0.5) * 5];
+  return [20.5937, 78.9629];
 };
 
 const getSeverityColor = (severity: string) => {
@@ -30,7 +30,7 @@ const getSeverityColor = (severity: string) => {
     case "critical": return "#ef4444"; // red-500
     case "high": return "#f97316"; // orange-500
     case "medium": return "#eab308"; // yellow-500
-    case "low": return "#06b6d4"; // cyan-500
+    case "low": return "#10b981"; // emerald-500
     default: return "#94a3b8"; // slate-400
   }
 };
@@ -39,7 +39,7 @@ export default function MapView({ incidents }: MapViewProps) {
   return (
     <MapContainer 
       center={[20.5937, 78.9629]} 
-      zoom={5} 
+      zoom={4} 
       style={{ height: "100%", width: "100%", background: "#0B1120" }}
       scrollWheelZoom={false}
       className="rounded-2xl overflow-hidden z-0"
@@ -49,7 +49,11 @@ export default function MapView({ incidents }: MapViewProps) {
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       />
       {incidents.map((incident) => {
-        const coords = getLocationCoords(incident.location);
+        // PRIORITY: Use real coordinates if they exist, otherwise fallback to derivation
+        const coords: [number, number] = (incident.lat && incident.lng) 
+          ? [incident.lat, incident.lng] 
+          : getLocationCoords(incident.location);
+          
         const color = getSeverityColor(incident.severity);
         
         return (

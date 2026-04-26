@@ -21,6 +21,9 @@ import { cn } from "@/lib/utils";
 import { useIncidents } from "@/context/IncidentContext";
 import { AegisLogo } from "@/components/AegisLogo";
 import { getAIDecision } from "@/lib/crisisflow";
+import { toast } from "sonner";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 const INCIDENT_TYPES = ["Flood", "Fire", "Earthquake", "Cyber Attack", "Other"];
 const SEVERITY_LEVELS = ["low", "medium", "high", "critical"];
@@ -57,6 +60,46 @@ export default function ReportPage() {
     }
   }, [router]);
 
+  const getCoordinates = async (location: string): Promise<{ lat: number; lng: number } | null> => {
+    try {
+      // 1. Check cache
+      const cacheKey = `geo_${location.toLowerCase().trim()}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        console.log("Using cached coordinates for:", location);
+        return JSON.parse(cached);
+      }
+
+      // 2. Rate limiting/Throttling safeguard
+      // Nominatim requires a User-Agent and ideally not more than 1 request per second.
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=json&limit=1`,
+        {
+          headers: {
+            "User-Agent": "Aegis-Crisis-Management-System"
+          }
+        }
+      );
+
+      if (!response.ok) throw new Error("Geolocation service unavailable");
+      const data = await response.json();
+
+      if (data && data.length > 0) {
+        const coords = {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon)
+        };
+        // Cache the result
+        localStorage.setItem(cacheKey, JSON.stringify(coords));
+        return coords;
+      }
+      return null;
+    } catch (error) {
+      console.error("Geolocation error:", error);
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.location || !formData.description) return;
@@ -64,7 +107,24 @@ export default function ReportPage() {
     setIsSubmitting(true);
     
     try {
-      // Convert severity string to numeric for CrisisFlow API
+      // 1. Get Coordinates first
+      const coords = await getCoordinates(formData.location);
+      if (!coords) {
+        toast.error("Location lookup failed", {
+          description: "Using fallback tactical coordinates. Accuracy may be reduced.",
+        });
+      }
+
+      // 2. Fetch Global Settings
+      const configSnap = await getDoc(doc(db, "config", "globalSettings"));
+      const config = configSnap.exists() ? configSnap.data() : { alertPriority: "standard" };
+
+      // 3. Alert Priority Simulation (Throttling standard alerts)
+      if (config.alertPriority === "standard") {
+        await new Promise(res => setTimeout(res, 2000));
+      }
+
+      // 4. Convert severity string to numeric for CrisisFlow API
       const severityMap: Record<string, number> = {
         low: 3,
         medium: 6,
@@ -72,15 +132,18 @@ export default function ReportPage() {
         critical: 10,
       };
 
+      // 5. Get AI Decision (Pass config)
       const aiResponse = await getAIDecision({
         type: formData.type,
         severity: severityMap[formData.status] || 5,
         wait_time: 5,
         distance: 10,
         location: formData.location,
+        config: config
       });
       console.log("AI RESPONSE:", aiResponse)
 
+      // 4. Add Incident to Firebase
       const id = await addIncident({
         type: formData.type,
         severity: formData.status as any,
@@ -91,14 +154,19 @@ export default function ReportPage() {
         aiScore: aiResponse.score,
         aiConfidence: aiResponse.confidence,
         aiPriority: aiResponse.priority,
-        aiFactors: aiResponse.factors,
-        aiExplanation: aiResponse.explanation,
         aiAnalysis: aiResponse.reason,
+        lat: coords?.lat,
+        lng: coords?.lng,
+        neuralImpact: aiResponse.neuralImpact,
+        threatScore: aiResponse.threatScore,
       });
       setTrackingId(id);
       setIsSubmitted(true);
     } catch (error) {
       console.error("Submission failed:", error);
+      toast.error("Transmission failed", {
+        description: "Critical error in incident reporting protocol.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -376,31 +444,6 @@ export default function ReportPage() {
                           "text-green-500"
                         )}>
                           {currentIncident.aiPriority}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4 border-t border-white/[0.03] pt-4 mb-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-mono font-bold text-white/30 uppercase tracking-[0.2em]">Tactical Breakdown</p>
-                        <div className="px-2 py-0.5 rounded-full bg-accent-cyan/10 border border-accent-cyan/20">
-                          <p className="text-[8px] text-accent-cyan font-bold uppercase tracking-widest">Logic Flow</p>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        {currentIncident.aiFactors?.map((factor, idx) => (
-                          <div key={idx} className="flex items-start gap-2">
-                            <div className="w-1 h-1 rounded-full bg-accent-indigo mt-1.5 shrink-0" />
-                            <p className="text-[10px] text-white/50 font-medium leading-relaxed">{factor}</p>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="bg-white/[0.02] rounded-xl p-3 border border-white/5">
-                        <p className="text-[9px] text-white/30 uppercase font-bold mb-1.5">Decision Summary</p>
-                        <p className="text-[10px] text-slate-400 leading-relaxed italic">
-                          &quot;{currentIncident.aiExplanation}&quot;
                         </p>
                       </div>
                     </div>

@@ -23,3 +23,43 @@ export function formatTimeAgo(dateString: string | undefined): string {
   const days = Math.floor(hours / 24);
   return `${days} day${days !== 1 ? 's' : ''} ago`;
 }
+
+export const calculateNeuralImpact = (severity: "critical" | "high" | "medium" | "low" | number, aiScore?: number) => {
+  let severityNum = 5;
+  if (typeof severity === "string") {
+    const map = { critical: 10, high: 8, medium: 5, low: 3 };
+    severityNum = map[severity] || 5;
+  } else {
+    severityNum = severity;
+  }
+  
+  const base = severityNum * 10;
+  const bonus = aiScore ? Math.min(aiScore / 2, 20) : 0;
+  return Math.min(100, Math.round(base + bonus));
+};
+
+export const getTransmissionOrigin = (type: string) => {
+  switch (type?.toLowerCase()) {
+    case "fire":
+      return "IOT_SENSOR_GRID";
+    case "cyber":
+    case "cyber attack":
+      return "CYBER_DEFENSE_NODE";
+    case "flood":
+      return "SATELLITE_MONITORING_SYSTEM";
+    case "medical":
+      return "EMERGENCY_CALL_CENTER";
+    default:
+      return "USER_INPUT_PORTAL";
+  }
+};
+
+export const createInitialTimeline = () => {
+  return [
+    {
+      status: "Processing",
+      timestamp: new Date().toISOString(),
+      description: "Request received and logged into system"
+    }
+  ];
+};

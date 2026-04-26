@@ -21,39 +21,22 @@ import { Badge } from "@/components/Badge";
 import { GlassCard } from "@/components/GlassCard";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
-
-const SETTING_GROUPS = [
-  {
-    title: "Intelligence & Analysis",
-    description: "Manage neural network parameters and predictive modeling triggers.",
-    items: [
-      { id: "infer-mode", name: "Inference Sensitivity", desc: "Level of sensitivity for anomaly detection", icon: Cpu, val: "Enhanced" },
-      { id: "predict-horizon", name: "Predictive Horizon", desc: "How far into the future AI attempts to forecast", icon: Zap, val: "6 Hours" },
-      { id: "neural-sync", name: "Neural Sync Frequency", desc: "Synchronization rate between core and edge nodes", icon: Database, val: "Real-time" },
-    ]
-  },
-  {
-    title: "Security & Protocols",
-    description: "Configure the Aegis firewall and automated response triggers.",
-    items: [
-      { id: "firewall-lv", name: "Firewall Aggression", desc: "Strictness of automated packet drop protocols", icon: Shield, val: "Tier 4" },
-      { id: "auth-mode", name: "Access Protocols", desc: "Neural biometric requirements for root actions", icon: Lock, val: "Biometric L3" },
-      { id: "node-isolation", name: "Auto-Isolation", desc: "Automatically isolate nodes on critical detection", icon: Globe, val: "Enabled" },
-    ]
-  },
-  {
-    title: "Notifications & Alerts",
-    description: "Manage how you receive mission-critical updates.",
-    items: [
-      { id: "alert-level", name: "Critical Alert Priority", desc: "Delivery method for Priority 1 incidents", icon: Bell, val: "Satellite Overrride" },
-      { id: "team-sync", name: "Incident Team Sync", desc: "Share active incident logs with tactical teams", icon: Users, val: "Opt-in" },
-    ]
-  }
-];
+import { db } from "@/lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [settings, setSettings] = useState({
+    inferenceSensitivity: "normal", // low | normal | enhanced
+    predictiveHorizon: 6,            // hours (1–12)
+    autoIsolation: true,
+    alertPriority: "satellite"       // satellite | standard
+  });
 
   // Route protection
   useEffect(() => {
@@ -65,12 +48,51 @@ export default function SettingsPage() {
     }
   }, [router]);
 
+  // Fetch settings from Firebase
+  useEffect(() => {
+    if (!isAuthorized) return;
+
+    const fetchSettings = async () => {
+      try {
+        const ref = doc(db, "config", "globalSettings");
+        const docSnap = await getDoc(ref);
+        if (docSnap.exists()) {
+          setSettings(docSnap.data() as any);
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+        toast.error("Failed to sync global configuration");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, [isAuthorized]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await setDoc(doc(db, "config", "globalSettings"), settings);
+      toast.success("System configuration updated globally", {
+        description: "Neural protocols synchronized across all edge nodes."
+      });
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      toast.error("Failed to broadcast changes");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (!isAuthorized) return null;
+
   return (
     <main className="flex-1 container-premium pt-32 pb-16 section-spacing pb-40">
       <header className="space-y-4 max-w-3xl">
         <div className="flex items-center gap-3">
-          <Badge variant="neutral" dot={false} className="font-bold rounded-lg px-2">v4.2.0</Badge>
+          <Badge variant="neutral" dot={false} className="font-bold rounded-lg px-2">v4.5.0_STABLE</Badge>
+          {loading && <Badge variant="low" className="animate-pulse">SYNCING...</Badge>}
         </div>
         <h1 className="hero-heading">
           Global <span className="text-slate-500">Configuration</span>
@@ -80,55 +102,150 @@ export default function SettingsPage() {
         </p>
       </header>
 
-      <div className="space-y-16">
-        {SETTING_GROUPS.map((group, i) => (
-          <section key={i} className="space-y-8 animate-in">
-            <div className="space-y-2 px-1">
-              <h2 className="section-heading text-white">{group.title}</h2>
-              <p className="text-xs text-slate-500 font-medium">{group.description}</p>
-            </div>
+      <div className="space-y-12 mt-16">
+        {/* Intelligence Settings */}
+        <section className="space-y-8 animate-in">
+          <div className="space-y-2 px-1">
+            <h2 className="section-heading text-white">Intelligence & Analysis</h2>
+            <p className="text-xs text-slate-500 font-medium">Manage neural network parameters and predictive modeling triggers.</p>
+          </div>
 
-            <div className="space-y-3">
-              {group.items.map((item) => (
-                <GlassCard 
-                  key={item.id} 
-                  className="flex flex-col md:flex-row items-start md:items-center justify-between p-5 md:p-6 transition-all duration-300 gap-6 rounded-2xl"
-                  hover={true}
-                >
-                  <div className="flex items-center gap-5">
-                    <div className="p-2.5 rounded-2xl bg-accent-indigo/[0.03] border border-white/[0.05] text-accent-indigo">
-                      <item.icon className="h-5 w-5" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm font-bold text-white tracking-tight leading-none uppercase">{item.name}</p>
-                      <p className="text-[11px] text-slate-500 font-medium leading-none">{item.desc}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
-                    <span className="text-[10px] font-mono font-bold text-accent-cyan bg-accent-cyan/[0.03] px-3 py-1.5 rounded-lg border border-white/[0.05] uppercase tracking-widest leading-none">
-                      {item.val}
-                    </span>
-                    <Button variant="ghost" size="sm" className="hidden md:flex py-2 border-white/[0.05] h-9">Modify</Button>
-                    <ChevronRight className="h-4 w-4 text-slate-700 md:hidden" />
-                  </div>
-                </GlassCard>
-              ))}
-            </div>
-          </section>
-        ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <GlassCard className="p-6 space-y-6 rounded-2xl" hover={false}>
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-accent-indigo/10 text-accent-indigo">
+                  <Cpu className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-white uppercase tracking-wider">Inference Sensitivity</p>
+                  <p className="text-[10px] text-slate-500">Anomaly detection threshold</p>
+                </div>
+              </div>
+              <div className="flex gap-2 p-1 bg-white/[0.02] border border-white/[0.05] rounded-xl">
+                {["low", "normal", "enhanced"].map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setSettings({ ...settings, inferenceSensitivity: mode })}
+                    className={cn(
+                      "flex-1 py-2 text-[10px] font-bold uppercase rounded-lg transition-all",
+                      settings.inferenceSensitivity === mode 
+                        ? "bg-accent-indigo text-white shadow-lg" 
+                        : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.03]"
+                    )}
+                  >
+                    {mode}
+                  </button>
+                ))}
+              </div>
+            </GlassCard>
+
+            <GlassCard className="p-6 space-y-6 rounded-2xl" hover={false}>
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-accent-cyan/10 text-accent-cyan">
+                  <Zap className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-white uppercase tracking-wider">Predictive Horizon</p>
+                  <p className="text-[10px] text-slate-500">Forecasting range (1–12 hours)</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <input 
+                  type="range" 
+                  min="1" 
+                  max="12" 
+                  value={settings.predictiveHorizon}
+                  onChange={(e) => setSettings({ ...settings, predictiveHorizon: parseInt(e.target.value) })}
+                  className="flex-1 accent-accent-cyan"
+                />
+                <span className="text-xl font-mono font-bold text-white min-w-[3ch]">{settings.predictiveHorizon}h</span>
+              </div>
+            </GlassCard>
+          </div>
+        </section>
+
+        {/* Protocol Settings */}
+        <section className="space-y-8 animate-in">
+          <div className="space-y-2 px-1">
+            <h2 className="section-heading text-white">Security & Protocols</h2>
+            <p className="text-xs text-slate-500 font-medium">Configure automated response triggers and network isolation.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <GlassCard className="p-6 flex items-center justify-between rounded-2xl" hover={false}>
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-accent-indigo/10 text-accent-indigo">
+                  <Globe className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-white uppercase tracking-wider">Auto-Isolation</p>
+                  <p className="text-[10px] text-slate-500">Lock nodes on critical detection</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSettings({ ...settings, autoIsolation: !settings.autoIsolation })}
+                className={cn(
+                  "w-12 h-6 rounded-full p-1 transition-all duration-300",
+                  settings.autoIsolation ? "bg-accent-indigo" : "bg-white/10"
+                )}
+              >
+                <div className={cn(
+                  "w-4 h-4 bg-white rounded-full transition-all duration-300",
+                  settings.autoIsolation ? "translate-x-6" : "translate-x-0"
+                )} />
+              </button>
+            </GlassCard>
+
+            <GlassCard className="p-6 space-y-6 rounded-2xl" hover={false}>
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-accent-cyan/10 text-accent-cyan">
+                  <Bell className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-white uppercase tracking-wider">Critical Alert Priority</p>
+                  <p className="text-[10px] text-slate-500">Delivery channel for Priority 1</p>
+                </div>
+              </div>
+              <div className="flex gap-2 p-1 bg-white/[0.02] border border-white/[0.05] rounded-xl">
+                {["standard", "satellite"].map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setSettings({ ...settings, alertPriority: mode })}
+                    className={cn(
+                      "flex-1 py-2 text-[10px] font-bold uppercase rounded-lg transition-all",
+                      settings.alertPriority === mode 
+                        ? "bg-accent-cyan text-slate-900 shadow-lg" 
+                        : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.03]"
+                    )}
+                  >
+                    {mode}
+                  </button>
+                ))}
+              </div>
+            </GlassCard>
+          </div>
+        </section>
       </div>
 
-      <GlassCard className="p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 border-accent-indigo/10 rounded-3xl" hover={false}>
+      <GlassCard className="p-8 md:p-10 mt-16 flex flex-col md:flex-row items-center justify-between gap-8 border-accent-indigo/10 rounded-3xl" hover={false}>
          <div className="flex items-center gap-6">
             <div className="h-12 w-12 rounded-full bg-accent-indigo/10 flex items-center justify-center text-accent-indigo border border-white/[0.05] shadow-lg">
               <History className="h-5 w-5" />
             </div>
             <div className="space-y-1">
               <p className="label-text mb-0">Protocol Version Control</p>
-              <p className="text-xs text-slate-400 font-mono font-bold tracking-widest">v4.2.0-STABLE_b2026.04.18</p>
+              <p className="text-xs text-slate-400 font-mono font-bold tracking-widest uppercase">v4.5.0-PROXIMA_b{new Date().getFullYear()}.{new Date().getMonth()+1}.{new Date().getDate()}</p>
             </div>
          </div>
-         <Button variant="primary" size="lg" className="w-full md:w-auto min-w-[200px]">Broadcast Changes</Button>
+         <Button 
+           variant="primary" 
+           size="lg" 
+           className="w-full md:w-auto min-w-[200px]"
+           onClick={handleSave}
+           disabled={isSaving}
+         >
+           {isSaving ? "BROADCASTING..." : "Broadcast Changes"}
+         </Button>
       </GlassCard>
     </main>
   );

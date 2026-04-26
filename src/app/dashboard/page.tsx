@@ -27,16 +27,52 @@ import { useIncidents } from "@/context/IncidentContext";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import { formatTimeAgo } from "@/lib/utils";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
+import { calculateMetrics, SystemMetrics } from "@/lib/metrics";
 
 const MapView = dynamic(() => import("@/components/MapView"), { 
   ssr: false,
   loading: () => <div className="w-full h-full bg-white/[0.02] animate-pulse rounded-2xl flex items-center justify-center font-mono text-xs text-slate-500 uppercase tracking-widest">Initialising Tactical Grid...</div>
 });
 
+const Timeline = ({ timeline }: { timeline?: any[] }) => {
+  if (!timeline || timeline.length === 0) return null;
+
+  return (
+    <div className="space-y-6 relative before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-[1px] before:bg-white/10">
+      {timeline.map((event, i) => (
+        <div key={i} className="flex gap-4 relative">
+          <div className={cn(
+            "w-4 h-4 rounded-full mt-0.5 z-10 flex items-center justify-center border-2 border-[#0B1120]",
+            i === timeline.length - 1 ? "bg-accent-cyan shadow-[0_0_8px_#22d3ee]" : "bg-white/20"
+          )}>
+            {i === timeline.length - 1 && <div className="w-1.5 h-1.5 bg-[#0B1120] rounded-full animate-pulse" />}
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between gap-4">
+              <p className={cn("text-xs font-bold", i === timeline.length - 1 ? "text-white" : "text-slate-500")}>
+                {event.status}
+              </p>
+              <p className="text-[10px] font-mono text-slate-600 uppercase tracking-tight">
+                {new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+            <p className="text-[10px] text-slate-500 leading-relaxed max-w-[200px]">
+              {event.description}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export default function Dashboard() {
   const router = useRouter();
   const { incidents, loading: incidentsLoading, triggerEmergencyProtocol, isEmergency } = useIncidents();
   const [metrics, setMetrics] = useState<MetricPoint[]>([]);
+  const [computedMetrics, setComputedMetrics] = useState<SystemMetrics | null>(null);
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -56,7 +92,17 @@ export default function Dashboard() {
   useEffect(() => {
     if (!isAuthorized) return;
 
-    setLoading(false);
+    // Real-time listener for incidents and config to compute metrics
+    const unsubscribeIncidents = onSnapshot(collection(db, "incidents"), (snapshot) => {
+      const incidentsData = snapshot.docs.map(doc => doc.data() as any);
+      
+      getDoc(doc(db, "config", "globalSettings")).then(configSnap => {
+        const config = configSnap.exists() ? configSnap.data() : { inferenceSensitivity: "normal" };
+        const computed = calculateMetrics(incidentsData, config);
+        setComputedMetrics(computed);
+        setLoading(false);
+      });
+    });
 
     const generateInitialData = () => {
       const data: MetricPoint[] = [];
@@ -86,7 +132,10 @@ export default function Dashboard() {
       });
     }, 2500);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      unsubscribeIncidents();
+    };
   }, [isAuthorized]);
 
   // Set initial selection once incidents arrive
@@ -219,21 +268,45 @@ export default function Dashboard() {
             Array.from({ length: 4 }).map((_, i) => <MetricSkeleton key={i} />)
           ) : (
             [
-              { label: "Neural Load", val: metrics.length > 0 ? `${metrics[metrics.length-1].value.toFixed(1)}%` : "0.0%", icon: Activity, trend: "+2.1%" },
-              { label: "Network Latency", val: "42ms", icon: Zap, trend: "-12ms" },
-              { label: "Active Nodes", val: "1,204", icon: Globe, trend: "Stable" },
-              { label: "Threat Index", val: "0.04", icon: AlertTriangle, trend: "Minimal" },
+              { 
+                label: "Neural Load", 
+                val: computedMetrics ? `${computedMetrics.neuralImpact}%` : "0%", 
+                icon: Activity, 
+                trend: computedMetrics && computedMetrics.neuralImpact > 70 ? "Critical" : computedMetrics && computedMetrics.neuralImpact > 40 ? "Elevated" : "Stable",
+                color: computedMetrics && computedMetrics.neuralImpact > 70 ? "text-red-500" : computedMetrics && computedMetrics.neuralImpact > 40 ? "text-yellow-500" : "text-accent-cyan"
+              },
+              { 
+                label: "Avg Response", 
+                val: computedMetrics ? `${computedMetrics.avgResponseTime}s` : "0s", 
+                icon: Zap, 
+                trend: "Live",
+                color: "text-accent-cyan"
+              },
+              { 
+                label: "Active Nodes", 
+                val: computedMetrics ? computedMetrics.activeIncidents.toString() : "0", 
+                icon: Globe, 
+                trend: "Grid Sync",
+                color: "text-accent-cyan"
+              },
+              { 
+                label: "Threat Index", 
+                val: computedMetrics ? computedMetrics.threatIndex.toFixed(1) : "0.0", 
+                icon: AlertTriangle, 
+                trend: computedMetrics && computedMetrics.threatIndex > 7 ? "CRITICAL" : computedMetrics && computedMetrics.threatIndex > 4 ? "ELEVATED" : "LOW",
+                color: computedMetrics && computedMetrics.threatIndex > 7 ? "text-red-500" : computedMetrics && computedMetrics.threatIndex > 4 ? "text-yellow-500" : "text-emerald-500"
+              },
             ].map((m, i) => (
               <GlassCard key={i} className="p-5 md:p-6 flex flex-col gap-5 group hover:scale-[1.02] hover:-translate-y-[2px] transition-all duration-200 ease-out" hover={true}>
                 <div className="flex items-center justify-between">
                   <div className="p-2.5 rounded-2xl bg-white/[0.03] border border-white/[0.05] group-hover:border-accent-indigo/20 transition-colors">
                     <m.icon className="h-4 w-4 text-slate-400 group-hover:text-accent-indigo transition-colors" />
                   </div>
-                  <span className="font-mono text-[10px] text-accent-cyan font-bold leading-none">{m.trend}</span>
+                  <span className={cn("font-mono text-[10px] font-bold leading-none", m.color)}>{m.trend}</span>
                 </div>
                 <div className="space-y-1">
                   <p className="label-text mb-0">{m.label}</p>
-                  <h4 className="text-2xl font-mono font-bold text-white tracking-tight leading-none">{m.val}</h4>
+                  <h4 className={cn("text-2xl font-mono font-bold tracking-tight leading-none", m.label === "Neural Load" || m.label === "Threat Index" ? m.color : "text-white")}>{m.val}</h4>
                 </div>
               </GlassCard>
             ))
@@ -300,7 +373,9 @@ export default function Dashboard() {
                 </div>
                 <div className="bg-white/[0.03] border border-white/[0.05] p-6 rounded-3xl min-w-[200px] text-center shrink-0">
                   <p className="label-text lowercase mb-2">Impact Intensity</p>
-                  <p className="text-4xl md:text-5xl font-mono font-bold text-white leading-none tracking-tighter">{selectedIncident.neuralImpact}%</p>
+                  <p className="text-4xl md:text-5xl font-mono font-bold text-red-400 leading-none tracking-tighter">
+                    {selectedIncident.neuralImpact || 0}%
+                  </p>
                 </div>
               </div>
 
@@ -310,8 +385,8 @@ export default function Dashboard() {
                     <p className="label-text flex items-center gap-3">
                       <LocateFixed className="h-3.5 w-3.5" /> Target Vectors
                     </p>
-                    <p className="text-sm text-slate-400 leading-relaxed font-semibold italic">
-                      {selectedIncident.location}
+                    <p className="text-sm text-accent-cyan leading-relaxed font-bold italic uppercase tracking-wider">
+                      {selectedIncident.origin || "UNKNOWN_ORIGIN"}
                     </p>
                   </div>
                   
@@ -325,26 +400,7 @@ export default function Dashboard() {
                         <span className="text-[10px] font-mono text-slate-500 uppercase tracking-tight">Updated {formatTimeAgo(selectedIncident.lastUpdated)}</span>
                       )}
                     </div>
-                    <div className="space-y-6 relative before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-[1px] before:bg-white/10">
-                      {selectedIncident.timeline?.map((step, idx) => (
-                        <div key={idx} className="flex gap-4 relative">
-                          <div className={cn(
-                            "w-4 h-4 rounded-full mt-0.5 z-10 flex items-center justify-center border-2 border-[#0B1120]",
-                            idx === selectedIncident.timeline!.length - 1 ? "bg-accent-cyan" : "bg-white/20"
-                          )}>
-                            {idx === selectedIncident.timeline!.length - 1 && <div className="w-1.5 h-1.5 bg-[#0B1120] rounded-full animate-pulse" />}
-                          </div>
-                          <div className="space-y-1">
-                            <p className={cn("text-xs font-bold", idx === selectedIncident.timeline!.length - 1 ? "text-white" : "text-slate-500")}>
-                              {step.status}
-                            </p>
-                            <p className="text-[10px] font-mono text-slate-600 uppercase tracking-tight">
-                              {new Date(step.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <Timeline timeline={selectedIncident.timeline} />
                   </div>
                 </div>
                 <div className="md:col-span-8 space-y-3">
@@ -548,7 +604,13 @@ export default function Dashboard() {
             <p className="text-[11px] text-slate-300 leading-relaxed font-medium">
               Neural efficiency is performing at <span className="text-white font-bold">1.2 Petaflops</span> with 99.9% autonomous mitigation across the edge network.
             </p>
-            <Button variant="ghost" className="w-full border-white/[0.05] h-11 text-xs font-bold hover:bg-white/[0.05] rounded-xl">View Cluster Health</Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => router.push("/cluster")}
+              className="w-full border-white/[0.05] h-11 text-xs font-bold hover:bg-white/[0.05] rounded-xl"
+            >
+              View Cluster Health
+            </Button>
           </GlassCard>
         </aside>
       </div>
