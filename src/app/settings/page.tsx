@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { 
   Settings, 
   Shield, 
@@ -13,17 +13,18 @@ import {
   ChevronRight,
   Zap,
   Activity,
-  History
+  History,
+  Loader2
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
 import { GlassCard } from "@/components/GlassCard";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { toast } from "sonner";
+import { isAdmin } from "@/lib/auth";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -38,14 +39,17 @@ export default function SettingsPage() {
     alertPriority: "satellite"       // satellite | standard
   });
 
-  // Route protection
+  // Authorization check
   useEffect(() => {
-    const role = localStorage.getItem("role");
-    if (role !== "admin") {
-      router.push("/");
-    } else {
-      setIsAuthorized(true);
-    }
+    const checkAuth = async () => {
+      const admin = isAdmin();
+      if (!admin) {
+        router.replace("/admin");
+      } else {
+        setIsAuthorized(true);
+      }
+    };
+    checkAuth();
   }, [router]);
 
   // Fetch settings from Firebase
@@ -85,10 +89,19 @@ export default function SettingsPage() {
     }
   };
 
-  if (!isAuthorized) return null;
+  if (!isAuthorized) {
+    return (
+      <div className="h-screen flex items-center justify-center text-white bg-[#05070A]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+          <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">Validating Credentials...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <main className="flex-1 container-premium pt-32 pb-16 section-spacing pb-40">
+    <main className="flex-1 container-premium pt-32 pb-16 section-spacing pb-40 bg-[#05070A]">
       <header className="space-y-4 max-w-3xl">
         <div className="flex items-center gap-3">
           <Badge variant="neutral" dot={false} className="font-bold rounded-lg px-2">v4.5.0_STABLE</Badge>
@@ -97,12 +110,12 @@ export default function SettingsPage() {
         <h1 className="hero-heading">
           Global <span className="text-slate-500">Configuration</span>
         </h1>
-        <p className="body-text">
+        <p className="body-text text-slate-400">
           Fine-tune the Aegis orchestrator and neural defense layers. Changes apply globally to the edge network within 5ms.
         </p>
       </header>
 
-      <div className="space-y-12 mt-16">
+      <div className="space-y-12 mt-16 text-white">
         {/* Intelligence Settings */}
         <section className="space-y-8 animate-in">
           <div className="space-y-2 px-1">
@@ -233,7 +246,7 @@ export default function SettingsPage() {
               <History className="h-5 w-5" />
             </div>
             <div className="space-y-1">
-              <p className="label-text mb-0">Protocol Version Control</p>
+              <p className="label-text mb-0 text-white">Protocol Version Control</p>
               <p className="text-xs text-slate-400 font-mono font-bold tracking-widest uppercase">v4.5.0-PROXIMA_b{new Date().getFullYear()}.{new Date().getMonth()+1}.{new Date().getDate()}</p>
             </div>
          </div>
@@ -250,5 +263,3 @@ export default function SettingsPage() {
     </main>
   );
 }
-
-

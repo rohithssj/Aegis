@@ -33,11 +33,15 @@ export default function IncidentsPage() {
   
   // Authorization check
   useEffect(() => {
-    if (!isAdmin()) {
-      router.push("/admin");
-    } else {
-      setIsAuthorized(true);
-    }
+    const checkAuth = async () => {
+      const admin = isAdmin();
+      if (!admin) {
+        router.replace("/admin");
+      } else {
+        setIsAuthorized(true);
+      }
+    };
+    checkAuth();
   }, [router]);
 
   // Initial selection
@@ -62,12 +66,18 @@ export default function IncidentsPage() {
   };
 
   const sanitizeAiText = (text: string | undefined) => {
-    if (!text) return "";
-    return text
+    if (!text) return null;
+    
+    // Remove markdown symbols (*, #, `)
+    const cleaned = text
       .replace(/[*#`]/g, "")
-      .replace(/\n+/g, " ")
+      // Collapse multiple spaces/newlines into one
+      .replace(/\s+/g, " ")
       .trim()
-      .substring(0, 400);
+      // Limit length to ~200 chars
+      .slice(0, 200);
+
+    return cleaned;
   };
 
   const getStatusStyles = (incident: Incident) => {
@@ -88,7 +98,16 @@ export default function IncidentsPage() {
     return "bg-slate-500";
   };
 
-  if (!isAuthorized) return null;
+  if (!isAuthorized) {
+    return (
+      <div className="h-screen flex items-center justify-center text-white bg-[#05070A]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+          <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">Validating Credentials...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="flex-1 flex flex-col md:flex-row h-screen pt-16 overflow-hidden bg-[#05070A] text-white">
@@ -220,7 +239,17 @@ export default function IncidentsPage() {
                            <span className="text-[10px] uppercase tracking-wide text-white/50">Aegis Heuristic Report</span>
                         </div>
                         <p className="text-lg leading-relaxed text-white/80 italic font-medium max-w-[95%]">
-                          {sanitizeAiText(selectedIncident.aiNarration) || "Aegis AI is monitoring this vector for anomalous patterns. Click Execute AI Synthesis for tactical synthesis."}
+                          {(() => {
+                            const cleaned = sanitizeAiText(selectedIncident.aiNarration);
+                            const isInvalid = !cleaned || 
+                              cleaned.toLowerCase().includes("ai busy") || 
+                              cleaned.toLowerCase().includes("fallback") || 
+                              cleaned.toLowerCase().includes("cached");
+                            
+                            return !isInvalid 
+                              ? cleaned 
+                              : "Click Execute Response to generate tactical intelligence.";
+                          })()}
                         </p>
                         
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-8 pt-8 mt-8 border-t border-white/5">
@@ -253,35 +282,25 @@ export default function IncidentsPage() {
                       onClick={async () => {
                         if (!selectedIncident || isAiLoading) return;
                         setIsAiLoading(true);
-                        const toastId = toast.loading("Synthesizing tactical data...");
                         try {
-                          const prompt = `Analyze this incident:
-Title: ${selectedIncident.title}
-Location: ${selectedIncident.location}
-Severity: ${selectedIncident.severity}
-
-Return concise plain text only. Focus on summary + action insight. Max 5 sentences.`;
-
+                          const { doc, updateDoc } = await import("firebase/firestore");
+                          const { db } = await import("@/lib/firebase");
+                          
                           const res = await fetch("/api/ai", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ prompt })
+                            body: JSON.stringify({ incident: selectedIncident })
                           });
 
                           const data = await res.json();
                           if (data.text) {
-                            const { doc, updateDoc } = await import("firebase/firestore");
-                            const { db } = await import("@/lib/firebase");
                             await updateDoc(doc(db, "incidents", selectedIncident.id), {
                               aiNarration: data.text,
                               lastUpdated: new Date().toISOString()
                             });
-                            toast.success("Tactical synthesis complete.", { id: toastId });
-                          } else {
-                            throw new Error("Failed");
                           }
                         } catch (err) {
-                          toast.error("AI synthesis failed. Reverting to local heuristics.", { id: toastId });
+                          console.error("AI Synthesis Error:", err);
                         } finally {
                           setIsAiLoading(false);
                         }

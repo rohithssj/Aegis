@@ -28,6 +28,7 @@ import dynamic from "next/dynamic";
 import { db } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { toast } from "sonner";
+import { isAdmin } from "@/lib/auth";
 
 const MapView = dynamic(() => import("@/components/MapView"), { 
   ssr: false,
@@ -45,7 +46,22 @@ export default function Dashboard() {
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
   const [mode, setMode] = useState<"live" | "history">("live");
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const router = typeof window !== "undefined" ? require("next/navigation").useRouter() : null;
   
+  // Authorization check
+  useEffect(() => {
+    const checkAuth = async () => {
+      const admin = isAdmin();
+      if (!admin) {
+        if (router) router.replace("/admin");
+      } else {
+        setIsAuthorized(true);
+      }
+    };
+    checkAuth();
+  }, [router]);
+
   const [liveMetrics, setLiveMetrics] = useState<MetricPoint[]>(() => {
     const points: MetricPoint[] = [];
     const now = new Date();
@@ -94,17 +110,10 @@ export default function Dashboard() {
     if (!selectedIncident || isAiLoading) return;
     setIsAiLoading(true);
     try {
-      const prompt = `Analyze this incident:
-Title: ${selectedIncident.title}
-Location: ${selectedIncident.location}
-Severity: ${selectedIncident.severity}
-
-Return concise plain text only. Focus on summary + action insight. Max 5 sentences.`;
-
       const res = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt })
+        body: JSON.stringify({ incident: selectedIncident })
       });
 
       const data = await res.json();
@@ -114,44 +123,31 @@ Return concise plain text only. Focus on summary + action insight. Max 5 sentenc
           aiMitigation: data.text,
           lastUpdated: new Date().toISOString()
         });
-        toast.success("Tactical response generated.");
-      } else {
-        throw new Error("Empty response from AI");
       }
     } catch (err) {
       console.error(err);
-      toast.error("AI Analysis failed. Reverting to local heuristic fallback.");
     } finally {
       setIsAiLoading(false);
     }
   };
 
   const sanitizeAiText = (text: string | undefined) => {
-    if (!text) return "";
-    return text
+    if (!text) return null;
+    const cleaned = text
       .replace(/[*#`]/g, "")
-      .replace(/\n+/g, " ")
+      .replace(/\s+/g, " ")
       .trim()
-      .substring(0, 400);
+      .slice(0, 200);
+    return cleaned;
   };
 
   const displayMetrics = mode === "live" ? liveMetrics : HISTORY_DATA;
 
-  if (loading) return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#05070A] p-10 space-y-10">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricSkeleton />
-        <MetricSkeleton />
-        <MetricSkeleton />
-        <MetricSkeleton />
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-8">
-          <ChartSkeleton />
-        </div>
-        <div className="lg:col-span-4">
-          <FeedSkeleton count={6} />
-        </div>
+  if (!isAuthorized || loading) return (
+    <div className="h-screen flex items-center justify-center text-white bg-[#05070A]">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+        <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">Validating Credentials...</p>
       </div>
     </div>
   );
@@ -354,7 +350,17 @@ Return concise plain text only. Focus on summary + action insight. Max 5 sentenc
                            <span className="text-[10px] uppercase tracking-wide text-white/50">Aegis Heuristic Report</span>
                         </div>
                         <p className="text-sm leading-relaxed text-white/80 italic font-medium max-w-[95%]">
-                          {sanitizeAiText(selectedIncident.aiMitigation) || "Aegis AI is monitoring this vector. Click Execute Response for tactical synthesis."}
+                          {(() => {
+                            const cleaned = sanitizeAiText(selectedIncident.aiMitigation);
+                            const isInvalid = !cleaned || 
+                              cleaned.toLowerCase().includes("ai busy") || 
+                              cleaned.toLowerCase().includes("fallback") || 
+                              cleaned.toLowerCase().includes("cached");
+                            
+                            return !isInvalid 
+                              ? cleaned 
+                              : "Click Execute Response to generate tactical intelligence.";
+                          })()}
                         </p>
                       </motion.div>
                     )}

@@ -9,12 +9,15 @@ import {
   AlertTriangle, 
   CheckCircle2, 
   ShieldAlert,
-  ChevronLeft
+  ChevronLeft,
+  Loader2
 } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
 import { useIncidents } from "@/context/IncidentContext";
 import { Button } from "@/components/Button";
 import { motion } from "framer-motion";
+import { isAdmin } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 
 export default function AnalyticsPage() {
   const router = useRouter();
@@ -22,12 +25,15 @@ export default function AnalyticsPage() {
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    const role = localStorage.getItem("role");
-    if (role !== "admin") {
-      router.push("/");
-    } else {
-      setIsAuthorized(true);
-    }
+    const checkAuth = async () => {
+      const admin = isAdmin();
+      if (!admin) {
+        router.replace("/admin");
+      } else {
+        setIsAuthorized(true);
+      }
+    };
+    checkAuth();
   }, [router]);
 
   const stats = useMemo(() => {
@@ -57,7 +63,18 @@ export default function AnalyticsPage() {
     return { total, critical, normal, avgResponse };
   }, [incidents]);
 
-  if (!isAuthorized || loading) return (
+  if (!isAuthorized) {
+    return (
+      <div className="h-screen flex items-center justify-center text-white bg-[#05070A]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+          <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">Validating Credentials...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-4">
         <div className="h-8 w-8 border-2 border-accent-indigo border-t-transparent rounded-full animate-spin" />
@@ -125,29 +142,29 @@ export default function AnalyticsPage() {
           </div>
           <div className="space-y-4">
              {['Critical', 'High', 'Medium', 'Low'].map((level) => {
-               const count = incidents.filter(i => i.severity === level.toLowerCase()).length;
-               const percentage = stats.total > 0 ? (count / stats.total) * 100 : 0;
-               return (
-                 <div key={level} className="space-y-2">
-                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest">
-                      <span className="text-slate-400">{level}</span>
-                      <span className="text-white">{count} ({Math.round(percentage)}%)</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${percentage}%` }}
-                        transition={{ duration: 1, ease: "easeOut" }}
-                        className={cn(
-                          "h-full",
-                          level === 'Critical' ? 'bg-red-500' : 
-                          level === 'High' ? 'bg-orange-500' :
-                          level === 'Medium' ? 'bg-yellow-500' : 'bg-accent-cyan'
-                        )}
-                      />
-                    </div>
-                 </div>
-               );
+                const count = incidents.filter(i => i.severity === level.toLowerCase()).length;
+                const percentage = stats.total > 0 ? (count / stats.total) * 100 : 0;
+                return (
+                  <div key={level} className="space-y-2">
+                     <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest">
+                       <span className="text-slate-400">{level}</span>
+                       <span className="text-white">{count} ({Math.round(percentage)}%)</span>
+                     </div>
+                     <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                       <motion.div 
+                         initial={{ width: 0 }}
+                         animate={{ width: `${percentage}%` }}
+                         transition={{ duration: 1, ease: "easeOut" }}
+                         className={cn(
+                           "h-full",
+                           level === 'Critical' ? 'bg-red-500' : 
+                           level === 'High' ? 'bg-orange-500' :
+                           level === 'Medium' ? 'bg-yellow-500' : 'bg-accent-cyan'
+                         )}
+                       />
+                     </div>
+                  </div>
+                );
              })}
           </div>
         </GlassCard>
@@ -194,9 +211,4 @@ export default function AnalyticsPage() {
       </div>
     </main>
   );
-}
-
-// Helper function for class names
-function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(" ");
 }

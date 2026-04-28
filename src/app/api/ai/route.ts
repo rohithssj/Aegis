@@ -2,11 +2,36 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const { prompt } = await req.json();
+    const { incident } = await req.json();
 
     if (!process.env.OPENROUTER_API_KEY) {
-      return NextResponse.json({ error: "OpenRouter API Key missing" }, { status: 500 });
+      return NextResponse.json({ text: null });
     }
+
+    const prompt = `
+You are an AI emergency response system.
+
+Analyze the incident:
+
+Title: ${incident.title}
+Description: ${incident.description}
+Severity: ${incident.severity}
+Location: ${incident.location}
+
+Instructions:
+
+* Respond in plain text only
+* No markdown, no symbols
+* Max 4 sentences
+* Be specific to this incident
+* Do not give generic answers. Response must depend on incident type.
+
+Output:
+
+* What is happening
+* Risk level
+* Immediate action
+`;
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -18,28 +43,16 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         model: "openai/gpt-4o-mini",
-        messages: [
-          { 
-            role: "system", 
-            content: "You are an emergency response AI. Return concise plain text ONLY. No markdown, no bolding (**), no hashtags (#), no bullet points, no symbols. Maximum 3-5 short sentences. Focus on summary and action insight." 
-          },
-          { role: "user", content: prompt }
-        ]
+        messages: [{ role: "user", content: prompt }]
       }),
     });
 
     const data = await response.json();
-    const rawText = data.choices?.[0]?.message?.content || "AI Analysis unavailable.";
-    
-    // Server-side secondary cleanup
-    const cleanText = rawText
-      .replace(/[*#`]/g, "")
-      .replace(/\n+/g, " ")
-      .trim();
+    const text = data.choices?.[0]?.message?.content || null;
 
-    return NextResponse.json({ text: cleanText });
+    return NextResponse.json({ text });
   } catch (error) {
     console.error("AI Route Error:", error);
-    return NextResponse.json({ error: "Failed to generate tactical response" }, { status: 500 });
+    return NextResponse.json({ text: null });
   }
 }
