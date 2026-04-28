@@ -1,124 +1,75 @@
 "use client";
 
-import React from "react";
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap, Circle } from "react-leaflet";
+import React, { useMemo } from "react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
-import "leaflet.heat";
-import "leaflet.markercluster";
-import "leaflet.markercluster/dist/MarkerCluster.css";
-import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { Incident } from "@/lib/mockData";
 import { Badge } from "./Badge";
+import { cn } from "@/lib/utils";
 
 interface MapViewProps {
   incidents: Incident[];
 }
 
-// Marker Cluster Component
-const MarkerCluster = ({ incidents }: { incidents: Incident[] }) => {
-  const map = useMap();
+// Proximity-based grouping (Radius ~0.01)
+const groupIncidents = (incidents: Incident[]) => {
+  const groups: Record<string, { 
+    lat: number; 
+    lng: number; 
+    count: number; 
+    criticalCount: number; 
+    mediumCount: number; 
+    lowCount: number; 
+    items: Incident[] 
+  }> = {};
 
-  React.useEffect(() => {
-    if (!map || incidents.length === 0) return;
+  incidents.forEach(inc => {
+    if (!inc.lat || !inc.lng) return;
+    
+    // Bucket by 0.01 precision
+    const latBucket = Math.round(inc.lat * 100) / 100;
+    const lngBucket = Math.round(inc.lng * 100) / 100;
+    const key = `${latBucket},${lngBucket}`;
 
-    const mg = (L as any).markerClusterGroup({
-      showCoverageOnHover: false,
-      zoomToBoundsOnClick: true,
-      spiderfyOnMaxZoom: true,
-      iconCreateFunction: (cluster: any) => {
-        const count = cluster.getChildCount();
-        return L.divIcon({
-          html: `<div class="w-8 h-8 rounded-full bg-accent-indigo/80 border-2 border-white/20 flex items-center justify-center text-[10px] font-bold text-white backdrop-blur-sm shadow-[0_0_15px_rgba(91,76,240,0.4)]">${count}</div>`,
-          className: 'custom-cluster-icon',
-          iconSize: L.point(32, 32)
-        });
-      }
-    });
-
-    incidents.forEach(i => {
-      const coords = (i.lat && i.lng) ? [i.lat, i.lng] : getLocationCoords(i.location);
-      const marker = L.marker(coords as any, {
-        icon: L.divIcon({
-          html: `<div class="w-2 h-2 rounded-full bg-accent-cyan animate-pulse shadow-[0_0_8px_cyan]"></div>`,
-          className: 'custom-marker-icon'
-        })
-      });
-      mg.addLayer(marker);
-    });
-
-    map.addLayer(mg);
-    return () => {
-      map.removeLayer(mg);
-    };
-  }, [map, incidents]);
-
-  return null;
-};
-
-// Heatmap Layer Component
-const HeatmapLayer = ({ incidents }: { incidents: Incident[] }) => {
-  const map = useMap();
-
-  React.useEffect(() => {
-    if (!map || incidents.length === 0) return;
-
-    const heatPoints = incidents.map(i => {
-      const coords = (i.lat && i.lng) 
-        ? [i.lat, i.lng] 
-        : getLocationCoords(i.location);
-      
-      const severityMap: Record<string, number> = {
-        low: 0.3,
-        medium: 0.5,
-        high: 0.8,
-        critical: 1.0
+    if (!groups[key]) {
+      groups[key] = { 
+        lat: latBucket, 
+        lng: lngBucket, 
+        count: 0, 
+        criticalCount: 0, 
+        mediumCount: 0, 
+        lowCount: 0, 
+        items: [] 
       };
-      const intensity = typeof i.severity === 'string' ? severityMap[i.severity] : (i.severity / 10);
-      
-      return [...coords, intensity];
-    }) as any;
+    }
 
-    const heatLayer = (L as any).heatLayer(heatPoints, { 
-      radius: 30,
-      blur: 20,
-      maxZoom: 10,
-      gradient: { 0.2: 'green', 0.5: 'yellow', 0.8: 'orange', 1: 'red' }
-    }).addTo(map);
+    groups[key].count++;
+    if (inc.severity === "critical") groups[key].criticalCount++;
+    else if (inc.severity === "medium") groups[key].mediumCount++;
+    else groups[key].lowCount++;
+    groups[key].items.push(inc);
+  });
 
-    return () => {
-      map.removeLayer(heatLayer);
-    };
-  }, [map, incidents]);
-
-  return null;
-};
-
-// Simple coordinate derivation from location strings for demo purposes (FALLBACK)
-const getLocationCoords = (location: string): [number, number] => {
-  const loc = location.toLowerCase();
-  if (loc.includes("sector 7-g")) return [28.6139, 77.2090]; // Delhi
-  if (loc.includes("apac")) return [1.3521, 103.8198]; // Singapore
-  if (loc.includes("eu-west")) return [48.8566, 2.3522]; // Paris
-  if (loc.includes("lunar")) return [20.0, 0.0]; // Demo
-  if (loc.includes("mumbai") || loc.includes("west")) return [19.0760, 72.8777];
-  if (loc.includes("bangalore") || loc.includes("south")) return [12.9716, 77.5946];
-  if (loc.includes("kolkata") || loc.includes("east")) return [22.5726, 88.3639];
-  
-  // Default to somewhere in India if not matched
-  return [20.5937, 78.9629];
-};
-
-const getSeverityColor = (severity: string) => {
-  switch (severity) {
-    case "critical": return "#ef4444"; // red-500
-    case "high": return "#f97316"; // orange-500
-    case "medium": return "#eab308"; // yellow-500
-    case "low": return "#10b981"; // emerald-500
-    default: return "#94a3b8"; // slate-400
-  }
+  return Object.values(groups);
 };
 
 export default function MapView({ incidents }: MapViewProps) {
+  const groupedData = useMemo(() => groupIncidents(incidents), [incidents]);
+
+  const createClusterIcon = (cluster: any) => {
+    let colorClass = "bg-emerald-500/80 shadow-[0_0_15px_#10b981]";
+    if (cluster.criticalCount > 0) colorClass = "bg-red-500/80 shadow-[0_0_15px_#ef4444]";
+    else if (cluster.mediumCount > 0) colorClass = "bg-yellow-500/80 shadow-[0_0_15px_#eab308]";
+
+    const size = Math.min(60, 32 + cluster.count * 2);
+
+    return L.divIcon({
+      html: `<div class="marker ${colorClass} rounded-full border-2 border-white/20 flex items-center justify-center text-[10px] font-bold text-white backdrop-blur-sm" style="width: ${size}px; height: ${size}px;">${cluster.count}</div>`,
+      className: 'custom-cluster-icon',
+      iconSize: L.point(size, size)
+    });
+  };
+
   return (
     <MapContainer 
       center={[20.5937, 78.9629]} 
@@ -131,61 +82,37 @@ export default function MapView({ incidents }: MapViewProps) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       />
-      <HeatmapLayer incidents={incidents} />
-      <MarkerCluster incidents={incidents} />
-      {incidents.map((incident) => {
-        const coords: [number, number] = (incident.lat && incident.lng) 
-          ? [incident.lat, incident.lng] 
-          : getLocationCoords(incident.location);
-          
-        const color = getSeverityColor(incident.severity);
-        
-        // Impact radius calculation
-        const severityValues: Record<string, number> = { low: 5, medium: 8, high: 12, critical: 20 };
-        const radius = (severityValues[incident.severity] || 10) * 10000; // in meters for Circle
-
-        return (
-          <React.Fragment key={incident.id}>
-            <Circle
-              center={coords}
-              radius={radius}
-              pathOptions={{
-                fillColor: color,
-                color: color,
-                weight: 1,
-                opacity: 0.2,
-                fillOpacity: 0.1
-              }}
-            />
-            <CircleMarker
-              center={coords}
-              radius={6}
-              pathOptions={{
-                fillColor: color,
-                color: "white",
-                weight: 1,
-                opacity: 1,
-                fillOpacity: 1
-              }}
-            >
-              <Popup className="custom-popup">
-                <div className="p-2 min-w-[150px] bg-[#0F172A] text-white rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-mono font-bold text-slate-500 uppercase">{incident.trackingId}</span>
-                    <Badge variant={incident.severity as any} dot={false} className="text-[8px] py-0">{incident.severity}</Badge>
+      
+      {groupedData.map((cluster, idx) => (
+        <Marker 
+          key={idx} 
+          position={[cluster.lat, cluster.lng]}
+          icon={createClusterIcon(cluster)}
+        >
+          <Popup className="custom-popup">
+            <div className="p-3 min-w-[200px] bg-[#0F172A] text-white rounded-xl space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Sector Activity</span>
+                <Badge variant={cluster.criticalCount > 0 ? "critical" : (cluster.mediumCount > 0 ? "medium" : "low")}>{cluster.count} Events</Badge>
+              </div>
+              <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar">
+                {cluster.items.map((inc) => (
+                  <div key={inc.id} className="text-left space-y-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[11px] font-bold truncate flex-1">{inc.title}</h4>
+                      <span className={cn(
+                        "w-1.5 h-1.5 rounded-full ml-2",
+                        inc.severity === 'critical' ? 'bg-red-500' : (inc.severity === 'medium' ? 'bg-yellow-500' : 'bg-green-500')
+                      )} />
+                    </div>
+                    <p className="text-[9px] text-slate-500 truncate">{inc.location}</p>
                   </div>
-                  <h4 className="text-xs font-bold mb-1">{incident.title}</h4>
-                  <p className="text-[10px] text-slate-400 mb-2">{incident.location}</p>
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse text-accent-cyan" />
-                    <span className="text-[9px] uppercase font-bold text-accent-cyan">{incident.status}</span>
-                  </div>
-                </div>
-              </Popup>
-            </CircleMarker>
-          </React.Fragment>
-        );
-      })}
+                ))}
+              </div>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
     </MapContainer>
   );
 }

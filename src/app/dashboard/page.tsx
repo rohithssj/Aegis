@@ -12,7 +12,9 @@ import {
   Zap, 
   Cpu, 
   Network, 
-  Radio 
+  Radio,
+  Loader2,
+  Binary
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { MetricPoint, Incident } from "@/lib/mockData";
@@ -23,6 +25,9 @@ import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { ChartSkeleton, MetricSkeleton, FeedSkeleton } from "@/components/Skeleton";
 import dynamic from "next/dynamic";
+import { db } from "@/lib/firebase";
+import { doc, updateDoc } from "firebase/firestore";
+import { toast } from "sonner";
 
 const MapView = dynamic(() => import("@/components/MapView"), { 
   ssr: false,
@@ -39,6 +44,7 @@ export default function Dashboard() {
   const { incidents, loading, refreshMetrics } = useIncidents() as any;
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
   const [mode, setMode] = useState<"live" | "history">("live");
+  const [isAiLoading, setIsAiLoading] = useState(false);
   
   const [liveMetrics, setLiveMetrics] = useState<MetricPoint[]>(() => {
     const points: MetricPoint[] = [];
@@ -83,6 +89,51 @@ export default function Dashboard() {
     incidents.find((inc: Incident) => inc.id === selectedIncidentId),
     [incidents, selectedIncidentId]
   );
+
+  const handleExecute = async () => {
+    if (!selectedIncident || isAiLoading) return;
+    setIsAiLoading(true);
+    try {
+      const prompt = `Analyze this incident:
+Title: ${selectedIncident.title}
+Location: ${selectedIncident.location}
+Severity: ${selectedIncident.severity}
+
+Return concise plain text only. Focus on summary + action insight. Max 5 sentences.`;
+
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt })
+      });
+
+      const data = await res.json();
+      if (data.text) {
+        const docRef = doc(db, "incidents", selectedIncident.id);
+        await updateDoc(docRef, {
+          aiMitigation: data.text,
+          lastUpdated: new Date().toISOString()
+        });
+        toast.success("Tactical response generated.");
+      } else {
+        throw new Error("Empty response from AI");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("AI Analysis failed. Reverting to local heuristic fallback.");
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
+  const sanitizeAiText = (text: string | undefined) => {
+    if (!text) return "";
+    return text
+      .replace(/[*#`]/g, "")
+      .replace(/\n+/g, " ")
+      .trim()
+      .substring(0, 400);
+  };
 
   const displayMetrics = mode === "live" ? liveMetrics : HISTORY_DATA;
 
@@ -223,29 +274,29 @@ export default function Dashboard() {
         </GlassCard>
 
         {/* Map + Intelligence */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 h-[600px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 items-start">
+          <div className="h-[600px]">
             <GlassCard className="p-0 overflow-hidden h-full">
               <MapView incidents={incidents} />
             </GlassCard>
           </div>
           
-          <div className="space-y-8 h-[600px]">
-            <GlassCard className="p-8 h-full flex flex-col">
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="text-xl font-bold flex items-center gap-3">
+          <div className="space-y-6 h-[600px]">
+            <GlassCard className="p-6 h-full flex flex-col">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold flex items-center gap-3">
                   <Zap className="w-5 h-5 text-purple-400" /> Live Intelligence
                 </h3>
                 <Badge variant="low">Active_Uplink</Badge>
               </div>
 
-              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4 max-h-[500px] scrollbar-thin scrollbar-thumb-white/10">
+              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 max-h-[500px] scrollbar-thin scrollbar-thumb-white/10">
                 {incidents.map((incident: Incident) => (
                   <button
                     key={incident.id}
                     onClick={() => setSelectedIncidentId(incident.id)}
                     className={cn(
-                      "w-full text-left p-6 rounded-2xl transition-all duration-300 border",
+                      "w-full text-left p-5 rounded-2xl transition-all duration-300 border",
                       selectedIncidentId === incident.id 
                         ? "bg-white/10 border-white/20 shadow-xl" 
                         : "bg-white/5 border-transparent hover:bg-white/10"
@@ -255,7 +306,7 @@ export default function Dashboard() {
                       <div className="space-y-2 flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] font-mono font-bold text-slate-500">{incident.trackingId}</span>
-                          <Badge variant={incident.severity as any} dot={false}>{incident.severity}</Badge>
+                          <Badge variant={incident.severity as any} dot={false} className="text-[9px] py-0">{incident.severity}</Badge>
                         </div>
                         <h4 className="text-sm font-bold truncate">{incident.title}</h4>
                         <div className="flex items-center gap-3 text-[10px] text-slate-500 font-medium">
@@ -271,15 +322,51 @@ export default function Dashboard() {
               </div>
 
               {selectedIncident && (
-                <div className="mt-8 pt-8 border-t border-white/10 space-y-6">
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Tactical Briefing</p>
-                    <p className="text-sm text-slate-300 leading-relaxed italic line-clamp-2">
-                      {selectedIncident.aiMitigation || "Aegis AI is monitoring this vector for anomalous patterns. Heuristic evaluation in progress."}
-                    </p>
-                  </div>
-                  <Button variant="primary" className="w-full">
-                    Execute Response
+                <div className="mt-6 pt-6 border-t border-white/10 space-y-4">
+                  <AnimatePresence mode="wait">
+                    {isAiLoading ? (
+                      <motion.div 
+                        key="shimmer"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="p-5 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 space-y-3"
+                      >
+                         <div className="flex items-center gap-3 mb-2">
+                           <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
+                           <span className="text-[10px] uppercase tracking-wide text-white/50">Synthesizing Briefing...</span>
+                         </div>
+                         <div className="space-y-2">
+                           <div className="h-3 bg-white/10 rounded w-full animate-pulse" />
+                           <div className="h-3 bg-white/10 rounded w-[90%] animate-pulse" />
+                           <div className="h-3 bg-white/10 rounded w-[80%] animate-pulse" />
+                         </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="content"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-5 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_0_30px_rgba(139,92,246,0.1)] space-y-3"
+                      >
+                        <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+                           <Binary className="w-4 h-4 text-purple-400" />
+                           <span className="text-[10px] uppercase tracking-wide text-white/50">Aegis Heuristic Report</span>
+                        </div>
+                        <p className="text-sm leading-relaxed text-white/80 italic font-medium max-w-[95%]">
+                          {sanitizeAiText(selectedIncident.aiMitigation) || "Aegis AI is monitoring this vector. Click Execute Response for tactical synthesis."}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  
+                  <Button 
+                    variant="primary" 
+                    className="w-full h-12" 
+                    onClick={handleExecute}
+                    disabled={isAiLoading}
+                  >
+                    {isAiLoading ? "PROCESSING..." : "Execute Response"}
                   </Button>
                 </div>
               )}
