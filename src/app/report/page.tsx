@@ -27,7 +27,7 @@ const SEVERITY_LEVELS = ["low", "medium", "high", "critical"];
 
 export default function ReportPage() {
   const router = useRouter();
-  const { addIncident, updateIncidentStatus } = useIncidents();
+  const { addIncident } = useIncidents();
   
   const [formData, setFormData] = useState({
     type: "Cyber Attack",
@@ -75,7 +75,7 @@ export default function ReportPage() {
     try {
       const coords = await getCoordinates(formData.location);
       
-      // Simulate Heuristic Processing
+      // Simulate Heuristic Processing delay (Internal to submission)
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       const aiData = {
@@ -109,9 +109,8 @@ export default function ReportPage() {
       
       setTrackingId(id);
       setIsSubmitted(true);
-
-      setTimeout(() => updateIncidentStatus(id, "analyzing"), 4000);
-      setTimeout(() => updateIncidentStatus(id, "responding"), 10000);
+      
+      // REMOVED: Automatic status progression (analyzing/responding timeouts)
     } catch (error) {
       console.error("Submission failed:", error);
       toast.error("Transmission failed");
@@ -121,14 +120,29 @@ export default function ReportPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("role");
+    localStorage.removeItem("isAdmin"); // Standardize with auth key
     router.push("/");
   };
 
   const { incidents } = useIncidents();
   const currentIncident = incidents.find(inc => inc.id === trackingId);
+  
+  // Explicitly use backend status, defaulting to processing for new reports
   const currentStatus = currentIncident?.status || "processing";
   const steps = ["processing", "analyzing", "responding", "resolved"];
+  
+  // Calculate active steps based on real status
+  const getActiveStepsCount = (status: string) => {
+    switch (status) {
+      case "processing": return 1;
+      case "analyzing": return 2;
+      case "responding": return 3;
+      case "resolved": return 4;
+      default: return 1;
+    }
+  };
+  
+  const activeSteps = getActiveStepsCount(currentStatus);
   const currentStepIndex = steps.indexOf(currentStatus);
 
   const statusConfigs = {
@@ -277,7 +291,7 @@ export default function ReportPage() {
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.3, 0.1] }}
                       transition={{ duration: 2, repeat: Infinity }}
-                      className={cn("absolute inset-0 rounded-full border-4", currentStepIndex === 3 ? "border-emerald-500/30" : "border-blue-500/30")}
+                      className={cn("absolute inset-0 rounded-full border-4", activeSteps === 4 ? "border-emerald-500/30" : "border-blue-500/30")}
                     />
                   </div>
 
@@ -295,24 +309,24 @@ export default function ReportPage() {
                       <div className="text-left">
                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Status</span>
                         <span className={cn("text-sm font-bold uppercase flex items-center gap-2", config.color)}>
-                          <span className={cn("w-2 h-2 rounded-full animate-pulse", currentStepIndex === 3 ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-current")} />
+                          <span className={cn("w-2 h-2 rounded-full animate-pulse", activeSteps === 4 ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-current")} />
                           {currentStatus}
                         </span>
                       </div>
                     </div>
 
-                    {/* Progress Indicator */}
+                    {/* Progress Indicator - Reflecting Real-time Status Only */}
                     <div className="px-2">
                        <div className="flex justify-between mb-6">
                          {steps.map((step, idx) => (
                            <div key={step} className="flex flex-col items-center gap-3">
                               <div className={cn(
                                 "w-3 h-3 rounded-full transition-all duration-700",
-                                idx <= currentStepIndex ? config.color.replace('text-', 'bg-') : "bg-white/10"
+                                idx < activeSteps ? config.color.replace('text-', 'bg-') : "bg-white/10"
                               )} />
                               <span className={cn(
                                 "text-[9px] font-bold uppercase tracking-[0.2em] transition-all",
-                                idx <= currentStepIndex ? "text-slate-200" : "text-slate-600"
+                                idx < activeSteps ? "text-slate-200" : "text-slate-600"
                               )}>
                                 {step}
                               </span>
@@ -321,10 +335,10 @@ export default function ReportPage() {
                        </div>
                        <div className="relative h-2 bg-white/5 rounded-full overflow-hidden">
                           <motion.div 
-                            initial={{ width: "0%" }}
-                            animate={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }}
+                            initial={{ width: "25%" }}
+                            animate={{ width: `${(activeSteps / steps.length) * 100}%` }}
                             className={cn("absolute h-full transition-all duration-700", 
-                              currentStepIndex === 3 ? "bg-emerald-500" : "bg-gradient-to-r from-blue-500 to-purple-500"
+                              activeSteps === 4 ? "bg-emerald-500" : "bg-gradient-to-r from-blue-500 to-purple-500"
                             )}
                           />
                        </div>

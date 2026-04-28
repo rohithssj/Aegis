@@ -69,10 +69,6 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       const incidentData: Incident[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        // Convert Firestore Timestamp to ISO string for the frontend state if needed, 
-        // or just keep it as is if Incident interface supports Date/Timestamp.
-        // The Incident interface currently uses string for timestamp/createdAt.
-        // I will map them to ISO strings here for UI compatibility.
         incidentData.push({ 
           id: doc.id, 
           ...data,
@@ -131,6 +127,7 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
     const docRef = doc(db, "incidents", id);
     await updateDoc(docRef, updates);
   };
+
   const updateIncidentStatus = async (id: string, status: Incident["status"]) => {
     const docRef = doc(db, "incidents", id);
     const now = new Date().toISOString();
@@ -154,6 +151,7 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       timeline: arrayUnion(newEvent)
     });
   };
+
   const addIncidentLog = async (id: string, message: string) => {
     const docRef = doc(db, "incidents", id);
     await updateDoc(docRef, {
@@ -213,25 +211,11 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       return (themes[type as keyof typeof themes] || themes["Other"]) + (tone[severity as keyof typeof tone] || "");
     };
 
-    const impactScores = {
-      critical: 85 + Math.floor(Math.random() * 15),
-      high: 60 + Math.floor(Math.random() * 20),
-      medium: 30 + Math.floor(Math.random() * 25),
-      low: 5 + Math.floor(Math.random() * 20)
-    };
-
     const trackingId = `AEG-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    // Fetch config for auto-isolation
-    const configSnap = await getDoc(doc(db, "config", "globalSettings"));
-    const config = configSnap.exists() ? configSnap.data() : { autoIsolation: true };
-
-    let status = (isEmergency ? "responding" : "processing") as any;
-    
-    // Auto-Isolation logic: Escalating critical incidents immediately if enabled
-    if (config.autoIsolation && (newIncidentData.severity === "critical" || isEmergency)) {
-      status = "responding";
-    }
+    // ALL user-submitted incidents MUST start at "processing" status
+    // Manual overrides only allowed by admin actions
+    const status = "processing";
 
     const newIncidentBase = {
       trackingId,
@@ -261,7 +245,6 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       threatScore: newIncidentData.threatScore || 0,
       timeline: createInitialTimeline(),
       lastUpdated: new Date().toISOString(),
-      neuralImpact_legacy: isEmergency ? 95 : impactScores[newIncidentData.severity],
       dismissed: false
     };
 
