@@ -20,7 +20,7 @@ import { GlassCard } from "@/components/GlassCard";
 import { cn } from "@/lib/utils";
 import { useIncidents } from "@/context/IncidentContext";
 import { AegisLogo } from "@/components/AegisLogo";
-import { getAIDecision } from "@/lib/crisisflow";
+import { callGemini } from "@/lib/ai";
 import { toast } from "sonner";
 import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -31,16 +31,6 @@ const SEVERITY_LEVELS = ["low", "medium", "high", "critical"];
 export default function ReportPage() {
   const router = useRouter();
   const { addIncident, updateIncidentStatus } = useIncidents();
-  const [isAuthorized, setIsAuthorized] = useState(false);
-
-  useEffect(() => {
-    const role = localStorage.getItem("role");
-    if (role !== "user") {
-      router.push("/");
-    } else {
-      setIsAuthorized(true);
-    }
-  }, [router]);
   
   const [formData, setFormData] = useState({
     type: "Cyber Attack",
@@ -53,43 +43,22 @@ export default function ReportPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [trackingId, setTrackingId] = useState("");
 
-  useEffect(() => {
-    const role = localStorage.getItem("role");
-    if (!role) {
-      router.push("/");
-    }
-  }, [router]);
-
   const getCoordinates = async (location: string): Promise<{ lat: number; lng: number } | null> => {
     try {
-      // 1. Check cache
       const cacheKey = `geo_${location.toLowerCase().trim()}`;
       const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        console.log("Using cached coordinates for:", location);
-        return JSON.parse(cached);
-      }
+      if (cached) return JSON.parse(cached);
 
-      // 2. Rate limiting/Throttling safeguard
-      // Nominatim requires a User-Agent and ideally not more than 1 request per second.
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=json&limit=1`,
-        {
-          headers: {
-            "User-Agent": "Aegis-Crisis-Management-System"
-          }
-        }
+        { headers: { "User-Agent": "Aegis-Crisis-Management-System" } }
       );
 
       if (!response.ok) throw new Error("Geolocation service unavailable");
       const data = await response.json();
 
       if (data && data.length > 0) {
-        const coords = {
-          lat: parseFloat(data[0].lat),
-          lng: parseFloat(data[0].lon)
-        };
-        // Cache the result
+        const coords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
         localStorage.setItem(cacheKey, JSON.stringify(coords));
         return coords;
       }
@@ -107,70 +76,76 @@ export default function ReportPage() {
     setIsSubmitting(true);
     
     try {
-      // 1. Get Coordinates first
       const coords = await getCoordinates(formData.location);
       if (!coords) {
         toast.error("Location lookup failed", {
-          description: "Using fallback tactical coordinates. Accuracy may be reduced.",
+          description: "Using fallback tactical coordinates.",
         });
       }
 
-      // 2. Fetch Global Settings
-      const configSnap = await getDoc(doc(db, "config", "globalSettings"));
-      const config = configSnap.exists() ? configSnap.data() : { alertPriority: "standard" };
+      // AI Analysis via Gemini
+      const prompt = `
+        You are an advanced emergency response AI.
+        Analyze this incident:
+        Type: ${formData.type}
+        Location: ${formData.location}
+        Description: ${formData.description}
+        Severity: ${formData.status}
 
-      // 3. Alert Priority Simulation (Throttling standard alerts)
-      if (config.alertPriority === "standard") {
-        await new Promise(res => setTimeout(res, 2000));
+        Return STRICT JSON format:
+        {
+          "summary": "Brief analysis of the situation",
+          "risk": "Critical/High/Medium/Low",
+          "confidence": 0-100,
+          "priority": "P1/P2/P3",
+          "unit": "Recommended response unit name",
+          "explanation": "3-point explanation of decision"
+        }
+      `;
+
+      const aiRaw = await callGemini(prompt);
+      let aiData;
+
+      try {
+        const jsonMatch = aiRaw.match(/\{[\s\S]*\}/);
+        aiData = JSON.parse(jsonMatch ? jsonMatch[0] : aiRaw);
+      } catch (err) {
+        aiData = {
+          summary: "AI analysis unavailable.",
+          risk: formData.status.charAt(0).toUpperCase() + formData.status.slice(1),
+          confidence: 85,
+          priority: formData.status === "critical" ? "P1" : "P3",
+          unit: "General Response Unit",
+          explanation: aiRaw || "Manual priority override."
+        };
       }
 
-      // 4. Convert severity string to numeric for CrisisFlow API
-      const severityMap: Record<string, number> = {
-        low: 3,
-        medium: 6,
-        high: 8,
-        critical: 10,
-      };
-
-      // 5. Get AI Decision (Pass config)
-      const aiResponse = await getAIDecision({
-        type: formData.type,
-        severity: severityMap[formData.status] || 5,
-        wait_time: 5,
-        distance: 10,
-        location: formData.location,
-        config: config
-      });
-      console.log("AI RESPONSE:", aiResponse)
-
-      // 4. Add Incident to Firebase
       const id = await addIncident({
         type: formData.type,
         severity: formData.status as any,
         location: formData.location,
         description: formData.description,
-        aiUnit: aiResponse.unit,
-        aiRisk: aiResponse.risk,
-        aiScore: aiResponse.score,
-        aiConfidence: aiResponse.confidence,
-        aiPriority: aiResponse.priority,
-        aiAnalysis: aiResponse.reason,
+        aiAnalysis: aiData.summary,
+        aiRisk: aiData.risk,
+        aiScore: aiData.confidence,
+        aiConfidence: aiData.confidence,
+        aiPriority: aiData.priority,
+        aiUnit: aiData.unit,
+        aiExplanation: aiData.explanation,
         lat: coords?.lat,
         lng: coords?.lng,
-        neuralImpact: aiResponse.neuralImpact,
-        threatScore: aiResponse.threatScore,
+        neuralImpact: Math.min(100, Math.max(0, aiData.confidence + (formData.status === 'critical' ? 20 : 0))),
+        threatScore: aiData.confidence / 10
       });
+      
       setTrackingId(id);
       setIsSubmitted(true);
 
-      // Auto-flow simulation
       setTimeout(() => updateIncidentStatus(id, "analyzing"), 3000);
       setTimeout(() => updateIncidentStatus(id, "responding"), 8000);
     } catch (error) {
       console.error("Submission failed:", error);
-      toast.error("Transmission failed", {
-        description: "Critical error in incident reporting protocol.",
-      });
+      toast.error("Transmission failed");
     } finally {
       setIsSubmitting(false);
     }
@@ -184,7 +159,6 @@ export default function ReportPage() {
   const { incidents } = useIncidents();
   const currentIncident = incidents.find(inc => inc.id === trackingId);
   const currentStatus = currentIncident?.status || "processing";
-
   const steps = ["processing", "analyzing", "responding", "resolved"];
   const currentStepIndex = steps.indexOf(currentStatus);
 
@@ -197,10 +171,10 @@ export default function ReportPage() {
 
   const config = statusConfigs[currentStatus as keyof typeof statusConfigs] || statusConfigs.processing;
 
-  if (!isAuthorized) return null;
-
   return (
-    <main className="min-h-screen bg-[#0B1120] py-12 md:py-24 px-4 md:px-6 flex items-center justify-center relative overflow-hidden">
+    <main className="min-h-screen bg-[#0B1120] py-12 md:py-24 px-4 md:px-6 flex flex-col items-center justify-center relative overflow-hidden">
+      <h1 className="text-white/20 font-mono text-[10px] uppercase tracking-[0.5em] mb-4">REPORT PAGE WORKING</h1>
+      
       <div className="max-w-7xl mx-auto w-full relative z-10 flex items-center justify-center">
         <div className="max-w-2xl w-full">
         <AnimatePresence mode="wait">
@@ -302,7 +276,7 @@ export default function ReportPage() {
                     >
                       {isSubmitting ? (
                         <span className="flex items-center gap-3">
-                          <Loader2 className="w-5 h-5 animate-spin" /> Transmitting Signal...
+                          <Loader2 className="w-5 h-5 animate-spin" /> Analyzing scenario...
                         </span>
                       ) : (
                         "Upload Intelligence Report"

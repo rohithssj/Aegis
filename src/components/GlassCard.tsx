@@ -13,9 +13,8 @@ export const GlassCard = ({ children, className, hover = true, ...props }: Glass
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-white/[0.05] bg-white/[0.03] backdrop-blur-md",
-        "shadow-sm transition-all duration-200 ease-out",
-        hover && "hover:bg-white/[0.05] hover:border-white/[0.08] hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-lg hover:shadow-black/10",
+        "bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 md:p-6 transition-all duration-300",
+        hover && "hover:scale-[1.015] hover:border-white/20 hover:bg-white/10",
         className
       )}
       {...props}
@@ -27,5 +26,4 @@ export const GlassCard = ({ children, className, hover = true, ...props }: Glass
     </div>
   );
 };
-
 

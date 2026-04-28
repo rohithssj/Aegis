@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import ClientWrapper from "@/components/ClientWrapper";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
-import { Navbar } from "@/components/Navbar";
-import { IncidentProvider } from "@/context/IncidentContext";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -20,8 +19,6 @@ export const metadata: Metadata = {
   description: "Next-generation AI emergency response and neural monitoring platform.",
 };
 
-import { Toaster } from "sonner";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,13 +27,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark h-full antialiased">
       <body className={`${inter.variable} ${jetbrains.variable} font-sans min-h-screen bg-[#0B1120] text-slate-200 flex flex-col`}>
-        <IncidentProvider>
-          <Toaster richColors position="top-right" theme="dark" />
-          <Navbar />
-          <div className="flex-1 flex flex-col">
-            {children}
-          </div>
-        </IncidentProvider>
+        <ClientWrapper>
+          {children}
+        </ClientWrapper>
       </body>
     </html>
   );

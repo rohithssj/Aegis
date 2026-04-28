@@ -39,6 +39,9 @@ export interface Incident {
   aiFactors?: string[];
   origin?: string;
   threatScore?: number;
+  aiNarration?: string;
+  aiMitigation?: string;
+  aiExplanationText?: string;
 }
 
 export interface MetricPoint {

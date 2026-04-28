@@ -20,6 +20,7 @@ import { Button } from "./Button";
 import { cn } from "@/lib/utils";
 import { AegisLogo } from "./AegisLogo";
 import { ReportIncidentModal } from "./ReportIncidentModal";
+import { isAdmin, logoutAdmin } from "@/lib/auth";
 
 const ADMIN_NAV = [
   { name: "Command", path: "/dashboard", icon: LayoutDashboard },
@@ -28,6 +29,7 @@ const ADMIN_NAV = [
 ];
 
 const USER_NAV = [
+  { name: "Report", path: "/report", icon: AlertCircle },
   { name: "Track", path: "/track", icon: Search },
 ];
 
@@ -65,9 +67,7 @@ export const Navbar = () => {
   const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check role from localStorage
-    const savedRole = localStorage.getItem("role");
-    setRole(savedRole);
+    setRole(isAdmin() ? "admin" : "user");
   }, [pathname]);
 
   // Hide navbar on entry page
@@ -178,17 +178,7 @@ export const Navbar = () => {
                     <div className="h-px bg-white/5 my-1 mx-2" />
                     <button 
                       onClick={() => {
-                        localStorage.removeItem("role");
-                        window.location.href = "/";
-                      }}
-                      className="w-full flex items-center gap-3 px-3 py-2 text-[11px] font-bold text-slate-400 hover:text-white hover:bg-white/[0.05] rounded-xl transition-all"
-                    >
-                      <User className="h-3.5 w-3.5" /> Switch Mode
-                    </button>
-                    <div className="h-px bg-white/5 my-1 mx-2" />
-                    <button 
-                      onClick={() => {
-                        localStorage.removeItem("role");
+                        logoutAdmin();
                         window.location.href = "/";
                       }}
                       className="w-full flex items-center gap-3 px-3 py-2 text-[11px] font-bold text-red-400 hover:bg-red-400/10 rounded-xl transition-all"

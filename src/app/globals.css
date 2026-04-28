@@ -5,9 +5,9 @@
   --color-foreground: #F8FAFC;
   --color-surface: #0F172A;
   
-  --color-accent-indigo: #5B4CF0;
-  --color-accent-indigo-light: #6D5DF6;
-  --color-accent-cyan: #22D3EE;
+  --color-accent-indigo: #8B5CF6; /* Violet-500 */
+  --color-accent-indigo-light: #A78BFA; /* Violet-400 */
+  --color-accent-cyan: #3B82F6; /* Blue-500 */
   
   --color-critical: #F43F5E;
   --color-high: #F59E0B;
@@ -116,3 +116,11 @@ h1, h2, h3, h4, h5, h6 {
   @apply bg-white/5 rounded-full hover:bg-white/10 transition-colors;
 }
 
+.animate-shimmer {
+  animation: shimmer 1.5s infinite linear;
+}
+
+@keyframes shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
