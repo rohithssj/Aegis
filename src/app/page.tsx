@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { ShieldAlert, Terminal, ArrowRight, Activity, Globe } from "lucide-react";
+import { ShieldAlert, Terminal, ArrowRight, Activity, Globe, Search } from "lucide-react";
 import { GlassCard } from "@/components/GlassCard";
 import { AegisLogo } from "@/components/AegisLogo";
 import { motion } from "framer-motion";
@@ -24,7 +24,7 @@ export default function LandingPage() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-cyan/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
-      <div className="max-w-5xl w-full z-10 space-y-20">
+      <div className="max-w-6xl w-full z-10 space-y-20 py-12">
         <header className="text-center space-y-6">
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
@@ -43,7 +43,7 @@ export default function LandingPage() {
           </motion.div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* User Entry */}
           <motion.div
             initial={{ opacity: 0, x: -40 }}
@@ -52,26 +52,59 @@ export default function LandingPage() {
           >
             <Link href="/report" className="block h-full group">
               <GlassCard 
-                className="p-12 h-full flex flex-col gap-10 rounded-[3rem] border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all relative overflow-hidden"
+                className="p-8 md:p-10 h-full flex flex-col gap-8 rounded-[2.5rem] border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all relative overflow-hidden"
                 hover={true}
               >
-                <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-                  <ShieldAlert className="w-40 h-40" />
+                <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                  <ShieldAlert className="w-32 h-32" />
                 </div>
                 
-                <div className="p-6 rounded-3xl bg-accent-cyan/10 w-fit text-accent-cyan ring-1 ring-accent-cyan/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                  <ShieldAlert className="w-12 h-12" />
+                <div className="p-5 rounded-2xl bg-accent-cyan/10 w-fit text-accent-cyan ring-1 ring-accent-cyan/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                  <ShieldAlert className="w-10 h-10" />
                 </div>
 
-                <div className="space-y-4">
-                  <h3 className="text-4xl font-bold text-white tracking-tight">Report Incident</h3>
-                  <p className="text-slate-400 text-lg leading-relaxed font-medium">
-                    Direct uplink to Aegis neural grid. Submit field reports for immediate autonomous triage and unit deployment.
+                <div className="space-y-3">
+                  <h3 className="text-3xl font-bold text-white tracking-tight">Report Incident</h3>
+                  <p className="text-slate-400 text-sm leading-relaxed font-medium">
+                    Submit field reports for immediate autonomous triage and unit deployment.
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 text-xs font-mono font-bold text-accent-cyan uppercase tracking-widest mt-auto group-hover:translate-x-3 transition-transform">
-                  Initiate Tactical Report <ArrowRight className="w-4 h-4" />
+                <div className="flex items-center gap-3 text-[10px] font-mono font-bold text-accent-cyan uppercase tracking-widest mt-auto group-hover:translate-x-3 transition-transform">
+                  Initiate Report <ArrowRight className="w-4 h-4" />
+                </div>
+              </GlassCard>
+            </Link>
+          </motion.div>
+
+          {/* Track Entry */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+          >
+            <Link href="/track" className="block h-full group">
+              <GlassCard 
+                className="p-8 md:p-10 h-full flex flex-col gap-8 rounded-[2.5rem] border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all relative overflow-hidden"
+                hover={true}
+              >
+                <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                  <Search className="w-32 h-32" />
+                </div>
+                
+                <div className="p-5 rounded-2xl bg-purple-500/10 w-fit text-purple-400 ring-1 ring-purple-500/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                  <Search className="w-10 h-10" />
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="text-3xl font-bold text-white tracking-tight">Track Status</h3>
+                  <p className="text-slate-400 text-sm leading-relaxed font-medium">
+                    Monitor neural grid acknowledgement and real-time response progression.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 text-[10px] font-mono font-bold text-purple-400 uppercase tracking-widest mt-auto group-hover:translate-x-3 transition-transform">
+                  Track Incident <ArrowRight className="w-4 h-4" />
                 </div>
               </GlassCard>
             </Link>
@@ -85,26 +118,26 @@ export default function LandingPage() {
           >
             <Link href="/admin" className="block h-full group">
               <GlassCard 
-                className="p-12 h-full flex flex-col gap-10 rounded-[3rem] border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all relative overflow-hidden"
+                className="p-8 md:p-10 h-full flex flex-col gap-8 rounded-[2.5rem] border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all relative overflow-hidden"
                 hover={true}
               >
-                <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-                  <Terminal className="w-40 h-40" />
+                <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                  <Terminal className="w-32 h-32" />
                 </div>
 
-                <div className="p-6 rounded-3xl bg-accent-indigo/10 w-fit text-accent-indigo ring-1 ring-accent-indigo/20 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-500">
-                  <Terminal className="w-12 h-12" />
+                <div className="p-5 rounded-2xl bg-accent-indigo/10 w-fit text-accent-indigo ring-1 ring-accent-indigo/20 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-500">
+                  <Terminal className="w-10 h-10" />
                 </div>
 
-                <div className="space-y-4">
-                  <h3 className="text-4xl font-bold text-white tracking-tight">Command Center</h3>
-                  <p className="text-slate-400 text-lg leading-relaxed font-medium">
-                    Strategic oversight and real-time neural monitoring. Authorized access only to global response coordination.
+                <div className="space-y-3">
+                  <h3 className="text-3xl font-bold text-white tracking-tight">Command Center</h3>
+                  <p className="text-slate-400 text-sm leading-relaxed font-medium">
+                    Authorized access only to global response coordination and monitoring.
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 text-xs font-mono font-bold text-accent-indigo uppercase tracking-widest mt-auto group-hover:translate-x-3 transition-transform">
-                  Access Command Grid <ArrowRight className="w-4 h-4" />
+                <div className="flex items-center gap-3 text-[10px] font-mono font-bold text-accent-indigo uppercase tracking-widest mt-auto group-hover:translate-x-3 transition-transform">
+                  Access Command <ArrowRight className="w-4 h-4" />
                 </div>
               </GlassCard>
             </Link>

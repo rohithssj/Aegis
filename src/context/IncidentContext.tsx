@@ -211,14 +211,14 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       return (themes[type as keyof typeof themes] || themes["Other"]) + (tone[severity as keyof typeof tone] || "");
     };
 
-    const trackingId = `AEG-${Math.floor(1000 + Math.random() * 9000)}`;
+    // Generate 6-digit tracking ID
+    const trackingId = "AEG-" + Math.floor(100000 + Math.random() * 900000);
 
     // ALL user-submitted incidents MUST start at "processing" status
-    // Manual overrides only allowed by admin actions
     const status = "processing";
 
     const newIncidentBase = {
-      trackingId,
+      trackingId: trackingId.toUpperCase(),
       type: newIncidentData.type,
       title: `${newIncidentData.type} Detection`,
       severity: isEmergency ? "critical" : newIncidentData.severity,
