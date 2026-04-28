@@ -1,24 +1,18 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isAdmin } from "@/lib/auth";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  AlertCircle, 
+  Activity, 
   ChevronRight, 
-  Clock, 
   MapPin, 
-  Activity,
-  ShieldAlert,
-  Search,
-  Hash,
   Binary,
-  Layers,
-  ShieldCheck,
-  PackageSearch,
   ArrowLeft,
-  Loader2
+  Loader2,
+  ShieldCheck,
+  AlertTriangle
 } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
@@ -28,21 +22,13 @@ import { cn, formatTimeAgo } from "@/lib/utils";
 import { useIncidents } from "@/context/IncidentContext";
 import { toast } from "sonner";
 import { Incident } from "@/lib/mockData";
-import { callGemini } from "@/lib/ai";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 export default function IncidentsPage() {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [adminNote, setAdminNote] = useState("");
-  const [assignedUnit, setAssignedUnit] = useState("");
-  const { incidents, loading: feedLoading, updateIncidentStatus, dismissIncident, updateIncident, addIncidentLog } = useIncidents();
+  const { incidents, loading: feedLoading, updateIncidentStatus, dismissIncident } = useIncidents();
   
-  const [aiAnalysisText, setAiAnalysisText] = useState<string | null>(null);
-  const [isAiLoading, setIsAiLoading] = useState(false);
-
   // Authorization check
   useEffect(() => {
     if (!isAdmin()) {
@@ -61,79 +47,10 @@ export default function IncidentsPage() {
 
   const selectedIncident = incidents.find((inc) => inc.id === selectedId);
 
-  // Debug visibility
-  useEffect(() => {
-    console.log("SELECTED INCIDENT:", selectedIncident?.trackingId);
-    console.log("AI DATA STATE:", aiAnalysisText);
-  }, [selectedIncident, aiAnalysisText]);
-
-  // Reset state when incident changes
-  useEffect(() => {
-    if (selectedIncident) {
-      setAiAnalysisText(selectedIncident.aiNarration || null);
-    }
-  }, [selectedId, selectedIncident]);
-
-  const handleGenerateIntel = useCallback(async () => {
-    if (!selectedIncident || isAiLoading || aiAnalysisText) return;
-    
-    setIsAiLoading(true);
-    console.log("TRIGGERING AI FOR:", selectedIncident.trackingId);
-
-    try {
-      const intelPrompt = `
-        Analyze this incident for Aegis Command:
-        Description: ${selectedIncident.description}
-        Location: ${selectedIncident.location}
-        
-        Return a structured tactical report:
-        1. Situation Summary
-        2. Risk Level & Confidence
-        3. Priority & Tactical Unit
-        4. Detailed Explanation
-      `;
-      
-      const narration = await callGemini(intelPrompt);
-      console.log("AI RESULT RECEIVED:", narration);
-      
-      setAiAnalysisText(narration);
-
-      // Cache in Firebase
-      await updateDoc(doc(db, "incidents", selectedIncident.id), {
-        aiNarration: narration
-      });
-    } catch (err) {
-      console.error("AI Intel Error:", err);
-      setAiAnalysisText("Intelligence node offline. Heuristic fallback active.");
-    } finally {
-      setIsAiLoading(false);
-    }
-  }, [selectedIncident, isAiLoading, aiAnalysisText]);
-
-  // Auto-trigger if missing
-  useEffect(() => {
-    if (selectedIncident && !selectedIncident.aiNarration && !aiAnalysisText && !isAiLoading) {
-      handleGenerateIntel();
-    }
-  }, [selectedIncident, aiAnalysisText, isAiLoading, handleGenerateIntel]);
-
-  const handleAdminUpdate = async () => {
-    if (!selectedId) return;
-    if (assignedUnit) await updateIncident(selectedId, { assignedUnit });
-    if (adminNote) {
-      await addIncidentLog(selectedId, adminNote);
-      setAdminNote("");
-    }
-    toast.success("Admin records updated");
-  };
-
-  const STATUS_ORDER = ["processing", "analyzing", "responding", "resolved"];
-  const currentIdx = selectedIncident ? STATUS_ORDER.indexOf(selectedIncident.status) : -1;
-
   const handleStatusUpdate = async (status: Incident["status"]) => {
     if (!selectedIncident) return;
     await updateIncidentStatus(selectedIncident.id, status);
-    toast.success(`Incident state updated`);
+    toast.success(`Incident state updated to ${status}`);
   };
 
   const handleDismiss = async () => {
@@ -142,19 +59,37 @@ export default function IncidentsPage() {
     setSelectedId(null);
   };
 
+  const getStatusStyles = (incident: Incident) => {
+    const isCritical = incident.severity === "critical";
+    const isResponding = incident.status === "responding";
+    const isResolved = incident.status === "resolved";
+
+    if (isCritical) return "bg-red-500/10 border-red-500/30 text-red-400";
+    if (isResponding) return "bg-yellow-500/10 border-yellow-500/30 text-yellow-400";
+    if (isResolved) return "bg-green-500/10 border-green-500/30 text-green-400";
+    return "bg-white/5 border-transparent text-slate-400";
+  };
+
+  const getIndicatorColor = (incident: Incident) => {
+    if (incident.severity === "critical") return "bg-red-500";
+    if (incident.status === "responding") return "bg-yellow-500";
+    if (incident.status === "resolved") return "bg-green-500";
+    return "bg-slate-500";
+  };
+
   if (!isAuthorized) return null;
 
   return (
-    <main className="flex-1 flex flex-col md:flex-row h-screen pt-16 overflow-hidden bg-background">
+    <main className="flex-1 flex flex-col md:flex-row h-screen pt-16 overflow-hidden bg-[#05070A] text-white">
       <aside className={cn(
         "w-full md:w-[400px] border-r border-white/5 flex flex-col bg-surface/30 backdrop-blur-md transition-all duration-500",
         selectedId && "hidden md:flex"
       )}>
-        <div className="p-6 border-b border-white/5 space-y-6">
+        <div className="p-8 border-b border-white/5 space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-bold text-white tracking-tight">Intelligence</h1>
-              <p className="label-text mb-0 mt-0.5">Active Event Stream</p>
+              <h1 className="text-xl font-bold tracking-tight">Intelligence</h1>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Active Event Stream</p>
             </div>
             <Badge variant="low" className="font-mono text-[9px] px-2">LIVE</Badge>
           </div>
@@ -164,24 +99,32 @@ export default function IncidentsPage() {
           {feedLoading ? (
              <div className="p-4"><FeedSkeleton count={6} /></div>
           ) : (
-            <div className="p-3 space-y-1.5">
+            <div className="p-4 space-y-3">
               {incidents.map((incident) => (
                 <button
                   key={incident.id}
                   onClick={() => setSelectedId(incident.id)}
                   className={cn(
-                    "w-full text-left p-4 rounded-xl transition-all duration-300 relative group/item hover:scale-[1.02]",
-                    selectedId === incident.id ? "bg-white/[0.08] border border-white/[0.05]" : "bg-transparent border border-transparent"
+                    "w-full text-left p-5 rounded-2xl transition-all duration-200 relative group border overflow-hidden",
+                    selectedId === incident.id 
+                      ? "bg-white/10 border-white/20 shadow-xl" 
+                      : cn("hover:bg-white/5", getStatusStyles(incident))
                   )}
                 >
-                  <div className="space-y-4">
+                  {/* Left Indicator Bar */}
+                  <div className={cn("absolute left-0 top-0 bottom-0 w-1", getIndicatorColor(incident))} />
+                  
+                  <div className="space-y-4 pl-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono font-bold text-slate-500 uppercase">{incident.trackingId}</span>
+                      <span className="text-[10px] font-mono font-bold opacity-60 uppercase">{incident.trackingId}</span>
                       <Badge variant={incident.status as any} className="text-[8px] uppercase">{incident.status}</Badge>
                     </div>
-                    <h3 className={cn("text-xs font-bold", selectedId === incident.id ? "text-white" : "text-slate-400")}>
+                    <h3 className="text-sm font-bold truncate">
                       {incident.title}
                     </h3>
+                    <div className="flex items-center gap-3 text-[10px] opacity-60 font-medium">
+                       <span className="flex items-center gap-1 truncate"><MapPin className="w-3 h-3" /> {incident.location}</span>
+                    </div>
                   </div>
                 </button>
               ))}
@@ -211,10 +154,10 @@ export default function IncidentsPage() {
 
               <div className="space-y-10">
                 <div className="flex flex-wrap items-center gap-4">
-                  <Badge variant={selectedIncident.severity as any} className="px-5 py-0.5 rounded-full uppercase">{selectedIncident.severity}</Badge>
-                  <div className="ml-auto flex items-center gap-2 px-3 py-1 bg-white/[0.02] border border-white/[0.05] rounded-full">
-                    <Binary className="h-3 w-3 text-accent-cyan" />
-                    <span className="text-slate-400 font-mono text-[10px]">{selectedIncident.id}</span>
+                  <Badge variant={selectedIncident.severity as any} className="px-5 py-1 rounded-full uppercase">{selectedIncident.severity}</Badge>
+                  <div className="ml-auto flex items-center gap-2 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full">
+                    <Binary className="h-3.5 w-3.5 text-blue-400" />
+                    <span className="text-slate-400 font-mono text-[11px] font-bold">{selectedIncident.id}</span>
                   </div>
                 </div>
 
@@ -222,7 +165,7 @@ export default function IncidentsPage() {
                   <h2 className="text-5xl md:text-6xl font-bold tracking-tight text-white leading-[1.1]">
                     {selectedIncident.title}
                   </h2>
-                  <p className="text-slate-400 text-lg max-w-2xl font-medium italic">
+                  <p className="text-slate-400 text-xl max-w-2xl font-medium italic leading-relaxed">
                     {selectedIncident.description}
                   </p>
                 </div>
@@ -237,33 +180,44 @@ export default function IncidentsPage() {
                 </div>
 
                 <GlassCard className="p-12 border-white/5 relative group rounded-[2.5rem] bg-white/[0.02]" hover={false}>
-                  {isAiLoading ? (
-                    <div className="py-12 flex flex-col items-center justify-center space-y-4 opacity-40">
-                       <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
-                       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.3em]">Synthesizing Intelligence...</p>
+                  <div className="space-y-6 relative z-10">
+                    <div className="flex items-center gap-3 text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+                       <AlertTriangle className="w-4 h-4 text-amber-500" />
+                       Aegis Heuristic Report
                     </div>
-                  ) : (
-                    <div className="space-y-6 relative z-10">
-                      <p className="text-white/80 leading-relaxed whitespace-pre-wrap font-medium italic">
-                        {aiAnalysisText || "Aegis AI is monitoring this vector for anomalous patterns. Heuristic evaluation in progress."}
-                      </p>
+                    <p className="text-white/80 leading-relaxed whitespace-pre-wrap font-medium italic text-lg">
+                      {selectedIncident.aiNarration || "Aegis AI is monitoring this vector for anomalous patterns. Heuristic evaluation in progress. Primary response units are on standby."}
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-8 pt-8 border-t border-white/5">
+                       <div>
+                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Threat Risk</p>
+                          <p className="text-xl font-bold text-white">{selectedIncident.severity === 'critical' ? 'Elevated' : 'Moderate'}</p>
+                       </div>
+                       <div>
+                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Confidence</p>
+                          <p className="text-xl font-bold text-white">94.2%</p>
+                       </div>
+                       <div className="hidden md:block">
+                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Protocol</p>
+                          <p className="text-xl font-bold text-blue-400">Secure_L6</p>
+                       </div>
                     </div>
-                  )}
+                  </div>
                 </GlassCard>
               </div>
 
               {/* Actions */}
-              <div className="pt-10 border-t border-white/[0.05] flex flex-wrap gap-4">
+              <div className="pt-10 border-t border-white/5 flex flex-wrap gap-4">
                 <Button variant="primary" size="lg" className="rounded-full" onClick={() => handleStatusUpdate("analyzing")}>Start Analysis</Button>
-                <Button variant="primary" size="lg" className="rounded-full bg-accent-cyan" onClick={() => handleStatusUpdate("responding")}>Start Response</Button>
-                <Button variant="primary" size="lg" className="rounded-full bg-emerald-500" onClick={() => handleStatusUpdate("resolved")}>Resolve</Button>
-                <Button variant="ghost" className="rounded-full text-slate-600 hover:text-red-400 sm:ml-auto" onClick={handleDismiss}>Dismiss</Button>
+                <Button variant="primary" size="lg" className="rounded-full bg-blue-600 shadow-blue-600/20" onClick={() => handleStatusUpdate("responding")}>Start Response</Button>
+                <Button variant="primary" size="lg" className="rounded-full bg-emerald-600 shadow-emerald-600/20" onClick={() => handleStatusUpdate("resolved")}>Resolve</Button>
+                <Button variant="ghost" className="rounded-full text-slate-500 hover:text-red-400 sm:ml-auto" onClick={handleDismiss}>Dismiss Incident</Button>
               </div>
             </motion.div>
           ) : (
-            <div className="h-full flex items-center justify-center opacity-30">
-              <ShieldCheck className="h-12 w-12 text-slate-500 mr-4" />
-              <p className="label-text mb-0">Waiting for neural event selection...</p>
+            <div className="h-full flex flex-col items-center justify-center opacity-30 space-y-6">
+              <ShieldCheck className="h-20 w-20 text-slate-500" />
+              <p className="text-sm font-bold uppercase tracking-widest">Waiting for neural event selection...</p>
             </div>
           )}
         </AnimatePresence>

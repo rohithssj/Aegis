@@ -51,18 +51,6 @@ export const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Snappier transitions for a tactical feel
-  const height = useTransform(scrollY, [0, 40], ["64px", "52px"]);
-  const backgroundColor = useTransform(
-    scrollY,
-    [0, 40],
-    ["rgba(11, 17, 32, 0)", "rgba(11, 17, 32, 0.8)"]
-  );
-  const borderBottom = useTransform(
-    scrollY,
-    [0, 40],
-    ["1px solid rgba(255, 255, 255, 0)", "1px solid rgba(255, 255, 255, 0.08)"]
-  );
 
   const [role, setRole] = useState<string | null>(null);
 
@@ -80,14 +68,7 @@ export const Navbar = () => {
   return (
     <>
       <motion.nav
-        style={{ 
-          height, 
-          backgroundColor, 
-          backdropFilter: "blur(12px)", 
-          borderBottom,
-          WebkitBackdropFilter: "blur(12px)"
-        } as any}
-        className="fixed top-0 left-0 right-0 z-50 flex items-center transition-colors"
+        className="fixed top-0 left-0 right-0 z-50 flex items-center transition-all duration-300 bg-[#0B0F1A]/70 backdrop-blur-xl border-b border-white/10 h-16"
       >
         <div className="container-premium flex items-center justify-between">
           {/* LOGO */}

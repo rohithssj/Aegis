@@ -1,26 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Activity, 
   Shield, 
   AlertTriangle, 
-  Clock, 
   MapPin, 
   ChevronRight, 
-  CheckCircle2, 
-  LayoutDashboard, 
-  Zap, 
-  Target, 
   TrendingUp, 
-  Globe, 
-  ShieldAlert,
-  Binary,
-  Loader2,
-  Cpu,
-  Network,
-  Radio
+  Zap, 
+  Cpu, 
+  Network, 
+  Radio 
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { MetricPoint, Incident } from "@/lib/mockData";
@@ -30,11 +22,6 @@ import { GlassCard } from "@/components/GlassCard";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { ChartSkeleton, MetricSkeleton, FeedSkeleton } from "@/components/Skeleton";
-import { NeuralGraph } from "@/components/NeuralGraph";
-import { callGemini } from "@/lib/ai";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { toast } from "sonner";
 import dynamic from "next/dynamic";
 
 const MapView = dynamic(() => import("@/components/MapView"), { 
@@ -42,11 +29,18 @@ const MapView = dynamic(() => import("@/components/MapView"), {
   loading: () => <div className="h-full w-full bg-surface/50 animate-pulse flex items-center justify-center text-slate-500 font-mono text-xs">INITIALIZING_MAP_ENGINE...</div>
 });
 
+const HISTORY_DATA: MetricPoint[] = Array.from({ length: 24 }, (_, i) => ({
+  time: `${String(i).padStart(2, '0')}:00`,
+  value: 40 + Math.sin(i / 3) * 20 + Math.random() * 10,
+  expected: 50,
+}));
+
 export default function Dashboard() {
   const { incidents, loading, refreshMetrics } = useIncidents() as any;
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
+  const [mode, setMode] = useState<"live" | "history">("live");
   
-  const [metrics] = useState<MetricPoint[]>(() => {
+  const [liveMetrics, setLiveMetrics] = useState<MetricPoint[]>(() => {
     const points: MetricPoint[] = [];
     const now = new Date();
     for (let i = 24; i >= 0; i--) {
@@ -59,6 +53,25 @@ export default function Dashboard() {
     }
     return points;
   });
+
+  // Simulated live update
+  useEffect(() => {
+    if (mode !== "live") return;
+    const interval = setInterval(() => {
+      setLiveMetrics(prev => {
+        const next = [...prev.slice(1)];
+        const last = prev[prev.length - 1];
+        const now = new Date();
+        next.push({
+          time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          value: Math.max(20, Math.min(90, last.value + (Math.random() - 0.5) * 10)),
+          expected: 50
+        });
+        return next;
+      });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [mode]);
   
   useEffect(() => {
     if (incidents.length > 0 && !selectedIncidentId) {
@@ -71,49 +84,11 @@ export default function Dashboard() {
     [incidents, selectedIncidentId]
   );
 
-  const [aiMitigation, setAiMitigation] = useState<string | null>(null);
-  const [isAiLoading, setIsAiLoading] = useState(false);
-
-  useEffect(() => {
-    if (selectedIncident) {
-      setAiMitigation(selectedIncident.aiMitigation || null);
-    }
-  }, [selectedIncidentId, selectedIncident]);
-
-  const handleFetchAiInsights = useCallback(async () => {
-    if (!selectedIncident || isAiLoading || aiMitigation) return;
-    
-    setIsAiLoading(true);
-    try {
-      const mitigationPrompt = `
-        Predict what will happen next based on:
-        Incident: ${selectedIncident.description}
-        Severity: ${selectedIncident.severity}
-        
-        Provide a concise tactical prediction including future risk and suggested actions.
-      `;
-      const mitigation = await callGemini(mitigationPrompt);
-      setAiMitigation(mitigation);
-
-      await updateDoc(doc(db, "incidents", selectedIncident.id), {
-        aiMitigation: mitigation,
-      });
-    } catch (err) {
-      console.error("AI Insight Fetch Error:", err);
-    } finally {
-      setIsAiLoading(false);
-    }
-  }, [selectedIncident, isAiLoading, aiMitigation]);
-
-  useEffect(() => {
-    if (selectedIncident && !selectedIncident.aiMitigation && !aiMitigation && !isAiLoading) {
-      handleFetchAiInsights();
-    }
-  }, [selectedIncident, aiMitigation, isAiLoading, handleFetchAiInsights]);
+  const displayMetrics = mode === "live" ? liveMetrics : HISTORY_DATA;
 
   if (loading) return (
     <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#05070A] p-10 space-y-10">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricSkeleton />
         <MetricSkeleton />
         <MetricSkeleton />
@@ -131,16 +106,15 @@ export default function Dashboard() {
   );
 
   const criticalCount = incidents.filter((i: Incident) => i.severity === 'critical').length;
-  const activeCount = incidents.filter((i: Incident) => i.status !== 'resolved').length;
   const avgImpact = incidents.length > 0 
     ? Math.round(incidents.reduce((acc: number, curr: Incident) => acc + (curr.neuralImpact || 0), 0) / incidents.length) 
     : 0;
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#05070A] text-white">
+    <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#05070A] text-white pt-16">
       <div className="max-w-[1600px] mx-auto p-6 md:p-12 space-y-12">
         
-        {/* STEP 1: Header Section */}
+        {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-3 text-purple-500 font-mono text-sm tracking-[0.3em] uppercase font-bold">
@@ -170,7 +144,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* STEP 2: Metrics Row */}
+        {/* Metrics Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { label: "Neural Load", val: `${avgImpact}%`, icon: Cpu, color: "text-blue-400" },
@@ -195,7 +169,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* STEP 3: Graph Section */}
+        {/* Graph Section */}
         <GlassCard className="p-10">
           <div className="flex items-center justify-between mb-12">
             <div>
@@ -204,19 +178,35 @@ export default function Dashboard() {
               </h3>
               <p className="text-slate-500 mt-1">Heuristic throughput metrics across global response clusters</p>
             </div>
-            <div className="flex gap-2">
-              <button className="px-5 py-2 rounded-full text-xs font-bold bg-white/10 text-white">Live</button>
-              <button className="px-5 py-2 rounded-full text-xs font-bold text-slate-500 hover:text-white transition-colors">History</button>
+            <div className="flex gap-2 bg-white/5 p-1 rounded-full border border-white/10">
+              <button 
+                onClick={() => setMode("live")}
+                className={cn(
+                  "px-6 py-2 rounded-full text-xs font-bold transition-all duration-300",
+                  mode === "live" ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20" : "text-slate-500 hover:text-white"
+                )}
+              >
+                Live
+              </button>
+              <button 
+                onClick={() => setMode("history")}
+                className={cn(
+                  "px-6 py-2 rounded-full text-xs font-bold transition-all duration-300",
+                  mode === "history" ? "bg-purple-500 text-white shadow-lg shadow-purple-500/20" : "text-slate-500 hover:text-white"
+                )}
+              >
+                History
+              </button>
             </div>
           </div>
           
-          <div className="h-[400px] w-full">
+          <div className="h-[400px] w-full transition-opacity duration-200" key={mode}>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={metrics}>
+              <AreaChart data={displayMetrics}>
                 <defs>
                   <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor={mode === "live" ? "#3B82F6" : "#8B5CF6"} stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor={mode === "live" ? "#3B82F6" : "#8B5CF6"} stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="time" hide />
@@ -225,14 +215,14 @@ export default function Dashboard() {
                   contentStyle={{ backgroundColor: '#0F172A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px' }}
                   itemStyle={{ color: '#fff' }}
                 />
-                <Area type="monotone" dataKey="value" stroke="#3B82F6" strokeWidth={4} fillOpacity={1} fill="url(#colorValue)" />
+                <Area type="monotone" dataKey="value" stroke={mode === "live" ? "#3B82F6" : "#8B5CF6"} strokeWidth={4} fillOpacity={1} fill="url(#colorValue)" />
                 <Area type="monotone" dataKey="expected" stroke="rgba(255,255,255,0.1)" strokeWidth={2} strokeDasharray="8 8" fill="transparent" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </GlassCard>
 
-        {/* STEP 4: Map + Intelligence */}
+        {/* Map + Intelligence */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 h-[600px]">
             <GlassCard className="p-0 overflow-hidden h-full">
@@ -249,7 +239,7 @@ export default function Dashboard() {
                 <Badge variant="low">Active_Uplink</Badge>
               </div>
 
-              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
+              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4 max-h-[500px] scrollbar-thin scrollbar-thumb-white/10">
                 {incidents.map((incident: Incident) => (
                   <button
                     key={incident.id}
@@ -262,19 +252,19 @@ export default function Dashboard() {
                     )}
                   >
                     <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-2">
+                      <div className="space-y-2 flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] font-mono font-bold text-slate-500">{incident.trackingId}</span>
                           <Badge variant={incident.severity as any} dot={false}>{incident.severity}</Badge>
                         </div>
-                        <h4 className="text-sm font-bold">{incident.title}</h4>
+                        <h4 className="text-sm font-bold truncate">{incident.title}</h4>
                         <div className="flex items-center gap-3 text-[10px] text-slate-500 font-medium">
-                          <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {incident.location}</span>
+                          <span className="flex items-center gap-1 truncate"><MapPin className="w-3 h-3 flex-shrink-0" /> {incident.location}</span>
                           <span>•</span>
-                          <span>{formatTimeAgo(incident.timestamp)}</span>
+                          <span className="flex-shrink-0">{formatTimeAgo(incident.timestamp)}</span>
                         </div>
                       </div>
-                      <ChevronRight className={cn("w-4 h-4 transition-transform", selectedIncidentId === incident.id && "rotate-90")} />
+                      <ChevronRight className={cn("w-4 h-4 transition-transform flex-shrink-0", selectedIncidentId === incident.id && "rotate-90")} />
                     </div>
                   </button>
                 ))}
@@ -284,8 +274,8 @@ export default function Dashboard() {
                 <div className="mt-8 pt-8 border-t border-white/10 space-y-6">
                   <div className="space-y-2">
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Tactical Briefing</p>
-                    <p className="text-sm text-slate-300 leading-relaxed italic">
-                      {aiMitigation || "Aegis AI is synthesizing tactical options for this vector..."}
+                    <p className="text-sm text-slate-300 leading-relaxed italic line-clamp-2">
+                      {selectedIncident.aiMitigation || "Aegis AI is monitoring this vector for anomalous patterns. Heuristic evaluation in progress."}
                     </p>
                   </div>
                   <Button variant="primary" className="w-full">

@@ -36,6 +36,9 @@ interface IncidentContextType {
     aiAnalysis?: string;
     aiFactors?: string[];
     aiExplanation?: string;
+    aiMitigation?: string;
+    aiNarration?: string;
+    aiExplanationText?: string;
     lat?: number;
     lng?: number;
     neuralImpact?: number;
@@ -182,6 +185,9 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
     aiAnalysis?: string;
     aiFactors?: string[];
     aiExplanation?: string;
+    aiMitigation?: string;
+    aiNarration?: string;
+    aiExplanationText?: string;
     lat?: number;
     lng?: number;
     neuralImpact?: number;
@@ -245,6 +251,9 @@ export const IncidentProvider = ({ children }: { children: ReactNode }) => {
       aiPriority: newIncidentData.aiPriority || "P3",
       aiFactors: newIncidentData.aiFactors || [],
       aiExplanation: newIncidentData.aiExplanation || "Direct tactical allocation based on current neural load.",
+      aiMitigation: newIncidentData.aiMitigation || "",
+      aiNarration: newIncidentData.aiNarration || "",
+      aiExplanationText: newIncidentData.aiExplanationText || "",
       lat: newIncidentData.lat,
       lng: newIncidentData.lng,
       neuralImpact: newIncidentData.neuralImpact || calculateNeuralImpact(newIncidentData.severity, newIncidentData.aiScore),
