@@ -3,6 +3,7 @@
 import React, { useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { Incident } from "@/lib/mockData";
 import { Badge } from "./Badge";
 import { cn } from "@/lib/utils";
