@@ -17,11 +17,11 @@ export const Badge = ({
   dot = true,
 }: BadgeProps) => {
   const variants = {
-    critical: "bg-danger/10 text-danger border-danger/20",
-    high: "bg-warning/10 text-warning border-warning/20",
-    medium: "bg-warning/10 text-warning border-warning/20",
-    low: "bg-primary/10 text-primary-light border-primary/20",
-    neutral: "bg-white/5 text-slate-400 border-white/10",
+    critical: "bg-danger/10 text-danger border-danger/20 backdrop-blur-md",
+    high: "bg-warning/10 text-warning border-warning/20 backdrop-blur-md",
+    medium: "bg-warning/10 text-warning border-warning/20 backdrop-blur-md",
+    low: "bg-primary/10 text-primary-light border-primary/20 backdrop-blur-md",
+    neutral: "bg-white/5 text-slate-400 border-white/10 backdrop-blur-md",
   };
 
   const dotColors = {

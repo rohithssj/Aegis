@@ -75,16 +75,21 @@ export default function AnalyticsPage() {
   }
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-base">
+    <div className="h-screen flex items-center justify-center text-white bg-base">
       <div className="flex flex-col items-center gap-4">
-        <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">Accessing Neural Archives...</p>
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">Accessing Neural Archives...</p>
       </div>
     </div>
   );
 
   return (
-    <main className="flex-1 max-w-7xl mx-auto w-full pt-32 pb-12 px-6 space-y-12 animate-in">
+    <motion.main 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="flex-1 max-w-7xl mx-auto w-full pt-32 pb-12 px-6 space-y-12"
+    >
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-4">
           <Button 
@@ -104,7 +109,7 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
         {[
           { label: "Total Incidents", val: stats.total, icon: BarChart3, color: "text-primary", desc: "Total recorded events in database" },
           { label: "Critical vs Normal", val: `${stats.critical} / ${stats.normal}`, icon: ShieldAlert, color: "text-danger", desc: "High-priority vs standard events" },
@@ -138,7 +143,6 @@ export default function AnalyticsPage() {
             <h3 className="text-lg font-bold text-white flex items-center gap-3">
               <TrendingUp className="h-4 w-4 text-primary" /> Severity Distribution
             </h3>
-            <span className="text-[10px] font-mono text-slate-600">LIVE_VIEW_v2</span>
           </div>
           <div className="space-y-4">
              {['Critical', 'High', 'Medium', 'Low'].map((level) => {
@@ -209,6 +213,6 @@ export default function AnalyticsPage() {
           </div>
         </GlassCard>
       </div>
-    </main>
+    </motion.main>
   );
 }

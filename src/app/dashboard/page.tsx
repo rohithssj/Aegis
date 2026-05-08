@@ -23,7 +23,7 @@ import { cn, formatTimeAgo } from "@/lib/utils";
 import { GlassCard } from "@/components/GlassCard";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
-import { ChartSkeleton, MetricSkeleton, FeedSkeleton } from "@/components/Skeleton";
+import { Skeleton, ChartSkeleton, MetricSkeleton, FeedSkeleton } from "@/components/Skeleton";
 import dynamic from "next/dynamic";
 import { db } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
@@ -32,7 +32,7 @@ import { isAdmin } from "@/lib/auth";
 
 const MapView = dynamic(() => import("@/components/MapView"), { 
   ssr: false,
-  loading: () => <div className="h-full w-full bg-surface/50 animate-pulse flex items-center justify-center text-slate-500 font-mono text-xs">INITIALIZING_MAP_ENGINE...</div>
+  loading: () => <Skeleton className="h-full w-full rounded-2xl" />
 });
 
 const HISTORY_DATA: MetricPoint[] = Array.from({ length: 24 }, (_, i) => ({
@@ -158,8 +158,13 @@ export default function Dashboard() {
     : 0;
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar bg-base text-white pt-16">
-      <div className="max-w-[1600px] mx-auto p-6 md:p-12 space-y-12">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="flex-1 overflow-y-auto custom-scrollbar bg-base text-white pt-8"
+    >
+      <div className="container-premium py-12 space-y-12">
         
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -172,13 +177,13 @@ export default function Dashboard() {
               Strategic <span className="bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">Command</span>
             </h1>
             <p className="text-slate-400 max-w-2xl text-lg font-medium">
-              Global neural monitoring and autonomous response orchestration. Protocol L6 active.
+              Global neural monitoring and autonomous response orchestration.
             </p>
           </div>
           <div className="flex flex-col items-end gap-4">
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="sm" onClick={refreshMetrics} className="border-white/5">
-                <Activity className="h-4 w-4 mr-2" /> RE_SYNC
+                <Activity className="h-4 w-4 mr-2" /> Sync Data
               </Button>
               <Button variant="primary" size="md">
                 Emergency Protocol
@@ -192,7 +197,7 @@ export default function Dashboard() {
         </div>
 
         {/* Metrics Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {[
             { label: "Neural Load", val: `${avgImpact}%`, icon: Cpu, color: "text-primary-light" },
             { label: "Network Latency", val: "24ms", icon: Network, color: "text-primary" },
@@ -333,9 +338,9 @@ export default function Dashboard() {
                            <span className="text-[10px] uppercase tracking-wide text-white/50">Synthesizing Briefing...</span>
                          </div>
                          <div className="space-y-2">
-                           <div className="h-3 bg-white/10 rounded w-full animate-pulse" />
-                           <div className="h-3 bg-white/10 rounded w-[90%] animate-pulse" />
-                           <div className="h-3 bg-white/10 rounded w-[80%] animate-pulse" />
+                           <Skeleton className="h-3 w-full" />
+                           <Skeleton className="h-3 w-[90%]" />
+                           <Skeleton className="h-3 w-[80%]" />
                          </div>
                       </motion.div>
                     ) : (
@@ -381,6 +386,6 @@ export default function Dashboard() {
         </div>
 
       </div>
-    </div>
+    </motion.div>
   );
 }

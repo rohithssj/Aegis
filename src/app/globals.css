@@ -64,7 +64,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Standardized Layout Containers */
 .container-premium {
-  @apply max-w-7xl mx-auto px-4 md:px-6 w-full;
+  @apply max-w-7xl mx-auto px-4 md:px-6 lg:px-8 w-full;
 }
 
 .section-spacing {
@@ -73,15 +73,15 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Refined Glass - Linear/SaaS Style */
 .glass {
-  @apply bg-white/[0.03] backdrop-blur-md border border-white/[0.05] shadow-sm;
+  @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_0_30px_rgba(37,99,235,0.15)];
 }
 
 .glass-interactive {
-  @apply bg-white/[0.03] backdrop-blur-md border border-white/[0.05] shadow-sm transition-all duration-300 ease-out;
+  @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_0_30px_rgba(37,99,235,0.15)] transition-all duration-300 ease-out;
 }
 
 .glass-interactive:hover {
-  @apply bg-white/[0.08] border-primary/30 -translate-y-1 scale-[1.01] shadow-lg shadow-primary/10;
+  @apply bg-white/10 border-primary/30 -translate-y-1 scale-[1.02] shadow-[0_0_40px_rgba(37,99,235,0.25)];
 }
 
 /* Custom Scrollbar */

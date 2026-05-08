@@ -155,7 +155,12 @@ export default function ReportPage() {
   const config = statusConfigs[currentStatus as keyof typeof statusConfigs] || statusConfigs.processing;
 
   return (
-    <main className="min-h-screen bg-base py-12 md:py-24 px-4 md:px-6 flex flex-col items-center justify-center relative overflow-hidden text-white">
+    <motion.main 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen bg-base py-12 md:py-24 px-4 md:px-6 flex flex-col items-center justify-center relative overflow-hidden text-white"
+    >
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
          <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px]" />
          <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-accent/20 rounded-full blur-[120px]" />
@@ -419,6 +424,6 @@ export default function ReportPage() {
         </AnimatePresence>
         </div>
       </div>
-    </main>
+    </motion.main>
   );
 }

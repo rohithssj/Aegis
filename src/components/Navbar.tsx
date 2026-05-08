@@ -68,7 +68,7 @@ export const Navbar = () => {
   return (
     <>
       <motion.nav
-        className="fixed top-0 left-0 right-0 z-50 flex items-center transition-all duration-300 bg-base/70 backdrop-blur-xl border-b border-white/10 h-16"
+        className="sticky top-0 left-0 right-0 z-50 flex items-center transition-all duration-300 bg-white/5 backdrop-blur-xl border-b border-white/10 h-16"
       >
         <div className="container-premium flex items-center justify-between">
           {/* LOGO */}

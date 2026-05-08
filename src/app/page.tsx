@@ -17,7 +17,12 @@ export default function LandingPage() {
   if (!mounted) return null;
 
   return (
-    <main className="min-h-screen bg-base relative overflow-hidden flex flex-col items-center justify-center p-6">
+    <motion.main 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen bg-base relative overflow-hidden flex flex-col items-center justify-center p-6"
+    >
       {/* Background Ambience */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
@@ -148,11 +153,11 @@ export default function LandingPage() {
            <div className="flex gap-12">
              <div className="flex items-center gap-3 opacity-30">
                <Activity className="w-4 h-4 text-slate-500" />
-               <span className="text-[10px] font-mono text-slate-500 font-bold tracking-widest uppercase">Grid: Indian-Cluster-01</span>
+               <span className="text-[10px] font-mono text-slate-500 font-bold tracking-widest uppercase">Aegis Grid Stable</span>
              </div>
              <div className="flex items-center gap-3 opacity-30">
                <Globe className="w-4 h-4 text-slate-500" />
-               <span className="text-[10px] font-mono text-slate-500 font-bold tracking-widest uppercase">Protocol: Secure_L6</span>
+               <span className="text-[10px] font-mono text-slate-500 font-bold tracking-widest uppercase">Secure Protocol Active</span>
              </div>
            </div>
            <p className="text-[10px] text-slate-800 font-mono tracking-[0.5em] uppercase font-black">
@@ -160,6 +165,6 @@ export default function LandingPage() {
            </p>
         </footer>
       </div>
-    </main>
+    </motion.main>
   );
 }

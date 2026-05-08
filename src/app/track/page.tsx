@@ -77,7 +77,12 @@ export default function TrackPage() {
   const config = incident ? (statusConfigs[incident.status as keyof typeof statusConfigs] || statusConfigs.processing) : statusConfigs.processing;
 
   return (
-    <main className="min-h-screen bg-base text-white py-24 px-6 relative overflow-hidden flex flex-col items-center">
+    <motion.main 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen bg-base text-white py-24 px-6 relative overflow-hidden flex flex-col items-center"
+    >
       {/* Background Ambience */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
          <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px]" />
@@ -219,6 +224,6 @@ export default function TrackPage() {
           )}
         </AnimatePresence>
       </div>
-    </main>
+    </motion.main>
   );
 }

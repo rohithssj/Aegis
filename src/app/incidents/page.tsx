@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { GlassCard } from "@/components/GlassCard";
-import { FeedSkeleton } from "@/components/Skeleton";
+import { Skeleton, FeedSkeleton } from "@/components/Skeleton";
 import { cn, formatTimeAgo } from "@/lib/utils";
 import { useIncidents } from "@/context/IncidentContext";
 import { toast } from "sonner";
@@ -110,7 +110,12 @@ export default function IncidentsPage() {
   }
 
   return (
-    <main className="flex-1 flex flex-col md:flex-row h-screen pt-16 overflow-hidden bg-base text-white">
+    <motion.main 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="flex-1 flex flex-col md:flex-row h-screen pt-16 overflow-hidden bg-base text-white"
+    >
       <aside className={cn(
         "w-full md:w-[400px] border-r border-white/5 flex flex-col bg-surface/30 backdrop-blur-md transition-all duration-500 h-screen overflow-y-auto pr-2 custom-scrollbar",
         selectedId && "hidden md:flex"
@@ -119,9 +124,8 @@ export default function IncidentsPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold tracking-tight">Intelligence</h1>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Active Event Stream</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Event Stream</p>
             </div>
-            <Badge variant="low" className="font-mono text-[9px] px-2">LIVE</Badge>
           </div>
         </div>
 
@@ -222,9 +226,9 @@ export default function IncidentsPage() {
                            <span className="text-[10px] uppercase tracking-wide text-white/50">Synthesizing Tactical Data...</span>
                          </div>
                          <div className="space-y-3">
-                           <div className="h-3 bg-white/10 rounded w-full animate-pulse" />
-                           <div className="h-3 bg-white/10 rounded w-[95%] animate-pulse" />
-                           <div className="h-3 bg-white/10 rounded w-[85%] animate-pulse" />
+                           <Skeleton className="h-3 w-full" />
+                           <Skeleton className="h-3 w-[95%]" />
+                           <Skeleton className="h-3 w-[85%]" />
                          </div>
                       </motion.div>
                     ) : (
@@ -263,7 +267,7 @@ export default function IncidentsPage() {
                            </div>
                            <div className="hidden md:block">
                               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Protocol</p>
-                              <p className="text-xl font-bold text-primary">Secure_L6</p>
+                              <p className="text-xl font-bold text-primary">Standard</p>
                            </div>
                         </div>
                       </motion.div>
@@ -327,6 +331,6 @@ export default function IncidentsPage() {
           </AnimatePresence>
         </div>
       </section>
-    </main>
+    </motion.main>
   );
 }
