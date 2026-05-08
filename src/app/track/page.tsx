@@ -67,21 +67,21 @@ export default function TrackPage() {
   };
 
   const statusConfigs = {
-    processing: { color: "text-blue-400", bg: "bg-blue-400/10", icon: Loader2 },
-    analyzing: { color: "text-purple-400", bg: "bg-purple-400/10", icon: Activity },
-    responding: { color: "text-yellow-400", bg: "bg-yellow-400/10", icon: Zap },
-    resolved: { color: "text-emerald-500", bg: "bg-emerald-500/10", icon: CheckCircle2 },
+    processing: { color: "text-primary-light", bg: "bg-primary-light/10", icon: Loader2 },
+    analyzing: { color: "text-primary", bg: "bg-primary/10", icon: Activity },
+    responding: { color: "text-warning", bg: "bg-warning/10", icon: Zap },
+    resolved: { color: "text-success", bg: "bg-success/10", icon: CheckCircle2 },
   };
 
   const activeSteps = incident ? getActiveStepsCount(incident.status) : 0;
   const config = incident ? (statusConfigs[incident.status as keyof typeof statusConfigs] || statusConfigs.processing) : statusConfigs.processing;
 
   return (
-    <main className="min-h-screen bg-[#05070A] text-white py-24 px-6 relative overflow-hidden flex flex-col items-center">
+    <main className="min-h-screen bg-base text-white py-24 px-6 relative overflow-hidden flex flex-col items-center">
       {/* Background Ambience */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
-         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-500/20 rounded-full blur-[120px]" />
-         <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-blue-500/20 rounded-full blur-[120px]" />
+         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px]" />
+         <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-accent/20 rounded-full blur-[120px]" />
       </div>
 
       <div className="max-w-2xl w-full relative z-10 space-y-8">
@@ -95,7 +95,7 @@ export default function TrackPage() {
             </button>
             <AegisLogo className="w-10 h-10" showText={false} />
           </div>
-          <h1 className="text-5xl font-bold tracking-tighter">Track <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent italic">Incident</span></h1>
+          <h1 className="text-5xl font-bold tracking-tighter">Track <span className="bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent italic">Incident</span></h1>
           <p className="text-slate-400 font-medium">Monitor real-time status of your reported incident</p>
         </header>
 
@@ -103,7 +103,7 @@ export default function TrackPage() {
           <form onSubmit={handleTrack} className="space-y-4">
             <div className="space-y-2 text-left">
               <label htmlFor="trackingId" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                <Binary className="w-3 h-3 text-purple-400" /> Tracking Identifier
+                <Binary className="w-3 h-3 text-primary" /> Tracking Identifier
               </label>
               <div className="relative group">
                 <input
@@ -112,7 +112,7 @@ export default function TrackPage() {
                   value={trackingId}
                   onChange={(e) => setTrackingId(e.target.value)}
                   placeholder="Paste tracking ID here..."
-                  className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-6 py-4 text-sm font-medium text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all"
+                  className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-6 py-4 text-sm font-medium text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                   required
                 />
                 <button 
@@ -146,7 +146,7 @@ export default function TrackPage() {
               transition={{ type: "spring", damping: 15 }}
             >
               <GlassCard className="p-8 md:p-10 space-y-10 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent" />
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />
                 
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                   <div className="space-y-3">
@@ -166,13 +166,13 @@ export default function TrackPage() {
                   <div className="space-y-1">
                     <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Location</p>
                     <p className="text-sm font-bold text-white flex items-center gap-2">
-                      <MapPin className="w-3.5 h-3.5 text-purple-400" /> {incident.location}
+                      <MapPin className="w-3.5 h-3.5 text-primary" /> {incident.location}
                     </p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Reported</p>
                     <p className="text-sm font-bold text-white flex items-center gap-2">
-                      <Clock className="w-3.5 h-3.5 text-blue-400" /> {formatTimeAgo(incident.timestamp)}
+                      <Clock className="w-3.5 h-3.5 text-primary-light" /> {formatTimeAgo(incident.timestamp)}
                     </p>
                   </div>
                 </div>
@@ -201,7 +201,7 @@ export default function TrackPage() {
                         initial={{ width: "0%" }}
                         animate={{ width: `${(activeSteps / steps.length) * 100}%` }}
                         className={cn("absolute h-full transition-all duration-700", 
-                          activeSteps === 4 ? "bg-emerald-500" : "bg-gradient-to-r from-blue-500 to-purple-500"
+                          activeSteps === 4 ? "bg-success" : "bg-gradient-to-r from-primary to-primary-light"
                         )}
                       />
                     </div>

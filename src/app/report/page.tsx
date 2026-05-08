@@ -147,18 +147,18 @@ export default function ReportPage() {
 
   const statusConfigs = {
     processing: { color: "text-slate-400", bg: "bg-slate-400/10", icon: Loader2 },
-    analyzing: { color: "text-blue-400", bg: "bg-blue-400/10", icon: Activity },
-    responding: { color: "text-purple-500", bg: "bg-purple-500/10", icon: Zap },
-    resolved: { color: "text-emerald-500", bg: "bg-emerald-500/10", icon: CheckCircle2 },
+    analyzing: { color: "text-primary-light", bg: "bg-primary-light/10", icon: Activity },
+    responding: { color: "text-accent", bg: "bg-accent/10", icon: Zap },
+    resolved: { color: "text-success", bg: "bg-success/10", icon: CheckCircle2 },
   };
 
   const config = statusConfigs[currentStatus as keyof typeof statusConfigs] || statusConfigs.processing;
 
   return (
-    <main className="min-h-screen bg-[#05070A] py-12 md:py-24 px-4 md:px-6 flex flex-col items-center justify-center relative overflow-hidden text-white">
+    <main className="min-h-screen bg-base py-12 md:py-24 px-4 md:px-6 flex flex-col items-center justify-center relative overflow-hidden text-white">
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
-         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-500/20 rounded-full blur-[120px]" />
-         <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-blue-500/20 rounded-full blur-[120px]" />
+         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px]" />
+         <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-accent/20 rounded-full blur-[120px]" />
       </div>
 
       <div className="max-w-7xl mx-auto w-full relative z-10 flex items-center justify-center">
@@ -185,7 +185,7 @@ export default function ReportPage() {
               <GlassCard className="p-8 md:p-12 rounded-[2.5rem] border-white/5 bg-white/[0.01]">
                 <div className="space-y-10">
                   <div className="space-y-3">
-                    <h1 className="text-5xl md:text-6xl font-bold text-white tracking-tighter">Report <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent italic">Incident</span></h1>
+                    <h1 className="text-5xl md:text-6xl font-bold text-white tracking-tighter">Report <span className="bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent italic">Incident</span></h1>
                     <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.3em] font-bold">Transmission Protocol Initialized</p>
                   </div>
 
@@ -193,12 +193,12 @@ export default function ReportPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-3">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                          <AlertTriangle className="h-3 w-3 text-purple-500" /> Event Type
+                          <AlertTriangle className="h-3 w-3 text-primary" /> Event Type
                         </label>
                         <select
                           value={formData.type}
                           onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                          className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-6 py-4 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all appearance-none cursor-pointer"
+                          className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-6 py-4 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
                         >
                           {INCIDENT_TYPES.map((t) => (
                             <option key={t} value={t} className="bg-[#0F172A]">
@@ -210,12 +210,12 @@ export default function ReportPage() {
 
                       <div className="space-y-3">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                          <ShieldAlert className="h-3 w-3 text-purple-500" /> Priority
+                          <ShieldAlert className="h-3 w-3 text-primary" /> Priority
                         </label>
                         <select
                           value={formData.status}
                           onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                          className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-6 py-4 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all appearance-none cursor-pointer"
+                          className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-6 py-4 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
                         >
                           {SEVERITY_LEVELS.map((s) => (
                             <option key={s} value={s} className="bg-[#0F172A]">
@@ -228,7 +228,7 @@ export default function ReportPage() {
 
                     <div className="space-y-3">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                        <MapPin className="h-3 w-3 text-purple-500" /> Geographic Sector
+                        <MapPin className="h-3 w-3 text-primary" /> Geographic Sector
                       </label>
                       <input
                         type="text"
@@ -236,13 +236,13 @@ export default function ReportPage() {
                         value={formData.location}
                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                         placeholder="e.g. Northeast Corridor / Node 78"
-                        className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-6 py-4 text-sm font-medium text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all"
+                        className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-6 py-4 text-sm font-medium text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                       />
                     </div>
 
                     <div className="space-y-3">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                        <AlignLeft className="h-3 w-3 text-purple-500" /> Intelligence Brief
+                        <AlignLeft className="h-3 w-3 text-primary" /> Intelligence Brief
                       </label>
                       <textarea
                         required
@@ -250,7 +250,7 @@ export default function ReportPage() {
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         placeholder="Provide mission-critical details..."
-                        className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-6 py-4 text-sm font-medium text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all resize-none"
+                        className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl px-6 py-4 text-sm font-medium text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
                       />
                     </div>
 
@@ -281,7 +281,7 @@ export default function ReportPage() {
               className="text-center space-y-8"
             >
               <GlassCard className="p-8 md:p-16 rounded-[4rem] border-white/5 bg-white/[0.01] relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent animate-pulse" />
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse" />
                 
                 <div className="flex flex-col items-center gap-10">
                   <div className={cn("p-8 rounded-full relative transition-all duration-500", config.bg, config.color)}>
@@ -291,7 +291,7 @@ export default function ReportPage() {
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.3, 0.1] }}
                       transition={{ duration: 2, repeat: Infinity }}
-                      className={cn("absolute inset-0 rounded-full border-4", activeSteps === 4 ? "border-emerald-500/30" : "border-blue-500/30")}
+                      className={cn("absolute inset-0 rounded-full border-4", activeSteps === 4 ? "border-success/30" : "border-primary/30")}
                     />
                   </div>
 
@@ -309,7 +309,7 @@ export default function ReportPage() {
                       <div className="text-left">
                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Status</span>
                         <span className={cn("text-sm font-bold uppercase flex items-center gap-2", config.color)}>
-                          <span className={cn("w-2 h-2 rounded-full animate-pulse", activeSteps === 4 ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-current")} />
+                          <span className={cn("w-2 h-2 rounded-full animate-pulse", activeSteps === 4 ? "bg-success shadow-[0_0_8px_#22C55E]" : "bg-current")} />
                           {currentStatus}
                         </span>
                       </div>
@@ -338,7 +338,7 @@ export default function ReportPage() {
                             initial={{ width: "25%" }}
                             animate={{ width: `${(activeSteps / steps.length) * 100}%` }}
                             className={cn("absolute h-full transition-all duration-700", 
-                              activeSteps === 4 ? "bg-emerald-500" : "bg-gradient-to-r from-blue-500 to-purple-500"
+                              activeSteps === 4 ? "bg-success" : "bg-gradient-to-r from-primary to-accent"
                             )}
                           />
                        </div>
@@ -388,15 +388,15 @@ export default function ReportPage() {
                       </div>
                       <div className="space-y-1">
                         <p className="text-[9px] text-slate-500 uppercase font-bold">Confidence</p>
-                        <p className="text-xs text-blue-400 font-bold">{currentIncident.aiConfidence}%</p>
+                        <p className="text-xs text-primary font-bold">{currentIncident.aiConfidence}%</p>
                       </div>
                       <div className="space-y-1">
                         <p className="text-[9px] text-slate-500 uppercase font-bold">Priority</p>
                         <p className={cn(
                           "text-xs font-bold",
-                          currentIncident.aiPriority === "P1" ? "text-red-500" :
-                          currentIncident.aiPriority === "P2" ? "text-yellow-500" :
-                          "text-green-500"
+                          currentIncident.aiPriority === "P1" ? "text-danger" :
+                          currentIncident.aiPriority === "P2" ? "text-warning" :
+                          "text-success"
                         )}>
                           {currentIncident.aiPriority}
                         </p>

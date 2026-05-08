@@ -17,11 +17,11 @@ export default function LandingPage() {
   if (!mounted) return null;
 
   return (
-    <main className="min-h-screen bg-[#0B1120] relative overflow-hidden flex flex-col items-center justify-center p-6">
+    <main className="min-h-screen bg-base relative overflow-hidden flex flex-col items-center justify-center p-6">
       {/* Background Ambience */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent-indigo/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-cyan/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
       <div className="max-w-6xl w-full z-10 space-y-20 py-12">
@@ -31,10 +31,10 @@ export default function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center gap-6"
           >
-            <AegisLogo className="w-20 h-20 drop-shadow-[0_0_15px_rgba(91,76,240,0.3)]" showText={false} />
+            <AegisLogo className="w-20 h-20 drop-shadow-[0_0_15px_rgba(37,99,235,0.3)]" showText={false} />
             <div className="space-y-2">
               <h1 className="text-6xl md:text-7xl font-black tracking-tighter text-white">
-                AEGIS <span className="bg-gradient-to-r from-accent-indigo to-accent-cyan bg-clip-text text-transparent italic font-medium">COMMAND</span>
+                AEGIS <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent italic font-medium">COMMAND</span>
               </h1>
               <p className="text-slate-500 font-mono text-[10px] md:text-xs tracking-[0.6em] uppercase font-bold">
                 Next-Gen Tactical Intelligence & Response System
@@ -59,7 +59,7 @@ export default function LandingPage() {
                   <ShieldAlert className="w-32 h-32" />
                 </div>
                 
-                <div className="p-5 rounded-2xl bg-accent-cyan/10 w-fit text-accent-cyan ring-1 ring-accent-cyan/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                <div className="p-5 rounded-2xl bg-accent/10 w-fit text-accent ring-1 ring-accent/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
                   <ShieldAlert className="w-10 h-10" />
                 </div>
 
@@ -70,7 +70,7 @@ export default function LandingPage() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 text-[10px] font-mono font-bold text-accent-cyan uppercase tracking-widest mt-auto group-hover:translate-x-3 transition-transform">
+                <div className="flex items-center gap-3 text-[10px] font-mono font-bold text-accent uppercase tracking-widest mt-auto group-hover:translate-x-3 transition-transform">
                   Initiate Report <ArrowRight className="w-4 h-4" />
                 </div>
               </GlassCard>
@@ -92,7 +92,7 @@ export default function LandingPage() {
                   <Search className="w-32 h-32" />
                 </div>
                 
-                <div className="p-5 rounded-2xl bg-purple-500/10 w-fit text-purple-400 ring-1 ring-purple-500/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                <div className="p-5 rounded-2xl bg-primary/10 w-fit text-primary ring-1 ring-primary/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
                   <Search className="w-10 h-10" />
                 </div>
 
@@ -103,7 +103,7 @@ export default function LandingPage() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 text-[10px] font-mono font-bold text-purple-400 uppercase tracking-widest mt-auto group-hover:translate-x-3 transition-transform">
+                <div className="flex items-center gap-3 text-[10px] font-mono font-bold text-primary uppercase tracking-widest mt-auto group-hover:translate-x-3 transition-transform">
                   Track Incident <ArrowRight className="w-4 h-4" />
                 </div>
               </GlassCard>
@@ -125,7 +125,7 @@ export default function LandingPage() {
                   <Terminal className="w-32 h-32" />
                 </div>
 
-                <div className="p-5 rounded-2xl bg-accent-indigo/10 w-fit text-accent-indigo ring-1 ring-accent-indigo/20 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-500">
+                <div className="p-5 rounded-2xl bg-primary-light/10 w-fit text-primary-light ring-1 ring-primary-light/20 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-500">
                   <Terminal className="w-10 h-10" />
                 </div>
 
@@ -136,7 +136,7 @@ export default function LandingPage() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 text-[10px] font-mono font-bold text-accent-indigo uppercase tracking-widest mt-auto group-hover:translate-x-3 transition-transform">
+                <div className="flex items-center gap-3 text-[10px] font-mono font-bold text-primary-light uppercase tracking-widest mt-auto group-hover:translate-x-3 transition-transform">
                   Access Command <ArrowRight className="w-4 h-4" />
                 </div>
               </GlassCard>

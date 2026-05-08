@@ -144,9 +144,9 @@ export default function Dashboard() {
   const displayMetrics = mode === "live" ? liveMetrics : HISTORY_DATA;
 
   if (!isAuthorized || loading) return (
-    <div className="h-screen flex items-center justify-center text-white bg-[#05070A]">
+    <div className="h-screen flex items-center justify-center text-white bg-base">
       <div className="flex flex-col items-center gap-4">
-        <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
         <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">Validating Credentials...</p>
       </div>
     </div>
@@ -158,18 +158,18 @@ export default function Dashboard() {
     : 0;
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#05070A] text-white pt-16">
+    <div className="flex-1 overflow-y-auto custom-scrollbar bg-base text-white pt-16">
       <div className="max-w-[1600px] mx-auto p-6 md:p-12 space-y-12">
         
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="space-y-4">
-            <div className="flex items-center gap-3 text-purple-500 font-mono text-sm tracking-[0.3em] uppercase font-bold">
+            <div className="flex items-center gap-3 text-primary font-mono text-sm tracking-[0.3em] uppercase font-bold">
               <Shield className="w-5 h-5" />
               Aegis Tactical Overload
             </div>
             <h1 className="text-5xl md:text-7xl font-bold tracking-tighter">
-              Strategic <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Command</span>
+              Strategic <span className="bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">Command</span>
             </h1>
             <p className="text-slate-400 max-w-2xl text-lg font-medium">
               Global neural monitoring and autonomous response orchestration. Protocol L6 active.
@@ -194,10 +194,10 @@ export default function Dashboard() {
         {/* Metrics Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: "Neural Load", val: `${avgImpact}%`, icon: Cpu, color: "text-blue-400" },
-            { label: "Network Latency", val: "24ms", icon: Network, color: "text-purple-400" },
-            { label: "Active Nodes", val: incidents.length + 124, icon: Radio, color: "text-emerald-400" },
-            { label: "Threat Index", val: (criticalCount * 12.4 + 4.2).toFixed(1), icon: AlertTriangle, color: "text-red-400" }
+            { label: "Neural Load", val: `${avgImpact}%`, icon: Cpu, color: "text-primary-light" },
+            { label: "Network Latency", val: "24ms", icon: Network, color: "text-primary" },
+            { label: "Active Nodes", val: incidents.length + 124, icon: Radio, color: "text-success" },
+            { label: "Threat Index", val: (criticalCount * 12.4 + 4.2).toFixed(1), icon: AlertTriangle, color: "text-danger" }
           ].map((m, i) => (
             <GlassCard key={i} className="p-8 group relative overflow-hidden">
                <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -230,7 +230,7 @@ export default function Dashboard() {
                 onClick={() => setMode("live")}
                 className={cn(
                   "px-6 py-2 rounded-full text-xs font-bold transition-all duration-300",
-                  mode === "live" ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20" : "text-slate-500 hover:text-white"
+                  mode === "live" ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-500 hover:text-white"
                 )}
               >
                 Live
@@ -239,7 +239,7 @@ export default function Dashboard() {
                 onClick={() => setMode("history")}
                 className={cn(
                   "px-6 py-2 rounded-full text-xs font-bold transition-all duration-300",
-                  mode === "history" ? "bg-purple-500 text-white shadow-lg shadow-purple-500/20" : "text-slate-500 hover:text-white"
+                  mode === "history" ? "bg-accent text-white shadow-lg shadow-accent/20" : "text-slate-500 hover:text-white"
                 )}
               >
                 History
@@ -252,17 +252,17 @@ export default function Dashboard() {
               <AreaChart data={displayMetrics}>
                 <defs>
                   <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={mode === "live" ? "#3B82F6" : "#8B5CF6"} stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor={mode === "live" ? "#3B82F6" : "#8B5CF6"} stopOpacity={0}/>
+                    <stop offset="5%" stopColor={mode === "live" ? "#2563EB" : "#F59E0B"} stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor={mode === "live" ? "#2563EB" : "#F59E0B"} stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="time" hide />
                 <YAxis hide domain={['auto', 'auto']} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#0F172A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px' }}
+                  contentStyle={{ backgroundColor: '#020617', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px' }}
                   itemStyle={{ color: '#fff' }}
                 />
-                <Area type="monotone" dataKey="value" stroke={mode === "live" ? "#3B82F6" : "#8B5CF6"} strokeWidth={4} fillOpacity={1} fill="url(#colorValue)" />
+                <Area type="monotone" dataKey="value" stroke={mode === "live" ? "#2563EB" : "#F59E0B"} strokeWidth={4} fillOpacity={1} fill="url(#colorValue)" />
                 <Area type="monotone" dataKey="expected" stroke="rgba(255,255,255,0.1)" strokeWidth={2} strokeDasharray="8 8" fill="transparent" />
               </AreaChart>
             </ResponsiveContainer>
@@ -281,7 +281,7 @@ export default function Dashboard() {
             <GlassCard className="p-6 h-full flex flex-col">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-bold flex items-center gap-3">
-                  <Zap className="w-5 h-5 text-purple-400" /> Live Intelligence
+                  <Zap className="w-5 h-5 text-accent" /> Live Intelligence
                 </h3>
                 <Badge variant="low">Active_Uplink</Badge>
               </div>
@@ -329,7 +329,7 @@ export default function Dashboard() {
                         className="p-5 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 space-y-3"
                       >
                          <div className="flex items-center gap-3 mb-2">
-                           <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
+                           <Loader2 className="w-4 h-4 text-primary animate-spin" />
                            <span className="text-[10px] uppercase tracking-wide text-white/50">Synthesizing Briefing...</span>
                          </div>
                          <div className="space-y-2">
@@ -343,10 +343,10 @@ export default function Dashboard() {
                         key="content"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="p-5 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_0_30px_rgba(139,92,246,0.1)] space-y-3"
+                        className="p-5 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_0_30px_rgba(var(--color-primary-rgb),0.1)] space-y-3"
                       >
-                        <div className="flex items-center gap-3 border-b border-white/10 pb-3">
-                           <Binary className="w-4 h-4 text-purple-400" />
+                         <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+                           <Binary className="w-4 h-4 text-accent" />
                            <span className="text-[10px] uppercase tracking-wide text-white/50">Aegis Heuristic Report</span>
                         </div>
                         <p className="text-sm leading-relaxed text-white/80 italic font-medium max-w-[95%]">

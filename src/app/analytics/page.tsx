@@ -65,9 +65,9 @@ export default function AnalyticsPage() {
 
   if (!isAuthorized) {
     return (
-      <div className="h-screen flex items-center justify-center text-white bg-[#05070A]">
+      <div className="h-screen flex items-center justify-center text-white bg-base">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
           <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">Validating Credentials...</p>
         </div>
       </div>
@@ -75,9 +75,9 @@ export default function AnalyticsPage() {
   }
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-center justify-center bg-base">
       <div className="flex flex-col items-center gap-4">
-        <div className="h-8 w-8 border-2 border-accent-indigo border-t-transparent rounded-full animate-spin" />
+        <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         <p className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">Accessing Neural Archives...</p>
       </div>
     </div>
@@ -96,7 +96,7 @@ export default function AnalyticsPage() {
             <ChevronLeft className="h-4 w-4 mr-2" /> Back to Command
           </Button>
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white leading-tight">
-            System <span className="bg-gradient-to-r from-accent-indigo to-accent-indigo-light bg-clip-text text-transparent italic">Analytics</span>
+            System <span className="bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent italic">Analytics</span>
           </h1>
           <p className="text-slate-400 text-sm md:text-base max-w-xl leading-relaxed">
             Historical response data and neural load distribution metrics across all active sectors.
@@ -106,9 +106,9 @@ export default function AnalyticsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {[
-          { label: "Total Incidents", val: stats.total, icon: BarChart3, color: "text-accent-indigo", desc: "Total recorded events in database" },
-          { label: "Critical vs Normal", val: `${stats.critical} / ${stats.normal}`, icon: ShieldAlert, color: "text-red-500", desc: "High-priority vs standard events" },
-          { label: "Avg Response Time", val: `${stats.avgResponse}m`, icon: Clock, color: "text-accent-cyan", desc: "Average time from creation to resolution" }
+          { label: "Total Incidents", val: stats.total, icon: BarChart3, color: "text-primary", desc: "Total recorded events in database" },
+          { label: "Critical vs Normal", val: `${stats.critical} / ${stats.normal}`, icon: ShieldAlert, color: "text-danger", desc: "High-priority vs standard events" },
+          { label: "Avg Response Time", val: `${stats.avgResponse}m`, icon: Clock, color: "text-accent", desc: "Average time from creation to resolution" }
         ].map((m, i) => (
           <motion.div
             key={i}
@@ -136,7 +136,7 @@ export default function AnalyticsPage() {
         <GlassCard className="p-8 rounded-[2rem] border-white/5 space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold text-white flex items-center gap-3">
-              <TrendingUp className="h-4 w-4 text-accent-indigo" /> Severity Distribution
+              <TrendingUp className="h-4 w-4 text-primary" /> Severity Distribution
             </h3>
             <span className="text-[10px] font-mono text-slate-600">LIVE_VIEW_v2</span>
           </div>
@@ -157,9 +157,9 @@ export default function AnalyticsPage() {
                          transition={{ duration: 1, ease: "easeOut" }}
                          className={cn(
                            "h-full",
-                           level === 'Critical' ? 'bg-red-500' : 
-                           level === 'High' ? 'bg-orange-500' :
-                           level === 'Medium' ? 'bg-yellow-500' : 'bg-accent-cyan'
+                           level === 'Critical' ? 'bg-danger' : 
+                           level === 'High' ? 'bg-accent' :
+                           level === 'Medium' ? 'bg-warning' : 'bg-primary-light'
                          )}
                        />
                      </div>
@@ -172,7 +172,7 @@ export default function AnalyticsPage() {
         <GlassCard className="p-8 rounded-[2rem] border-white/5 space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold text-white flex items-center gap-3">
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Resolution Health
+              <CheckCircle2 className="h-4 w-4 text-success" /> Resolution Health
             </h3>
           </div>
           <div className="flex flex-col items-center justify-center h-48 space-y-4">
@@ -198,7 +198,7 @@ export default function AnalyticsPage() {
                     initial={{ strokeDashoffset: 377 }}
                     animate={{ strokeDashoffset: 377 - (377 * (incidents.filter(i => i.status === "resolved").length / stats.total)) || 0 }}
                     transition={{ duration: 1.5, ease: "easeInOut" }}
-                    className="text-emerald-500"
+                    className="text-success"
                   />
                 </svg>
                 <span className="absolute text-2xl font-bold text-white">

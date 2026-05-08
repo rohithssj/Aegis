@@ -31,12 +31,12 @@ export const NeuralGraph = ({ data, isEmergency }: NeuralGraphProps) => {
             <linearGradient id="neuralGradient" x1="0" y1="0" x2="0" y2="1">
               <stop 
                 offset="5%" 
-                stopColor={isEmergency ? "#ef4444" : "#5B4CF0"} 
+                stopColor={isEmergency ? "#EF4444" : "#2563EB"} 
                 stopOpacity={0.3} 
               />
               <stop 
                 offset="95%" 
-                stopColor={isEmergency ? "#ef4444" : "#5B4CF0"} 
+                stopColor={isEmergency ? "#EF4444" : "#2563EB"} 
                 stopOpacity={0} 
               />
             </linearGradient>
@@ -60,7 +60,7 @@ export const NeuralGraph = ({ data, isEmergency }: NeuralGraphProps) => {
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#0F172A',
+              backgroundColor: '#020617',
               border: '1px solid rgba(255,255,255,0.08)',
               borderRadius: '12px',
               fontSize: '10px',
@@ -68,19 +68,19 @@ export const NeuralGraph = ({ data, isEmergency }: NeuralGraphProps) => {
               fontFamily: 'var(--font-mono)',
               boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
             }}
-            itemStyle={{ color: isEmergency ? "#ef4444" : "#5B4CF0" }}
+            itemStyle={{ color: isEmergency ? "#EF4444" : "#2563EB" }}
             cursor={{ stroke: 'rgba(255,255,255,0.05)', strokeWidth: 1 }}
           />
           <Area
             type="monotone"
             dataKey="value"
-            stroke={isEmergency ? "#ef4444" : "#5B4CF0"}
+            stroke={isEmergency ? "#EF4444" : "#2563EB"}
             strokeWidth={2}
             fillOpacity={1}
             fill="url(#neuralGradient)"
             isAnimationActive={true}
             animationDuration={1000}
-            activeDot={{ r: 4, strokeWidth: 0, fill: isEmergency ? "#ef4444" : "#5B4CF0" }}
+            activeDot={{ r: 4, strokeWidth: 0, fill: isEmergency ? "#EF4444" : "#2563EB" }}
           />
         </AreaChart>
       </ResponsiveContainer>

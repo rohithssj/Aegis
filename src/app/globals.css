@@ -1,18 +1,20 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #0B1120;
-  --color-foreground: #F8FAFC;
-  --color-surface: #0F172A;
+  --color-base: #020617;
+  --color-base-secondary: #0B1120;
   
-  --color-accent-indigo: #8B5CF6; /* Violet-500 */
-  --color-accent-indigo-light: #A78BFA; /* Violet-400 */
-  --color-accent-cyan: #3B82F6; /* Blue-500 */
+  --color-primary: #2563EB;
+  --color-primary-light: #3B82F6;
+  --color-primary-dark: #1D4ED8;
   
-  --color-critical: #F43F5E;
-  --color-high: #F59E0B;
-  --color-medium: #FBBF24;
-  --color-low: #22D3EE;
+  --color-accent: #F59E0B;
+  --color-accent-light: #FBBF24;
+  --color-accent-dark: #D97706;
+  
+  --color-success: #22C55E;
+  --color-warning: #EAB308;
+  --color-danger: #EF4444;
 
   --rounded-premium: 1rem;
   --rounded-premium-lg: 1rem;
@@ -25,12 +27,13 @@
 }
 
 :root {
-  --background: #0B1120;
+  --background: #020617;
   --foreground: #F8FAFC;
 }
 
 body {
-  background: var(--background);
+  background: #020617;
+  background-image: radial-gradient(circle at top right, #0B1120, transparent), radial-gradient(circle at bottom left, #0B1120, transparent);
   color: var(--foreground);
   font-family: var(--font-inter), system-ui, sans-serif;
   overflow-x: hidden;
@@ -40,7 +43,7 @@ body {
 
 /* Premium Typography System */
 h1, h2, h3, h4, h5, h6 {
-  @apply tracking-tight font-bold text-white;
+  @apply tracking-tight font-bold text-blue-300;
 }
 
 .hero-heading {
@@ -74,11 +77,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .glass-interactive {
-  @apply bg-white/[0.03] backdrop-blur-md border border-white/[0.05] shadow-sm transition-all duration-200 ease-out;
+  @apply bg-white/[0.03] backdrop-blur-md border border-white/[0.05] shadow-sm transition-all duration-300 ease-out;
 }
 
 .glass-interactive:hover {
-  @apply bg-white/[0.05] border-white/[0.08] -translate-y-0.5 scale-[1.01] shadow-lg shadow-black/10;
+  @apply bg-white/[0.08] border-primary/30 -translate-y-1 scale-[1.01] shadow-lg shadow-primary/10;
 }
 
 /* Custom Scrollbar */

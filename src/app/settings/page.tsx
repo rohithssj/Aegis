@@ -91,9 +91,9 @@ export default function SettingsPage() {
 
   if (!isAuthorized) {
     return (
-      <div className="h-screen flex items-center justify-center text-white bg-[#05070A]">
+      <div className="h-screen flex items-center justify-center text-white bg-base">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
           <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">Validating Credentials...</p>
         </div>
       </div>
@@ -101,7 +101,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#05070A] text-white pt-32 pb-40 overflow-x-hidden">
+    <main className="min-h-screen bg-base text-white pt-32 pb-40 overflow-x-hidden">
       <div className="container-premium max-w-5xl mx-auto px-6 space-y-16 animate-in">
         
         {/* Header Section */}
@@ -109,15 +109,15 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3">
             <Badge variant="neutral" dot={false} className="font-bold rounded-lg px-2 bg-white/5 border-white/10 text-slate-400 uppercase tracking-widest text-[10px]">v4.5.0_STABLE</Badge>
             {loading && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full">
-                <Loader2 className="w-3 h-3 text-blue-400 animate-spin" />
-                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Syncing Protocols...</span>
+              <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 rounded-full">
+                <Loader2 className="w-3 h-3 text-primary-light animate-spin" />
+                <span className="text-[10px] font-bold text-primary-light uppercase tracking-widest">Syncing Protocols...</span>
               </div>
             )}
           </div>
           <div className="space-y-2">
             <h1 className="text-5xl md:text-6xl font-bold tracking-tighter">
-              Global <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Configuration</span>
+              Global <span className="bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">Configuration</span>
             </h1>
             <p className="text-slate-400 text-lg max-w-2xl font-medium">
               Fine-tune the Aegis orchestrator and neural defense layers. Changes apply globally to the edge network.
@@ -130,7 +130,7 @@ export default function SettingsPage() {
           <section className="space-y-8">
             <div className="space-y-2 px-1">
               <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3">
-                <Cpu className="w-6 h-6 text-blue-400" /> Intelligence & Analysis
+                <Cpu className="w-6 h-6 text-primary" /> Intelligence & Analysis
               </h2>
               <p className="text-sm text-slate-500 font-medium">Manage neural network parameters and predictive modeling triggers.</p>
             </div>
@@ -138,7 +138,7 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <GlassCard className="p-8 space-y-8 rounded-2xl border-white/10 bg-white/[0.02]">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                  <div className="p-3 rounded-xl bg-primary/10 text-primary-light border border-primary/20">
                     <Activity className="h-5 w-5" />
                   </div>
                   <div className="space-y-1">
@@ -154,7 +154,7 @@ export default function SettingsPage() {
                       className={cn(
                         "flex-1 py-3 text-[10px] font-bold uppercase rounded-xl transition-all duration-300",
                         settings.inferenceSensitivity === mode 
-                          ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20" 
+                          ? "bg-primary text-white shadow-lg shadow-primary/20" 
                           : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
                       )}
                     >
@@ -166,7 +166,7 @@ export default function SettingsPage() {
 
               <GlassCard className="p-8 space-y-8 rounded-2xl border-white/10 bg-white/[0.02]">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                  <div className="p-3 rounded-xl bg-accent/10 text-accent border border-accent/20">
                     <Zap className="h-5 w-5" />
                   </div>
                   <div className="space-y-1">
@@ -181,7 +181,7 @@ export default function SettingsPage() {
                     max="12" 
                     value={settings.predictiveHorizon}
                     onChange={(e) => setSettings({ ...settings, predictiveHorizon: parseInt(e.target.value) })}
-                    className="flex-1 accent-purple-500 h-1.5 bg-white/5 rounded-full appearance-none cursor-pointer"
+                    className="flex-1 accent-primary h-1.5 bg-white/5 rounded-full appearance-none cursor-pointer"
                   />
                   <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-white/5 border border-white/10">
                     <span className="text-xl font-mono font-bold text-white">{settings.predictiveHorizon}h</span>
@@ -195,7 +195,7 @@ export default function SettingsPage() {
           <section className="space-y-8">
             <div className="space-y-2 px-1">
               <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3">
-                <Shield className="w-6 h-6 text-purple-400" /> Security & Protocols
+                <Shield className="w-6 h-6 text-accent" /> Security & Protocols
               </h2>
               <p className="text-sm text-slate-500 font-medium">Configure automated response triggers and network isolation.</p>
             </div>
@@ -203,7 +203,7 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <GlassCard className="p-8 flex items-center justify-between rounded-2xl border-white/10 bg-white/[0.02]">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                  <div className="p-3 rounded-xl bg-primary/10 text-primary-light border border-primary/20">
                     <Globe className="h-5 w-5" />
                   </div>
                   <div className="space-y-1">
@@ -215,7 +215,7 @@ export default function SettingsPage() {
                   onClick={() => setSettings({ ...settings, autoIsolation: !settings.autoIsolation })}
                   className={cn(
                     "w-14 h-7 rounded-full p-1.5 transition-all duration-500 ease-in-out",
-                    settings.autoIsolation ? "bg-blue-500 shadow-lg shadow-blue-500/20" : "bg-white/10"
+                    settings.autoIsolation ? "bg-primary shadow-lg shadow-primary/20" : "bg-white/10"
                   )}
                 >
                   <div className={cn(
@@ -227,7 +227,7 @@ export default function SettingsPage() {
 
               <GlassCard className="p-8 space-y-8 rounded-2xl border-white/10 bg-white/[0.02]">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                  <div className="p-3 rounded-xl bg-accent/10 text-accent border border-accent/20">
                     <Bell className="h-5 w-5" />
                   </div>
                   <div className="space-y-1">
@@ -243,7 +243,7 @@ export default function SettingsPage() {
                       className={cn(
                         "flex-1 py-3 text-[10px] font-bold uppercase rounded-xl transition-all duration-300",
                         settings.alertPriority === mode 
-                          ? "bg-purple-500 text-white shadow-lg shadow-purple-500/20" 
+                          ? "bg-accent text-white shadow-lg shadow-accent/20" 
                           : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
                       )}
                     >
@@ -258,9 +258,9 @@ export default function SettingsPage() {
 
         {/* Action Bar */}
         <GlassCard className="p-10 flex flex-col md:flex-row items-center justify-between gap-10 border-white/10 bg-white/[0.02] rounded-[3rem] shadow-2xl relative overflow-hidden">
-           <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent" />
+           <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
            <div className="flex items-center gap-8">
-              <div className="h-16 w-16 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
+              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary-light border border-primary/20 shadow-[0_0_20px_rgba(37,99,235,0.1)]">
                 <History className="h-7 w-7" />
               </div>
               <div className="space-y-1">

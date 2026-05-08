@@ -85,24 +85,24 @@ export default function IncidentsPage() {
     const isResponding = incident.status === "responding";
     const isResolved = incident.status === "resolved";
 
-    if (isCritical) return "bg-red-500/10 border-red-500/30 text-red-400";
-    if (isResponding) return "bg-yellow-500/10 border-yellow-500/30 text-yellow-400";
-    if (isResolved) return "bg-green-500/10 border-green-500/30 text-green-400";
+    if (isCritical) return "bg-danger/10 border-danger/30 text-danger";
+    if (isResponding) return "bg-warning/10 border-warning/30 text-warning";
+    if (isResolved) return "bg-success/10 border-success/30 text-success";
     return "bg-white/5 border-transparent text-slate-400";
   };
 
   const getIndicatorColor = (incident: Incident) => {
-    if (incident.severity === "critical") return "bg-red-500";
-    if (incident.status === "responding") return "bg-yellow-500";
-    if (incident.status === "resolved") return "bg-green-500";
+    if (incident.severity === "critical") return "bg-danger";
+    if (incident.status === "responding") return "bg-warning";
+    if (incident.status === "resolved") return "bg-success";
     return "bg-slate-500";
   };
 
   if (!isAuthorized) {
     return (
-      <div className="h-screen flex items-center justify-center text-white bg-[#05070A]">
+      <div className="h-screen flex items-center justify-center text-white bg-base">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
           <p className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">Validating Credentials...</p>
         </div>
       </div>
@@ -110,7 +110,7 @@ export default function IncidentsPage() {
   }
 
   return (
-    <main className="flex-1 flex flex-col md:flex-row h-screen pt-16 overflow-hidden bg-[#05070A] text-white">
+    <main className="flex-1 flex flex-col md:flex-row h-screen pt-16 overflow-hidden bg-base text-white">
       <aside className={cn(
         "w-full md:w-[400px] border-r border-white/5 flex flex-col bg-surface/30 backdrop-blur-md transition-all duration-500 h-screen overflow-y-auto pr-2 custom-scrollbar",
         selectedId && "hidden md:flex"
@@ -162,7 +162,7 @@ export default function IncidentsPage() {
       </aside>
 
       <section className={cn(
-        "flex-1 bg-background transition-all duration-500 h-[calc(100vh-64px)] overflow-hidden",
+        "flex-1 bg-base transition-all duration-500 h-[calc(100vh-64px)] overflow-hidden",
         !selectedId && "hidden md:block"
       )}>
         <div className="h-full overflow-y-auto p-8 md:p-16 custom-scrollbar pr-2 scrollbar-thin scrollbar-thumb-white/10">
@@ -185,7 +185,7 @@ export default function IncidentsPage() {
                   <div className="flex flex-wrap items-center gap-4">
                     <Badge variant={selectedIncident.severity as any} className="px-5 py-1 rounded-full uppercase text-[10px] tracking-widest">{selectedIncident.severity}</Badge>
                     <div className="ml-auto flex items-center gap-2 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full">
-                      <Binary className="h-3.5 w-3.5 text-blue-400" />
+                      <Binary className="h-3.5 w-3.5 text-primary" />
                       <span className="text-slate-400 font-mono text-[11px] font-bold">{selectedIncident.id}</span>
                     </div>
                   </div>
@@ -204,7 +204,7 @@ export default function IncidentsPage() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-bold flex items-center gap-3">
-                      <Activity className="h-5 w-5 text-purple-400" /> Tactical Intelligence
+                      <Activity className="h-5 w-5 text-primary" /> Tactical Intelligence
                     </h3>
                   </div>
 
@@ -218,7 +218,7 @@ export default function IncidentsPage() {
                         className="p-8 rounded-[2rem] bg-white/5 backdrop-blur-xl border border-white/10 space-y-4"
                       >
                          <div className="flex items-center gap-3 mb-4">
-                           <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
+                           <Loader2 className="w-4 h-4 text-primary animate-spin" />
                            <span className="text-[10px] uppercase tracking-wide text-white/50">Synthesizing Tactical Data...</span>
                          </div>
                          <div className="space-y-3">
@@ -232,10 +232,10 @@ export default function IncidentsPage() {
                         key="content"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="p-8 rounded-[2rem] bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_0_40px_rgba(139,92,246,0.1)] relative group"
+                        className="p-8 rounded-[2rem] bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_0_40px_rgba(var(--color-primary-rgb),0.1)] relative group"
                       >
                         <div className="flex items-center gap-3 border-b border-white/10 pb-4 mb-6">
-                           <Binary className="w-5 h-5 text-purple-400" />
+                           <Binary className="w-5 h-5 text-accent" />
                            <span className="text-[10px] uppercase tracking-wide text-white/50">Aegis Heuristic Report</span>
                         </div>
                         <p className="text-lg leading-relaxed text-white/80 italic font-medium max-w-[95%]">
@@ -263,7 +263,7 @@ export default function IncidentsPage() {
                            </div>
                            <div className="hidden md:block">
                               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Protocol</p>
-                              <p className="text-xl font-bold text-blue-400">Secure_L6</p>
+                              <p className="text-xl font-bold text-primary">Secure_L6</p>
                            </div>
                         </div>
                       </motion.div>
@@ -312,9 +312,9 @@ export default function IncidentsPage() {
 
                   <div className="flex flex-wrap gap-4">
                     <Button variant="primary" size="lg" className="rounded-full" onClick={() => handleStatusUpdate("analyzing")}>Start Analysis</Button>
-                    <Button variant="primary" size="lg" className="rounded-full bg-blue-600 shadow-blue-600/20" onClick={() => handleStatusUpdate("responding")}>Start Response</Button>
-                    <Button variant="primary" size="lg" className="rounded-full bg-emerald-600 shadow-emerald-600/20" onClick={() => handleStatusUpdate("resolved")}>Resolve</Button>
-                    <Button variant="ghost" className="rounded-full text-slate-500 hover:text-red-400 sm:ml-auto" onClick={handleDismiss}>Dismiss Incident</Button>
+                    <Button variant="primary" size="lg" className="rounded-full bg-primary shadow-primary/20" onClick={() => handleStatusUpdate("responding")}>Start Response</Button>
+                    <Button variant="primary" size="lg" className="rounded-full bg-success shadow-success/20" onClick={() => handleStatusUpdate("resolved")}>Resolve</Button>
+                    <Button variant="ghost" className="rounded-full text-slate-500 hover:text-danger sm:ml-auto" onClick={handleDismiss}>Dismiss Incident</Button>
                   </div>
                 </div>
               </motion.div>

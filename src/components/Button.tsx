@@ -18,10 +18,10 @@ export const Button = ({
   ...props
 }: ButtonProps) => {
   const variants = {
-    primary: "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg shadow-purple-500/20 hover:brightness-110",
-    secondary: "bg-white/5 border border-white/10 text-white hover:bg-white/10",
-    danger: "bg-red-500 text-white border border-red-400/20 hover:bg-red-600",
-    ghost: "bg-transparent text-slate-400 hover:text-white hover:bg-white/5",
+    primary: "bg-gradient-to-r from-primary to-primary-light text-white shadow-[0_0_20px_rgba(37,99,235,0.25)] hover:from-primary-dark hover:to-primary hover:shadow-[0_0_25px_rgba(37,99,235,0.4)] transition-all",
+    secondary: "bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-primary/30",
+    danger: "bg-danger text-white border border-danger/20 hover:bg-danger/80",
+    ghost: "bg-transparent text-gray-400 hover:text-white hover:bg-white/5",
   };
 
   const sizes = {
@@ -33,9 +33,9 @@ export const Button = ({
   return (
     <button
       className={cn(
-        "relative inline-flex items-center justify-center transition-all duration-300",
-        "rounded-full outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50 font-sans",
-        "hover:scale-105 active:scale-95",
+        "relative inline-flex items-center justify-center transition-all duration-300 ease-out",
+        "rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary/50 font-sans",
+        "hover:scale-[1.02] active:scale-95",
         variants[variant],
         sizes[size],
         className

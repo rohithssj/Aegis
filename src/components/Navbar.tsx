@@ -68,7 +68,7 @@ export const Navbar = () => {
   return (
     <>
       <motion.nav
-        className="fixed top-0 left-0 right-0 z-50 flex items-center transition-all duration-300 bg-[#0B0F1A]/70 backdrop-blur-xl border-b border-white/10 h-16"
+        className="fixed top-0 left-0 right-0 z-50 flex items-center transition-all duration-300 bg-base/70 backdrop-blur-xl border-b border-white/10 h-16"
       >
         <div className="container-premium flex items-center justify-between">
           {/* LOGO */}
@@ -91,7 +91,7 @@ export const Navbar = () => {
                       : "text-slate-500 hover:text-slate-300"
                   )}
                 >
-                  <item.icon className={cn("h-3.5 w-3.5", isActive ? "text-accent-indigo" : "text-slate-600")} />
+                  <item.icon className={cn("h-3.5 w-3.5", isActive ? "text-primary" : "text-slate-600")} />
                   {item.name}
                   {isActive && (
                     <motion.div
@@ -118,7 +118,7 @@ export const Navbar = () => {
             <Button 
               onClick={() => setIsReportModalOpen(true)}
               size="sm" 
-              className="hidden lg:flex rounded-full bg-accent-indigo hover:translate-y-0 hover:scale-105"
+              className="hidden lg:flex rounded-full bg-primary hover:translate-y-0 hover:scale-105"
             >
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-3.5 w-3.5" />
@@ -133,9 +133,9 @@ export const Navbar = () => {
               >
                 <div className="hidden sm:flex flex-col items-end mr-1">
                   <p className="text-[10px] font-bold text-white uppercase">Rohith S.</p>
-                  <p className="text-[8px] font-medium text-accent-cyan/80 uppercase tracking-widest">Root Control</p>
+                  <p className="text-[8px] font-medium text-primary-light/80 uppercase tracking-widest">Root Control</p>
                 </div>
-                <div className="h-7 w-7 rounded-full bg-gradient-to-tr from-accent-indigo to-accent-indigo-light flex items-center justify-center text-[10px] font-black text-white shadow-lg shadow-accent-indigo/20">
+                <div className="h-7 w-7 rounded-full bg-gradient-to-tr from-primary to-primary-light flex items-center justify-center text-[10px] font-black text-white shadow-lg shadow-primary/20">
                    RS
                 </div>
                 <ChevronDown className={cn("h-3 w-3 text-slate-500 transition-transform duration-300 mr-1", isDropdownOpen && "rotate-180")} />
@@ -148,7 +148,7 @@ export const Navbar = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.98 }}
                     transition={{ duration: 0.1, ease: "easeOut" }}
-                    className="absolute right-0 mt-3 w-48 bg-surface/95 border border-white/10 rounded-2xl shadow-2xl z-[60] backdrop-blur-xl p-1.5"
+                    className="absolute right-0 mt-3 w-48 bg-base-secondary/95 border border-white/10 rounded-2xl shadow-2xl z-[60] backdrop-blur-xl p-1.5"
                   >
                     <Link href="/settings" className="flex items-center gap-3 px-3 py-2 text-[11px] font-bold text-slate-400 hover:text-white hover:bg-white/[0.05] rounded-xl transition-all">
                       <User className="h-3.5 w-3.5" /> Profile
@@ -190,7 +190,7 @@ export const Navbar = () => {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={cn(
                       "flex items-center gap-4 p-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
-                      pathname === item.path ? "bg-accent-indigo/10 text-white" : "text-slate-500 hover:text-white hover:bg-white/5"
+                      pathname === item.path ? "bg-primary/10 text-white" : "text-slate-500 hover:text-white hover:bg-white/5"
                     )}
                   >
                     <item.icon className="h-4 w-4" />
@@ -203,7 +203,7 @@ export const Navbar = () => {
                     setIsReportModalOpen(true);
                     setIsMobileMenuOpen(false);
                   }}
-                  className="w-full justify-start gap-4 p-4 rounded-xl text-xs font-bold uppercase tracking-widest bg-accent-indigo/20 text-accent-indigo hover:bg-accent-indigo/30"
+                  className="w-full justify-start gap-4 p-4 rounded-xl text-xs font-bold uppercase tracking-widest bg-primary/20 text-primary hover:bg-primary/30"
                 >
                   <AlertCircle className="h-4 w-4" />
                   Report Incident

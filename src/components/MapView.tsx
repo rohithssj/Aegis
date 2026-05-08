@@ -58,9 +58,9 @@ export default function MapView({ incidents }: MapViewProps) {
   const groupedData = useMemo(() => groupIncidents(incidents), [incidents]);
 
   const createClusterIcon = (cluster: any) => {
-    let colorClass = "bg-emerald-500/80 shadow-[0_0_15px_#10b981]";
-    if (cluster.criticalCount > 0) colorClass = "bg-red-500/80 shadow-[0_0_15px_#ef4444]";
-    else if (cluster.mediumCount > 0) colorClass = "bg-yellow-500/80 shadow-[0_0_15px_#eab308]";
+    let colorClass = "bg-success/80 shadow-[0_0_15px_#22C55E]";
+    if (cluster.criticalCount > 0) colorClass = "bg-danger/80 shadow-[0_0_15px_#EF4444]";
+    else if (cluster.mediumCount > 0) colorClass = "bg-warning/80 shadow-[0_0_15px_#F59E0B]";
 
     const size = Math.min(60, 32 + cluster.count * 2);
 
@@ -75,7 +75,7 @@ export default function MapView({ incidents }: MapViewProps) {
     <MapContainer 
       center={[20.5937, 78.9629]} 
       zoom={4} 
-      style={{ height: "100%", width: "100%", background: "#0B1120" }}
+      style={{ height: "100%", width: "100%", background: "#020617" }}
       scrollWheelZoom={false}
       className="rounded-2xl overflow-hidden z-0"
     >
@@ -91,7 +91,7 @@ export default function MapView({ incidents }: MapViewProps) {
           icon={createClusterIcon(cluster)}
         >
           <Popup className="custom-popup">
-            <div className="p-3 min-w-[200px] bg-[#0F172A] text-white rounded-xl space-y-3">
+            <div className="p-3 min-w-[200px] bg-base-secondary text-white rounded-xl space-y-3">
               <div className="flex items-center justify-between pb-2 border-b border-white/10">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Sector Activity</span>
                 <Badge variant={cluster.criticalCount > 0 ? "critical" : (cluster.mediumCount > 0 ? "medium" : "low")}>{cluster.count} Events</Badge>
@@ -103,7 +103,7 @@ export default function MapView({ incidents }: MapViewProps) {
                       <h4 className="text-[11px] font-bold truncate flex-1">{inc.title}</h4>
                       <span className={cn(
                         "w-1.5 h-1.5 rounded-full ml-2",
-                        inc.severity === 'critical' ? 'bg-red-500' : (inc.severity === 'medium' ? 'bg-yellow-500' : 'bg-green-500')
+                        inc.severity === 'critical' ? 'bg-danger' : (inc.severity === 'medium' ? 'bg-warning' : 'bg-success')
                       )} />
                     </div>
                     <p className="text-[9px] text-slate-500 truncate">{inc.location}</p>
