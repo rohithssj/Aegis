@@ -64,6 +64,16 @@ export default function AdminLogin() {
             >
               Enter Command Center
             </Button>
+
+            <div className="text-[10px] text-slate-500 text-center opacity-70 font-medium">
+              demo access key:{" "}
+              <span 
+                onClick={() => setKey("aegis-admin-123")} 
+                className="text-slate-400 cursor-pointer hover:text-white transition-colors"
+              >
+                aegis-admin-123
+              </span>
+            </div>
           </form>
         </GlassCard>
       </div>
